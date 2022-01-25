@@ -1,0 +1,276 @@
+import AppKit
+import Combine
+import Defaults
+import SwiftUI
+
+// MARK: - StatusBarController
+
+class StatusBarController: NSObject, NSPopoverDelegate, NSWindowDelegate {
+    // MARK: Lifecycle
+
+    init(_ view: NSHostingView<AnyView>, image: String = "MenubarIcon") {
+        self.view = view
+
+        popover.contentViewController = MainViewController()
+        popover.contentViewController!.view = view
+        popover.animates = false
+
+        statusBar = NSStatusBar.system
+        statusItem = statusBar.statusItem(withLength: NSStatusItem.squareLength)
+
+        super.init()
+
+        if let statusBarButton = statusItem.button {
+            statusBarButton.image = NSImage(named: image)
+            statusBarButton.image?.size = NSSize(width: 18.0, height: 18.0)
+            statusBarButton.image?.isTemplate = true
+
+            statusBarButton.action = #selector(togglePopover(sender:))
+            statusBarButton.target = self
+        }
+
+        if Defaults[.hideMenubarIcon], let statusBarButton = statusItem.button {
+            statusBarButton.image = nil
+            statusItem.isVisible = false
+        }
+
+        Defaults.publisher(.hideMenubarIcon).removeDuplicates().filter { $0.oldValue != $0.newValue }.sink { [self] hidden in
+            let wasHidingMenubarIcon = hidden.oldValue
+            let showingMenubarIcon = !hidden.newValue
+            let hidingMenubarIcon = hidden.newValue
+
+            let windowLocation = wasHidingMenubarIcon ? window.frame.origin : popoverWindow?.frame.origin
+
+            hidePopover(self)
+            statusItem.isVisible = showingMenubarIcon
+            statusItem.button?.image = hidingMenubarIcon ? nil : NSImage(named: image)
+
+            guard popoverShownAtLeastOnce else { return }
+            mainAsyncAfter(ms: 10) {
+                showPopover(self, at: windowLocation)
+            }
+        }.store(in: &observers)
+
+        eventMonitor = GlobalEventMonitor(mask: [.leftMouseDown, .rightMouseDown], handler: mouseEventHandler)
+        popover.delegate = self
+    }
+
+    // MARK: Internal
+
+    var popover = NSPopover()
+    var view: NSHostingView<AnyView>
+
+    lazy var window: PanelWindow = {
+        let w = PanelWindow(swiftuiView: view.rootView)
+        w.delegate = self
+        return w
+    }()
+
+    var observers: Set<AnyCancellable> = []
+    var statusItem: NSStatusItem
+    @Atomic var popoverShownAtLeastOnce = false
+
+    var popoverWindow: NSWindow? {
+        popover.contentViewController?.view.window
+    }
+
+    func windowWillClose(_: Notification) {
+        Defaults[.popoverClosed] = true
+    }
+
+    func popoverDidClose(_: Notification) {
+        let positioningView = statusItem.button?.subviews.first {
+            $0.identifier == NSUserInterfaceItemIdentifier(rawValue: "positioningView")
+        }
+        positioningView?.removeFromSuperview()
+        Defaults[.popoverClosed] = true
+    }
+
+    @objc func togglePopover(sender: AnyObject) {
+        togglePopover(sender: sender, at: nil)
+    }
+
+    func togglePopover(sender: AnyObject, at point: NSPoint? = nil) {
+        if popover.isShown || window.isVisible {
+            hidePopover(sender)
+        } else {
+            showPopover(sender, at: point)
+        }
+    }
+
+    func popoverWillShow(_: Notification) {
+        Defaults[.popoverClosed] = false
+        popoverShownAtLeastOnce = true
+    }
+
+    func showPopoverIfNotVisible(at point: NSPoint? = nil) {
+        guard !window.isVisible, !(popoverWindow?.isVisible ?? false) else { return }
+        showPopover(self, at: point)
+    }
+
+    func showPopover(_ sender: AnyObject, at point: NSPoint? = nil) {
+        guard statusItem.isVisible else {
+            Defaults[.popoverClosed] = false
+            popoverShownAtLeastOnce = true
+            window.show(at: point)
+            NSApp.activate(ignoringOtherApps: true)
+            return
+        }
+
+        guard let button = statusItem.button else { return }
+
+        popoverShownAtLeastOnce = true
+        let positioningView = NSView(frame: button.bounds)
+        positioningView.identifier = NSUserInterfaceItemIdentifier(rawValue: "positioningView")
+        button.addSubview(positioningView)
+
+        popover.show(relativeTo: positioningView.bounds, of: positioningView, preferredEdge: .maxY)
+        positioningView.bounds = positioningView.bounds.offsetBy(dx: 0, dy: positioningView.bounds.height)
+        if let popoverWindow = popoverWindow {
+            popoverWindow.setFrame(popoverWindow.frame.offsetBy(dx: 0, dy: 12), display: false)
+            popoverWindow.makeKeyAndOrderFront(sender)
+        }
+        NSApp.activate(ignoringOtherApps: true)
+
+        eventMonitor?.start()
+    }
+
+    func hidePopover(_ sender: AnyObject) {
+        window.close()
+        popover.performClose(sender)
+        eventMonitor?.stop()
+    }
+
+    func mouseEventHandler(_ event: NSEvent?) {
+        if popover.isShown {
+            hidePopover(event!)
+        }
+    }
+
+    // MARK: Private
+
+    private var statusBar: NSStatusBar
+    private var eventMonitor: GlobalEventMonitor?
+}
+
+// MARK: - MainViewController
+
+class MainViewController: NSViewController {}
+
+// MARK: - PopoverBackgroundView
+
+class PopoverBackgroundView: NSView {
+    override func draw(_: NSRect) {
+        NSColor.clear.set()
+        bounds.fill()
+    }
+}
+
+extension NSVisualEffectView {
+    private typealias UpdateLayer = @convention(c) (AnyObject) -> Void
+
+    @objc dynamic
+    func replacement() {
+        super.updateLayer()
+        guard identifier == TRANSPARENT_POPOVER_IDENTIFIER, let layer = layer, layer.name == "NSPopoverFrame"
+        else {
+            unsafeBitCast(
+                updateLayerOriginalIMP, to: Self.UpdateLayer.self
+            )(self)
+            return
+        }
+        CATransaction.begin()
+        CATransaction.disableActions()
+
+        layer.isOpaque = false
+        layer.sublayers?.first?.opacity = 0
+        if let window = window {
+            window.backgroundColor = .clear
+            window.isOpaque = false
+            window.styleMask = .borderless
+            window.hasShadow = false
+
+            if let screenFrame = NSScreen.main?.visibleFrame {
+                #if DEBUG
+                    print("window.frame: x=\(window.frame.origin.x) width=\(window.frame.width)")
+                    print("screenFrame: x=\(screenFrame.origin.x) width=\(screenFrame.width)")
+                #endif
+
+                var xOffset: CGFloat = 0
+                let maxAllowedWindowX = (screenFrame.width + screenFrame.origin.x) - window.frame.width
+
+                if window.frame.origin.x > maxAllowedWindowX {
+                    xOffset = -(window.frame.origin.x - maxAllowedWindowX)
+                }
+
+                if window.frame.origin.x < screenFrame.origin.x {
+                    xOffset = (screenFrame.origin.x - window.frame.origin.x) + 20
+                }
+
+                #if DEBUG
+                    print("maxAllowedWindowX: \(maxAllowedWindowX)")
+                    print("xOffset: \(xOffset)")
+                #endif
+
+                if xOffset != 0 {
+                    window.setFrame(window.frame.offsetBy(dx: xOffset, dy: 0), display: false)
+                }
+            }
+        }
+
+        CATransaction.commit()
+    }
+}
+
+var updateLayerOriginal: Method?
+var updateLayerOriginalIMP: IMP?
+var popoverSwizzled = false
+
+func swizzlePopoverBackground() {
+    guard !popoverSwizzled else {
+        return
+    }
+    popoverSwizzled = true
+    let origMethod = #selector(NSVisualEffectView.updateLayer)
+    let replacementMethod = #selector(NSVisualEffectView.replacement)
+
+    updateLayerOriginal = class_getInstanceMethod(NSVisualEffectView.self, origMethod)
+    updateLayerOriginalIMP = method_getImplementation(updateLayerOriginal!)
+
+    let swizzleMethod: Method? = class_getInstanceMethod(NSVisualEffectView.self, replacementMethod)
+    let swizzleImpl = method_getImplementation(swizzleMethod!)
+    method_setImplementation(updateLayerOriginal!, swizzleImpl)
+}
+
+let TRANSPARENT_POPOVER_IDENTIFIER = NSUserInterfaceItemIdentifier("TRANSPARENT_POPOVER")
+
+func removePopoverBackground(view: NSView, backgroundView: inout PopoverBackgroundView?) {
+    view.identifier = TRANSPARENT_POPOVER_IDENTIFIER
+    if let frameView = view.window?.contentView?.superview as? NSVisualEffectView {
+        if let window = view.window {
+            window.backgroundColor = .clear
+            window.isOpaque = false
+            window.styleMask = .borderless
+            window.hasShadow = false
+        }
+
+        swizzlePopoverBackground()
+        frameView.bg = .clear
+        if backgroundView == nil {
+            backgroundView = PopoverBackgroundView(frame: frameView.bounds)
+            backgroundView!.autoresizingMask = NSView.AutoresizingMask([.width, .height])
+            frameView.addSubview(backgroundView!, positioned: NSWindow.OrderingMode.below, relativeTo: frameView)
+        }
+    }
+}
+
+// MARK: - HostingView
+
+class HostingView<T: View>: NSHostingView<T> {
+    var backgroundView: PopoverBackgroundView?
+
+    override func viewDidMoveToWindow() {
+        super.viewDidMoveToWindow()
+        removePopoverBackground(view: self, backgroundView: &backgroundView)
+    }
+}
