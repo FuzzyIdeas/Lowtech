@@ -4,10 +4,10 @@ import SwiftUI
 
 // MARK: - OSDWindow
 
-class OSDWindow: NSWindow {
+open class OSDWindow: NSWindow {
     // MARK: Lifecycle
 
-    convenience init(swiftuiView: AnyView) {
+    public convenience init(swiftuiView: AnyView) {
         self.init(contentViewController: NSHostingController(rootView: swiftuiView))
 
         level = NSWindow.Level(CGShieldingWindowLevel().i)
@@ -25,27 +25,9 @@ class OSDWindow: NSWindow {
         hidesOnDeactivate = false
     }
 
-    // MARK: Internal
+    // MARK: Open
 
-    var closer: DispatchWorkItem? {
-        didSet {
-            guard let oldCloser = oldValue else {
-                return
-            }
-            oldCloser.cancel()
-        }
-    }
-
-    var fader: DispatchWorkItem? {
-        didSet {
-            guard let oldCloser = oldValue else {
-                return
-            }
-            oldCloser.cancel()
-        }
-    }
-
-    func show(at point: NSPoint? = nil, closeAfter closeMilliseconds: Int = 3050, fadeAfter fadeMilliseconds: Int = 2000) {
+    open func show(at point: NSPoint? = nil, closeAfter closeMilliseconds: Int = 3050, fadeAfter fadeMilliseconds: Int = 2000) {
         if let point = point {
             setFrameOrigin(point)
         } else {
@@ -69,6 +51,26 @@ class OSDWindow: NSWindow {
             s.closer = mainAsyncAfter(ms: closeMilliseconds) { [weak self] in
                 self?.close()
             }
+        }
+    }
+
+    // MARK: Public
+
+    public var closer: DispatchWorkItem? {
+        didSet {
+            guard let oldCloser = oldValue else {
+                return
+            }
+            oldCloser.cancel()
+        }
+    }
+
+    public var fader: DispatchWorkItem? {
+        didSet {
+            guard let oldCloser = oldValue else {
+                return
+            }
+            oldCloser.cancel()
         }
     }
 

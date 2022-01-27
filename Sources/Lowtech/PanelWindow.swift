@@ -4,10 +4,10 @@ import SwiftUI
 
 // MARK: - PanelWindow
 
-class PanelWindow: NSWindow {
+open class PanelWindow: NSWindow {
     // MARK: Lifecycle
 
-    convenience init(swiftuiView: AnyView) {
+    public convenience init(swiftuiView: AnyView) {
         self.init(contentViewController: NSHostingController(rootView: swiftuiView))
 
         level = .floating
@@ -23,9 +23,9 @@ class PanelWindow: NSWindow {
         isMovableByWindowBackground = true
     }
 
-    // MARK: Internal
+    // MARK: Open
 
-    func show(at point: NSPoint? = nil) {
+    open func show(at point: NSPoint? = nil) {
         if let point = point {
             setFrameOrigin(point)
         } else {

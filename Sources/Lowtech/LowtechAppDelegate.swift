@@ -5,19 +5,51 @@ import Foundation
 import Magnet
 import SwiftUI
 
-class LowtechAppDelegate: NSObject, NSApplicationDelegate {
-    private(set) static var instance: LowtechAppDelegate!
+open class LowtechAppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
+    // MARK: Open
 
-    var statusBar: StatusBarController?
-    var application = NSApplication.shared
+    open func applicationDidBecomeActive(_ notification: Notification) {
+        #if DEBUG
+            print(notification)
+        #endif
+        if Defaults[.hideMenubarIcon] {
+            statusBar?.showPopoverIfNotVisible()
+        }
+    }
 
-    var globalEventMonitor: GlobalEventMonitor!
-    var localEventMonitor: LocalEventMonitor!
+    open func applicationDidFinishLaunching(_ notification: Notification) {
+        #if DEBUG
+            print(notification)
+        #endif
 
-    var observers: Set<AnyCancellable> = []
+        LowtechAppDelegate.instance = self
+        Defaults[.launchCount] += 1
 
-    lazy var notificationPopover: Popover = {
-        let p = Popover(statusBar)
+        initMenubar()
+        initHotkeys()
+        initFlagsListener()
+
+        if Defaults[.launchCount] == 1 {
+            mainAsyncAfter(ms: 1000) {
+                self.statusBar?.showPopover(self)
+            }
+        }
+    }
+
+    // MARK: Public
+
+    public private(set) static var instance: LowtechAppDelegate!
+
+    public var statusBar: StatusBarController?
+    public var application = NSApplication.shared
+
+    public var globalEventMonitor: GlobalEventMonitor!
+    public var localEventMonitor: LocalEventMonitor!
+
+    public var observers: Set<AnyCancellable> = []
+
+    public lazy var notificationPopover: LowtechPopover = {
+        let p = LowtechPopover(statusBar)
         p.contentViewController = MainViewController()
         p.animates = false
         p.contentViewController?.view = HostingView(rootView: notificationView)
@@ -25,16 +57,16 @@ class LowtechAppDelegate: NSObject, NSApplicationDelegate {
         return p
     }()
 
-    var notificationView: AnyView?
-    var contentView: AnyView?
+    public var notificationView: AnyView?
+    public var contentView: AnyView?
 
-    var showPopoverModifiers: [TriggerKey] = [.ralt]
-    var hotkeys: [HotKey] = []
-    lazy var showPopoverIdentifier = "SHOW_POPOVER\(showPopoverKey)"
+    @Published public var showPopoverModifiers: [TriggerKey] = [.ralt]
+    public var hotkeys: [HotKey] = []
+    public lazy var showPopoverIdentifier = "SHOW_POPOVER\(showPopoverKey)"
 
-    @Atomic var hotkeysRegistered = false
+    @Atomic public var hotkeysRegistered = false
 
-    var notificationCloser: DispatchWorkItem? {
+    public var notificationCloser: DispatchWorkItem? {
         didSet {
             guard let oldCloser = oldValue else {
                 return
@@ -43,19 +75,13 @@ class LowtechAppDelegate: NSObject, NSApplicationDelegate {
         }
     }
 
-    var showPopoverKey = "" {
+    @Published public var showPopoverKey = "" {
         didSet {
             showPopoverIdentifier = "SHOW_POPOVER\(showPopoverKey)"
         }
     }
 
-    func applicationDidBecomeActive(_: Notification) {
-        if Defaults[.hideMenubarIcon] {
-            statusBar?.showPopoverIfNotVisible()
-        }
-    }
-
-    func showNotification(
+    public func showNotification(
         title: String,
         lines: [String],
         yesButtonText: String? = nil,
@@ -76,9 +102,9 @@ class LowtechAppDelegate: NSObject, NSApplicationDelegate {
         }
     }
 
-    @objc func onHotkey(_: HotKey) {}
+    @objc public func onHotkey(_: HotKey) {}
 
-    @objc func handleHotkey(_ hotkey: HotKey) {
+    @objc public func handleHotkey(_ hotkey: HotKey) {
         #if DEBUG
             print(hotkey.identifier)
         #endif
@@ -87,14 +113,14 @@ class LowtechAppDelegate: NSObject, NSApplicationDelegate {
             return
         }
 
-        guard hotkey.identifier != showPopoverKey else {
+        guard hotkey.identifier != showPopoverIdentifier else {
             statusBar?.togglePopover(sender: self, at: .mouseLocation(centeredOn: statusBar?.window))
             return
         }
         onHotkey(hotkey)
     }
 
-    func initHotkeys() {
+    public func initHotkeys() {
         if !showPopoverKey.isEmpty, !showPopoverModifiers.isEmpty {
             hotkeys = buildHotkeys(
                 for: [showPopoverKey],
@@ -106,11 +132,15 @@ class LowtechAppDelegate: NSObject, NSApplicationDelegate {
         }
     }
 
-    func initMenubar() {
-        statusBar = StatusBarController(HostingView(rootView: AnyView(erasing: contentView)))
+    public func initMenubar() {
+        guard let contentView = contentView else {
+            return
+        }
+
+        statusBar = StatusBarController(HostingView(rootView: contentView))
     }
 
-    func onFlagsChanged(event: NSEvent) {
+    public func onFlagsChanged(event: NSEvent) {
         rcmd = event.modifierFlags.contains(.rightCommand)
         ralt = event.modifierFlags.contains(.rightOption)
         rshift = event.modifierFlags.contains(.rightShift)
@@ -127,7 +157,7 @@ class LowtechAppDelegate: NSObject, NSApplicationDelegate {
         }
     }
 
-    func initFlagsListener() {
+    public func initFlagsListener() {
         globalEventMonitor = GlobalEventMonitor(mask: .flagsChanged) { [self] event in
             guard let event = event else { return }
             onFlagsChanged(event: event)
@@ -141,7 +171,7 @@ class LowtechAppDelegate: NSObject, NSApplicationDelegate {
         localEventMonitor.start()
     }
 
-    func buildHotkeys(
+    public func buildHotkeys(
         for keys: [String],
         modifiers: NSEvent.ModifierFlags,
         action: Selector,
@@ -160,28 +190,13 @@ class LowtechAppDelegate: NSObject, NSApplicationDelegate {
         }
     }
 
-    func applicationDidFinishLaunching(_: Notification) {
-        LowtechAppDelegate.instance = self
-        Defaults[.launchCount] += 1
-
-        initMenubar()
-        initHotkeys()
-        initFlagsListener()
-
-        if Defaults[.launchCount] == 1 {
-            mainAsyncAfter(ms: 1000) {
-                self.statusBar?.showPopover(self)
-            }
-        }
-    }
-
-    func registerHotkeys() {
+    public func registerHotkeys() {
         guard !hotkeysRegistered else { return }
         hotkeys.forEach { $0.register() }
         hotkeysRegistered = true
     }
 
-    func unregisterHotkeys() {
+    public func unregisterHotkeys() {
         guard hotkeysRegistered else { return }
         hotkeys.forEach { $0.unregister() }
         hotkeysRegistered = false

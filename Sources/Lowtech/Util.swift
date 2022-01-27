@@ -13,20 +13,20 @@ import Foundation
 import Path
 import UserNotifications
 
-typealias FilePath = Path
-func p(_ string: String) -> FilePath? {
+public typealias FilePath = Path
+public func p(_ string: String) -> FilePath? {
     FilePath(string)
 }
 
-func printerr(_ msg: String, end: String = "\n") {
+public func printerr(_ msg: String, end: String = "\n") {
     fputs("\(msg)\(end)", stderr)
 }
 
-func cap<T: Comparable>(_ number: T, minVal: T, maxVal: T) -> T {
+public func cap<T: Comparable>(_ number: T, minVal: T, maxVal: T) -> T {
     max(min(number, maxVal), minVal)
 }
 
-func notify(identifier: String, title: String, body: String) {
+public func notify(identifier: String, title: String, body: String) {
     let sendNotification = { (nc: UNUserNotificationCenter) in
         let content = UNMutableNotificationContent()
         content.title = title
@@ -55,20 +55,24 @@ func notify(identifier: String, title: String, body: String) {
     }
 }
 
-func removeNotifications(withIdentifiers ids: [String]) {
+public func removeNotifications(withIdentifiers ids: [String]) {
     UNUserNotificationCenter.current().removeDeliveredNotifications(withIdentifiers: ids)
 }
 
 // MARK: - Formatting
 
-struct Formatting: Hashable {
-    let decimals: Int
-    let padding: Int
+public struct Formatting: Hashable {
+    // MARK: Public
 
-    func hash(into hasher: inout Hasher) {
+    public func hash(into hasher: inout Hasher) {
         hasher.combine(padding)
         hasher.combine(decimals)
     }
+
+    // MARK: Internal
+
+    let decimals: Int
+    let padding: Int
 }
 
 // MARK: - Atomic
@@ -94,14 +98,14 @@ public struct Atomic<Value: AtomicValue> {
 }
 
 @discardableResult
-@inline(__always) func mainThread<T>(_ action: () -> T) -> T {
+@inline(__always) public func mainThread<T>(_ action: () -> T) -> T {
     guard !Thread.isMainThread else {
         return action()
     }
     return DispatchQueue.main.sync { return action() }
 }
 
-@inline(__always) func mainAsync(_ action: @escaping () -> Void) {
+@inline(__always) public func mainAsync(_ action: @escaping () -> Void) {
     guard !Thread.isMainThread else {
         action()
         return
@@ -110,7 +114,7 @@ public struct Atomic<Value: AtomicValue> {
 }
 
 @discardableResult
-func mainAsyncAfter(ms: Int, _ action: @escaping () -> Void) -> DispatchWorkItem {
+public func mainAsyncAfter(ms: Int, _ action: @escaping () -> Void) -> DispatchWorkItem {
     let deadline = DispatchTime(uptimeNanoseconds: DispatchTime.now().uptimeNanoseconds + UInt64(ms * 1_000_000))
 
     let workItem = DispatchWorkItem {
@@ -121,7 +125,7 @@ func mainAsyncAfter(ms: Int, _ action: @escaping () -> Void) -> DispatchWorkItem
     return workItem
 }
 
-func createWindow(
+public func createWindow(
     _ identifier: String,
     controller: inout NSWindowController?,
     screen: NSScreen? = nil,
@@ -167,7 +171,7 @@ func createWindow(
     }
 }
 
-func createTransition(
+public func createTransition(
     duration: TimeInterval,
     type: CATransitionType,
     subtype: CATransitionSubtype = .fromTop,
@@ -185,7 +189,7 @@ func createTransition(
     return transition
 }
 
-func mapNumber<T: Numeric & Comparable & FloatingPoint>(_ number: T, fromLow: T, fromHigh: T, toLow: T, toHigh: T) -> T {
+public func mapNumber<T: Numeric & Comparable & FloatingPoint>(_ number: T, fromLow: T, fromHigh: T, toLow: T, toHigh: T) -> T {
     if fromLow == fromHigh {
         print("fromLow and fromHigh are both equal to \(fromLow)")
         return number
@@ -206,7 +210,7 @@ func mapNumber<T: Numeric & Comparable & FloatingPoint>(_ number: T, fromLow: T,
     }
 }
 
-let NO_SHADOW: NSShadow = {
+public let NO_SHADOW: NSShadow = {
     let s = NSShadow()
     s.shadowColor = .clear
     s.shadowOffset = .zero

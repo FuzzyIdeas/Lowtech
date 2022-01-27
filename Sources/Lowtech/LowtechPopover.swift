@@ -2,12 +2,12 @@ import Cocoa
 import Defaults
 import Foundation
 
-// MARK: - Popover
+// MARK: - LowtechPopover
 
-class Popover: NSPopover {
+open class LowtechPopover: NSPopover {
     // MARK: Lifecycle
 
-    init(_ statusBar: StatusBarController?) {
+    public init(_ statusBar: StatusBarController?) {
         super.init()
         self.statusBar = statusBar
         mockView = NSView(frame: NSRect(x: 0, y: 0, width: 2, height: 2))
@@ -34,20 +34,18 @@ class Popover: NSPopover {
         mockWindowController = NSWindowController(window: mockWindow)
     }
 
-    required init?(coder: NSCoder) {
+    public required init?(coder: NSCoder) {
         super.init(coder: coder)
     }
 
-    // MARK: Internal
+    // MARK: Open
 
-    weak var statusBar: StatusBarController?
-
-    override func close() {
+    override open func close() {
         super.close()
         mockWindow?.close()
     }
 
-    func show(menubarIconHidden: Bool? = nil) {
+    open func show(menubarIconHidden: Bool? = nil) {
         if menubarIconHidden ?? Defaults[.hideMenubarIcon] {
             if let frame = NSScreen.main?.visibleFrame {
                 let maxAllowedWindowX = (frame.width + frame.origin.x) - 400
@@ -60,7 +58,7 @@ class Popover: NSPopover {
         }
     }
 
-    func showAt(point: NSPoint? = nil, preferredEdge: NSRectEdge = .maxY) {
+    open func showAt(point: NSPoint? = nil, preferredEdge: NSRectEdge = .maxY) {
         guard let mockWindow = mockWindow, let mockWindowController = mockWindowController, let view = mockWindow.contentView else {
             return
         }
@@ -76,6 +74,10 @@ class Popover: NSPopover {
         show(relativeTo: view.bounds, of: view, preferredEdge: preferredEdge)
     }
 
+    // MARK: Internal
+
+    weak var statusBar: StatusBarController?
+
     // MARK: Private
 
     private var mockWindow: NSWindow?
@@ -83,7 +85,7 @@ class Popover: NSPopover {
     private var mockView: NSView?
 }
 
-extension NSPoint {
+public extension NSPoint {
     static func mouseLocation(centeredOn window: NSWindow? = nil) -> NSPoint {
         let loc = NSEvent.mouseLocation
         if let window = window {

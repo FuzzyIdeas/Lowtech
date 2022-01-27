@@ -1,11 +1,12 @@
 import Combine
 import Foundation
+import SwiftUI
 
-extension Substring {
+public extension Substring {
     var s: String { String(self) }
 }
 
-extension NumberFormatter {
+public extension NumberFormatter {
     static let shared = NumberFormatter()
     static var formatters: [Formatting: NumberFormatter] = [:]
 
@@ -35,7 +36,7 @@ extension NumberFormatter {
 #if os(macOS)
     import Cocoa
 
-    extension NSPopUpButton {
+    public extension NSPopUpButton {
         /// Publishes index of selected Item
         var selectionPublisher: AnyPublisher<String?, Never> {
             NotificationCenter.default
@@ -45,7 +46,7 @@ extension NumberFormatter {
         }
     }
 
-    extension NSView {
+    public extension NSView {
         func trackHover(owner: Any? = nil, rect: NSRect? = nil, cursor: Bool = false) {
             for area in trackingAreas {
                 removeTrackingArea(area)
@@ -118,11 +119,11 @@ extension NumberFormatter {
         }
     }
 
-    extension NSAppearance {
+    public extension NSAppearance {
         var isDark: Bool { name == .vibrantDark || name == .darkAqua }
     }
 
-    extension NSWindow {
+    public extension NSWindow {
         func shake(with intensity: CGFloat = 0.01, duration: Double = 0.3) {
             let numberOfShakes = 3
             let frame: CGRect = frame
@@ -145,7 +146,7 @@ extension NumberFormatter {
         }
     }
 
-    extension NSScreen {
+    public extension NSScreen {
         static func isOnline(_ id: CGDirectDisplayID) -> Bool {
             onlineDisplayIDs.contains(id)
         }
@@ -262,7 +263,7 @@ extension NumberFormatter {
 
 #endif
 
-extension Double {
+public extension Double {
     @inline(__always) func rounded(to scale: Int) -> Double {
         let behavior = NSDecimalNumberHandler(
             roundingMode: .plain,
@@ -331,13 +332,13 @@ extension Double {
     }
 }
 
-extension CGFloat {
+public extension CGFloat {
     @inline(__always) var i32: Int32 {
         Int32(self)
     }
 }
 
-extension UInt8 {
+public extension UInt8 {
     var hex: String {
         String(format: "%02x", self)
     }
@@ -357,7 +358,7 @@ extension UInt8 {
     }
 }
 
-extension BinaryInteger {
+public extension BinaryInteger {
     @inline(__always) var ns: NSNumber {
         NSNumber(value: d)
     }
@@ -419,13 +420,13 @@ extension BinaryInteger {
     }
 }
 
-extension ArraySlice {
+public extension ArraySlice {
     var arr: [Element] {
         Array(self)
     }
 }
 
-extension CAMediaTimingFunction {
+public extension CAMediaTimingFunction {
     // default
     static let `default` = CAMediaTimingFunction(name: .default)
     static let linear = CAMediaTimingFunction(name: .linear)
@@ -460,13 +461,13 @@ extension CAMediaTimingFunction {
     static let easeInOutBack = CAMediaTimingFunction(controlPoints: 0.68, -0.55, 0.265, 1.55)
 }
 
-extension CGFloat {
+public extension CGFloat {
     @inline(__always) var ns: NSNumber {
         NSNumber(value: Float(self))
     }
 }
 
-extension Data {
+public extension Data {
     var s: String? { String(data: self, encoding: .utf8) }
 
     func str(hex: Bool = false, base64: Bool = false, urlSafe: Bool = false, separator: String = " ") -> String {
@@ -489,13 +490,13 @@ extension Data {
     }
 }
 
-extension String {
+public extension String {
     @inline(__always) var trimmed: String {
         trimmingCharacters(in: .whitespacesAndNewlines)
     }
 }
 
-extension CharacterSet {
+public extension CharacterSet {
     func characters() -> [Character] {
         // A Unicode scalar is any Unicode code point in the range U+0000 to U+D7FF inclusive or U+E000 to U+10FFFF inclusive.
         codePoints().compactMap { UnicodeScalar($0) }.map { Character($0) }
@@ -521,8 +522,37 @@ extension CharacterSet {
     }
 }
 
-extension Published.Publisher {
+public extension Published.Publisher {
     var didSet: AnyPublisher<Value, Never> {
         receive(on: RunLoop.main).eraseToAnyPublisher()
+    }
+}
+
+public extension View {
+    /// Applies the given transform if the given condition evaluates to `true`.
+    /// - Parameters:
+    ///   - condition: The condition to evaluate.
+    ///   - transform: The transform to apply to the source `View`.
+    /// - Returns: Either the original `View` or the modified `View` if the condition is `true`.
+    @ViewBuilder func `if`<Content: View>(_ condition: @autoclosure () -> Bool, transform: (Self) -> Content) -> some View {
+        if condition() {
+            transform(self)
+        } else {
+            self
+        }
+    }
+}
+
+public extension Sequence where Element: AdditiveArithmetic {
+    func sum() -> Element {
+        reduce(.zero, +)
+    }
+}
+
+public extension View {
+    func size(size: Binding<CGSize>) -> some View {
+        ChildSizeReader(size: size) {
+            self
+        }
     }
 }

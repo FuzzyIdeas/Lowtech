@@ -12,13 +12,13 @@ import SystemColors
 
 // MARK: - CheckboxToggleStyle
 
-struct CheckboxToggleStyle: ToggleStyle {
-    enum Style {
+public struct CheckboxToggleStyle: ToggleStyle {
+    public enum Style {
         case square, circle
 
-        // MARK: Internal
+        // MARK: Public
 
-        var sfSymbolName: String {
+        public var sfSymbolName: String {
             switch self {
             case .square:
                 return "square"
@@ -28,10 +28,10 @@ struct CheckboxToggleStyle: ToggleStyle {
         }
     }
 
-    @Environment(\.isEnabled) var isEnabled
-    let style: Style // custom param
+    @Environment(\.isEnabled) public var isEnabled
+    public let style: Style // custom param
 
-    func makeBody(configuration: Configuration) -> some View {
+    public func makeBody(configuration: Configuration) -> some View {
         Button(action: {
             configuration.isOn.toggle() // toggle the state binding
         }, label: {
@@ -48,14 +48,10 @@ struct CheckboxToggleStyle: ToggleStyle {
 
 // MARK: - OutlineButton
 
-struct OutlineButton: ButtonStyle {
-    @State var color = Color.primary.opacity(0.8)
-    @State var hoverColor = Color.primary
-    @State var multiplyColor = Color.white
-    @State var scale: CGFloat = 1
-    @State var font: Font = .body.bold()
+public struct OutlineButton: ButtonStyle {
+    // MARK: Public
 
-    func makeBody(configuration: Configuration) -> some View {
+    public func makeBody(configuration: Configuration) -> some View {
         configuration
             .label
             .font(font)
@@ -76,25 +72,22 @@ struct OutlineButton: ButtonStyle {
                 }
             })
     }
+
+    // MARK: Internal
+
+    @State var color = Color.primary.opacity(0.8)
+    @State var hoverColor = Color.primary
+    @State var multiplyColor = Color.white
+    @State var scale: CGFloat = 1
+    @State var font: Font = .body.bold()
 }
 
 // MARK: - ToggleButton
 
-struct ToggleButton: ButtonStyle {
-    @Environment(\.colors) var colors
+public struct ToggleButton: ButtonStyle {
+    // MARK: Public
 
-    @State var onColor = Color.primary
-    @State var offColor = Color.primary.opacity(0.1)
-    @State var onTextColor = Color.textBackground
-    @State var offTextColor = Color.secondary
-    @State var scale: CGFloat = 1
-    @State var hoverColor = Color.white
-    @State var isEnabled = true
-    @Binding var isOn: Bool
-    @State var width: CGFloat? = nil
-    @State var height: CGFloat? = nil
-
-    func makeBody(configuration: Configuration) -> some View {
+    public func makeBody(configuration: Configuration) -> some View {
         configuration
             .label
             .foregroundColor(isOn ? onTextColor : offTextColor)
@@ -117,26 +110,29 @@ struct ToggleButton: ButtonStyle {
                 }
             })
     }
+
+    // MARK: Internal
+
+    @Environment(\.colors) var colors
+
+    @State var onColor = Color.primary
+    @State var offColor = Color.primary.opacity(0.1)
+    @State var onTextColor = Color.textBackground
+    @State var offTextColor = Color.secondary
+    @State var scale: CGFloat = 1
+    @State var hoverColor = Color.white
+    @State var isEnabled = true
+    @Binding var isOn: Bool
+    @State var width: CGFloat? = nil
+    @State var height: CGFloat? = nil
 }
 
 // MARK: - PickerButton
 
-struct PickerButton<T: Equatable>: ButtonStyle {
-    @Environment(\.colors) var colors
+public struct PickerButton<T: Equatable>: ButtonStyle {
+    // MARK: Public
 
-    @State var color = Color.primary
-    @State var offColor: Color? = nil
-    @State var onTextColor = Color.textBackground
-    @State var offTextColor = Color.secondary
-    @State var horizontalPadding: CGFloat = 4
-    @State var verticalPadding: CGFloat = 8
-    @State var brightness = 0.0
-    @State var scale: CGFloat = 1
-    @State var hoverColor = Color.white
-    @Binding var enumValue: T
-    @State var onValue: T
-
-    func makeBody(configuration: Configuration) -> some View {
+    public func makeBody(configuration: Configuration) -> some View {
         configuration
             .label
             .foregroundColor(enumValue == onValue ? onTextColor : offTextColor)
@@ -162,14 +158,30 @@ struct PickerButton<T: Equatable>: ButtonStyle {
                 }
             })
     }
+
+    // MARK: Internal
+
+    @Environment(\.colors) var colors
+
+    @State var color = Color.primary
+    @State var offColor: Color? = nil
+    @State var onTextColor = Color.textBackground
+    @State var offTextColor = Color.secondary
+    @State var horizontalPadding: CGFloat = 4
+    @State var verticalPadding: CGFloat = 8
+    @State var brightness = 0.0
+    @State var scale: CGFloat = 1
+    @State var hoverColor = Color.white
+    @Binding var enumValue: T
+    @State var onValue: T
 }
 
 // MARK: - FlatButton
 
-struct FlatButton: ButtonStyle {
+public struct FlatButton: ButtonStyle {
     // MARK: Lifecycle
 
-    init(
+    public init(
         color: Color? = nil,
         textColor: Color? = nil,
         hoverColor: Color? = nil,
@@ -182,9 +194,9 @@ struct FlatButton: ButtonStyle {
         radius: CGFloat = 8,
         pressedBinding: Binding<Bool>? = nil
     ) {
-        _color = colorBinding ?? .constant(color ?? Colors.red)
+        _color = colorBinding ?? .constant(color ?? Colors.lightGold)
         _textColor = textColorBinding ?? .constant(textColor ?? Colors.blackGray)
-        _hoverColor = hoverColorBinding ?? .constant(hoverColor ?? Colors.red)
+        _hoverColor = hoverColorBinding ?? .constant(hoverColor ?? Colors.lightGold)
         _width = .constant(width)
         _height = .constant(height)
         _circle = .constant(circle)
@@ -192,23 +204,9 @@ struct FlatButton: ButtonStyle {
         _pressed = pressedBinding ?? .constant(false)
     }
 
-    // MARK: Internal
+    // MARK: Public
 
-    @Environment(\.colors) var colors
-
-    @Binding var color: Color
-    @Binding var textColor: Color
-    @State var colorMultiply: Color = .white
-    @State var scale: CGFloat = 1.0
-    @Binding var hoverColor: Color
-    @State var pressedColor: Color = .white
-    @Binding var width: CGFloat?
-    @Binding var height: CGFloat?
-    @Binding var circle: Bool
-    @Binding var radius: CGFloat
-    @Binding var pressed: Bool
-
-    func makeBody(configuration: Configuration) -> some View {
+    public func makeBody(configuration: Configuration) -> some View {
         configuration
             .label
             .foregroundColor(textColor)
@@ -229,8 +227,8 @@ struct FlatButton: ButtonStyle {
                         ).fill(color).frame(minWidth: width, idealWidth: width, minHeight: height, idealHeight: height, alignment: .center)
                     )
 
-            ).colorMultiply(colorMultiply)
-            .scaleEffect(scale)
+            ).colorMultiply(configuration.isPressed ? pressedColor : colorMultiply)
+            .scaleEffect(configuration.isPressed ? 1.02 : scale)
             .onAppear {
                 pressedColor = hoverColor.blended(withFraction: 0.5, of: .white)
             }
@@ -247,40 +245,6 @@ struct FlatButton: ButtonStyle {
                     }
                 }
             }
-            // .gesture(
-            //     DragGesture(minimumDistance: 0)
-            //     #if os(macOS)
-            //         .onChanged { _ in
-            //             if scale == 1.05 {
-            //                 withAnimation(.interactiveSpring()) {
-            //                     colorMultiply = pressedColor
-            //                     scale = 1.02
-            //                 }
-            //             }
-            //         }.onEnded { _ in
-            //             withAnimation(.interactiveSpring()) {
-            //                 colorMultiply = hoverColor
-            //                 scale = 1.05
-            //             }
-            //             onTap()
-            //         }
-            //     #elseif os(iOS)
-            //         .onChanged { _ in
-            //             if scale == 1 {
-            //                 withAnimation(.interactiveSpring()) {
-            //                     colorMultiply = hoverColor
-            //                     scale = 1.05
-            //                 }
-            //             }
-            //         }.onEnded { _ in
-            //             withAnimation(.interactiveSpring()) {
-            //                 colorMultiply = .white
-            //                 scale = 1.0
-            //             }
-            //             onTap()
-            //         }
-            //     #endif
-            // )
             .onHover(perform: { hover in
                 withAnimation(.easeOut(duration: 0.2)) {
                     colorMultiply = hover ? hoverColor : .white
@@ -288,4 +252,20 @@ struct FlatButton: ButtonStyle {
                 }
             })
     }
+
+    // MARK: Internal
+
+    @Environment(\.colors) var colors
+
+    @Binding var color: Color
+    @Binding var textColor: Color
+    @State var colorMultiply: Color = .white
+    @State var scale: CGFloat = 1.0
+    @Binding var hoverColor: Color
+    @State var pressedColor: Color = .white
+    @Binding var width: CGFloat?
+    @Binding var height: CGFloat?
+    @Binding var circle: Bool
+    @Binding var radius: CGFloat
+    @Binding var pressed: Bool
 }

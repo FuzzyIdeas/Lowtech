@@ -2,7 +2,7 @@ import Cocoa
 
 // MARK: - GlobalEventMonitor
 
-class GlobalEventMonitor {
+open class GlobalEventMonitor {
     // MARK: Lifecycle
 
     public init(mask: NSEvent.EventTypeMask, handler: @escaping (NSEvent?) -> Void) {
@@ -36,7 +36,7 @@ class GlobalEventMonitor {
 
 // MARK: - LocalEventMonitor
 
-class LocalEventMonitor {
+open class LocalEventMonitor {
     // MARK: Lifecycle
 
     public init(mask: NSEvent.EventTypeMask, handler: @escaping (NSEvent) -> NSEvent?) {

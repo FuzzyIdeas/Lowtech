@@ -5,10 +5,10 @@ import SwiftUI
 
 // MARK: - StatusBarController
 
-class StatusBarController: NSObject, NSPopoverDelegate, NSWindowDelegate {
+open class StatusBarController: NSObject, NSPopoverDelegate, NSWindowDelegate {
     // MARK: Lifecycle
 
-    init(_ view: NSHostingView<AnyView>, image: String = "MenubarIcon") {
+    public init(_ view: NSHostingView<AnyView>, image: String = "MenubarIcon") {
         self.view = view
 
         popover.contentViewController = MainViewController()
@@ -55,30 +55,13 @@ class StatusBarController: NSObject, NSPopoverDelegate, NSWindowDelegate {
         popover.delegate = self
     }
 
-    // MARK: Internal
+    // MARK: Open
 
-    var popover = NSPopover()
-    var view: NSHostingView<AnyView>
-
-    lazy var window: PanelWindow = {
-        let w = PanelWindow(swiftuiView: view.rootView)
-        w.delegate = self
-        return w
-    }()
-
-    var observers: Set<AnyCancellable> = []
-    var statusItem: NSStatusItem
-    @Atomic var popoverShownAtLeastOnce = false
-
-    var popoverWindow: NSWindow? {
-        popover.contentViewController?.view.window
-    }
-
-    func windowWillClose(_: Notification) {
+    open func windowWillClose(_: Notification) {
         Defaults[.popoverClosed] = true
     }
 
-    func popoverDidClose(_: Notification) {
+    open func popoverDidClose(_: Notification) {
         let positioningView = statusItem.button?.subviews.first {
             $0.identifier == NSUserInterfaceItemIdentifier(rawValue: "positioningView")
         }
@@ -86,11 +69,35 @@ class StatusBarController: NSObject, NSPopoverDelegate, NSWindowDelegate {
         Defaults[.popoverClosed] = true
     }
 
-    @objc func togglePopover(sender: AnyObject) {
+    open func popoverWillShow(_: Notification) {
+        Defaults[.popoverClosed] = false
+        popoverShownAtLeastOnce = true
+    }
+
+    // MARK: Public
+
+    public var popover = NSPopover()
+    public var view: NSHostingView<AnyView>
+
+    public lazy var window: PanelWindow = {
+        let w = PanelWindow(swiftuiView: view.rootView)
+        w.delegate = self
+        return w
+    }()
+
+    public var observers: Set<AnyCancellable> = []
+    public var statusItem: NSStatusItem
+    @Atomic public var popoverShownAtLeastOnce = false
+
+    public var popoverWindow: NSWindow? {
+        popover.contentViewController?.view.window
+    }
+
+    @objc public func togglePopover(sender: AnyObject) {
         togglePopover(sender: sender, at: nil)
     }
 
-    func togglePopover(sender: AnyObject, at point: NSPoint? = nil) {
+    public func togglePopover(sender: AnyObject, at point: NSPoint? = nil) {
         if popover.isShown || window.isVisible {
             hidePopover(sender)
         } else {
@@ -98,17 +105,12 @@ class StatusBarController: NSObject, NSPopoverDelegate, NSWindowDelegate {
         }
     }
 
-    func popoverWillShow(_: Notification) {
-        Defaults[.popoverClosed] = false
-        popoverShownAtLeastOnce = true
-    }
-
-    func showPopoverIfNotVisible(at point: NSPoint? = nil) {
+    public func showPopoverIfNotVisible(at point: NSPoint? = nil) {
         guard !window.isVisible, !(popoverWindow?.isVisible ?? false) else { return }
         showPopover(self, at: point)
     }
 
-    func showPopover(_ sender: AnyObject, at point: NSPoint? = nil) {
+    public func showPopover(_ sender: AnyObject, at point: NSPoint? = nil) {
         guard statusItem.isVisible else {
             Defaults[.popoverClosed] = false
             popoverShownAtLeastOnce = true
@@ -135,13 +137,13 @@ class StatusBarController: NSObject, NSPopoverDelegate, NSWindowDelegate {
         eventMonitor?.start()
     }
 
-    func hidePopover(_ sender: AnyObject) {
+    public func hidePopover(_ sender: AnyObject) {
         window.close()
         popover.performClose(sender)
         eventMonitor?.stop()
     }
 
-    func mouseEventHandler(_ event: NSEvent?) {
+    public func mouseEventHandler(_ event: NSEvent?) {
         if popover.isShown {
             hidePopover(event!)
         }
@@ -245,8 +247,8 @@ func swizzlePopoverBackground() {
 let TRANSPARENT_POPOVER_IDENTIFIER = NSUserInterfaceItemIdentifier("TRANSPARENT_POPOVER")
 
 func removePopoverBackground(view: NSView, backgroundView: inout PopoverBackgroundView?) {
-    view.identifier = TRANSPARENT_POPOVER_IDENTIFIER
     if let frameView = view.window?.contentView?.superview as? NSVisualEffectView {
+        frameView.identifier = TRANSPARENT_POPOVER_IDENTIFIER
         if let window = view.window {
             window.backgroundColor = .clear
             window.isOpaque = false
@@ -266,11 +268,15 @@ func removePopoverBackground(view: NSView, backgroundView: inout PopoverBackgrou
 
 // MARK: - HostingView
 
-class HostingView<T: View>: NSHostingView<T> {
-    var backgroundView: PopoverBackgroundView?
+open class HostingView<T: View>: NSHostingView<T> {
+    // MARK: Open
 
-    override func viewDidMoveToWindow() {
+    override open func viewDidMoveToWindow() {
         super.viewDidMoveToWindow()
         removePopoverBackground(view: self, backgroundView: &backgroundView)
     }
+
+    // MARK: Internal
+
+    var backgroundView: PopoverBackgroundView?
 }

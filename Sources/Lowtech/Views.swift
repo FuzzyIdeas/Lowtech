@@ -26,19 +26,10 @@ extension NSSegmentedControl {
 
 // MARK: - NotificationView
 
-struct NotificationView: View {
-    @State var notificationLines: [String] = []
-    @State var yesButtonText: String? = nil
-    @State var noButtonText: String? = nil
+public struct NotificationView: View {
+    // MARK: Public
 
-    @State var buttonAction: ((Bool) -> Void)? = nil
-
-    @Environment(\.colorScheme) var colorScheme
-    @Environment(\.colors) var colors
-
-    let fontSize: CGFloat = 16
-
-    var body: some View {
+    public var body: some View {
         VStack(alignment: .leading) {
             ForEach(notificationLines, id: \.self) { line in
                 if line.starts(with: "# ") {
@@ -87,9 +78,22 @@ struct NotificationView: View {
                 .shadow(color: Colors.blackMauve.opacity(colorScheme == .dark ? 0.5 : 0.25), radius: 4, x: 0, y: 3)
         )
     }
+
+    // MARK: Internal
+
+    @State var notificationLines: [String] = []
+    @State var yesButtonText: String? = nil
+    @State var noButtonText: String? = nil
+
+    @State var buttonAction: ((Bool) -> Void)? = nil
+
+    @Environment(\.colorScheme) var colorScheme
+    @Environment(\.colors) var colors
+
+    let fontSize: CGFloat = 16
 }
 
-extension Color {
+public extension Color {
     #if os(macOS)
         func blended(withFraction fraction: CGFloat, of color: Color) -> Color {
             let color1 = NSColor(self)
@@ -124,7 +128,7 @@ extension Color {
 
 // MARK: - Nameable
 
-protocol Nameable {
+public protocol Nameable {
     var name: String { get set }
 }
 
@@ -133,23 +137,29 @@ protocol Nameable {
     import Cocoa
     import Magnet
 
-    class SizedPopUpButton: NSPopUpButton {
-        var width: CGFloat?
-        var height: CGFloat?
+    open class SizedPopUpButton: NSPopUpButton {
+        // MARK: Public
 
-        override var intrinsicContentSize: NSSize {
+        override public var intrinsicContentSize: NSSize {
             guard let width = width, let height = height else {
                 return super.intrinsicContentSize
             }
 
             return NSSize(width: width, height: height)
         }
+
+        // MARK: Internal
+
+        var width: CGFloat?
+        var height: CGFloat?
     }
 
     // MARK: - PopUpButton
 
-    struct PopUpButton<T: Nameable>: NSViewRepresentable {
-        class Coordinator: NSObject {
+    public struct PopUpButton<T: Nameable>: NSViewRepresentable {
+        // MARK: Open
+
+        open class Coordinator: NSObject {
             // MARK: Lifecycle
 
             init(_ popUpButton: PopUpButton) {
@@ -162,17 +172,13 @@ protocol Nameable {
             var observer: Cancellable?
         }
 
-        @Binding var selection: T
-        @State var width: CGFloat?
-        @State var height: CGFloat?
+        // MARK: Public
 
-        var content: [T]
-
-        func makeCoordinator() -> Coordinator {
+        public func makeCoordinator() -> Coordinator {
             Coordinator(self)
         }
 
-        func makeNSView(context: Context) -> SizedPopUpButton {
+        public func makeNSView(context: Context) -> SizedPopUpButton {
             let button = SizedPopUpButton()
             button.width = width
             button.height = height
@@ -199,7 +205,7 @@ protocol Nameable {
             return button
         }
 
-        func updateNSView(_ button: SizedPopUpButton, context: Context) {
+        public func updateNSView(_ button: SizedPopUpButton, context: Context) {
             guard let menu = button.menu else { return }
             button.select(menu.items.first(where: { $0.title == selection.name }))
             context.coordinator.observer = button.selectionPublisher.sink { inputName in
@@ -210,12 +216,22 @@ protocol Nameable {
             button.width = width
             button.height = height
         }
+
+        // MARK: Internal
+
+        @Binding var selection: T
+        @State var width: CGFloat?
+        @State var height: CGFloat?
+
+        var content: [T]
     }
 
     // MARK: - KeyEventHandling
 
-    struct KeyEventHandling: NSViewRepresentable {
-        class Coordinator: NSObject {
+    public struct KeyEventHandling: NSViewRepresentable {
+        // MARK: Open
+
+        open class Coordinator: NSObject {
             // MARK: Lifecycle
 
             init(_ handler: KeyEventHandling) {
@@ -227,12 +243,12 @@ protocol Nameable {
             var eventHandler: KeyEventHandling
         }
 
-        class KeyView: NSView {
-            dynamic var context: Context?
+        open class KeyView: NSView {
+            // MARK: Public
 
-            override var acceptsFirstResponder: Bool { true }
+            override public var acceptsFirstResponder: Bool { true }
 
-            override func keyDown(with event: NSEvent) {
+            override public func keyDown(with event: NSEvent) {
                 guard let context = context else {
                     return
                 }
@@ -253,16 +269,19 @@ protocol Nameable {
 
                 context.coordinator.eventHandler.recording = false
             }
+
+            // MARK: Internal
+
+            dynamic var context: Context?
         }
 
-        @Binding var recording: Bool
-        @Binding var hotkey: HotKey
+        // MARK: Public
 
-        func makeCoordinator() -> Coordinator {
+        public func makeCoordinator() -> Coordinator {
             Coordinator(self)
         }
 
-        func makeNSView(context: Context) -> NSView {
+        public func makeNSView(context: Context) -> NSView {
             let view = KeyView()
             view.context = context
             DispatchQueue.main.async { // wait till next event cycle
@@ -271,26 +290,124 @@ protocol Nameable {
             return view
         }
 
-        func updateNSView(_ nsView: NSView, context: Context) {
+        public func updateNSView(_ nsView: NSView, context: Context) {
             (nsView as? KeyView)?.context = context
         }
+
+        // MARK: Internal
+
+        @Binding var recording: Bool
+        @Binding var hotkey: HotKey
     }
+
+    public struct MenuHotkeyView: View {
+        // MARK: Lifecycle
+
+        public init(modifiers: Binding<[TriggerKey]>, key: Binding<String>) {
+            _modifiers = modifiers
+            _key = key
+        }
+
+        // MARK: Public
+
+        @Environment(\.colors) public var colors
+
+        @Binding public var modifiers: [TriggerKey]
+        @Binding public var key: String
+
+        public var body: some View {
+            VStack(alignment: .center, spacing: 1) {
+                HStack(alignment: .center) {
+                    Text(modifiers.str)
+                        .padding(.vertical, 1)
+                        .padding(.horizontal, 3)
+                        .foregroundColor(colors.bg.primary)
+                        .background(colors.fg.primary)
+                        .cornerRadius(3)
+                        .shadow(color: .black.opacity(0.2), radius: 2, x: 0, y: 1)
+                    Text(key.uppercased())
+                        .padding(.vertical, 1)
+                        .padding(.horizontal, 3)
+                        .foregroundColor(colors.bg.primary)
+                        .background(colors.fg.primary)
+                        .cornerRadius(3)
+                        .shadow(color: .black.opacity(0.2), radius: 2, x: 0, y: 1)
+                }
+                Text("Show this menu").font(.caption.bold())
+            }
+        }
+    }
+
 #endif
+
+// MARK: - VScrollView
+
+public struct VScrollView<Content>: View where Content: View {
+    // MARK: Lifecycle
+
+    public init(@ViewBuilder content: () -> Content) { self.content = content() }
+
+    // MARK: Public
+
+    @ViewBuilder public let content: Content
+
+    public var body: some View {
+        GeometryReader { geometry in
+            ScrollView(.vertical, showsIndicators: false) {
+                content
+                    .frame(width: geometry.size.width)
+                    .frame(minHeight: geometry.size.height)
+            }
+        }
+    }
+}
+
+// MARK: - HScrollView
+
+public struct HScrollView<Content>: View where Content: View {
+    // MARK: Lifecycle
+
+    public init(@ViewBuilder content: () -> Content) { self.content = content() }
+
+    // MARK: Public
+
+    @ViewBuilder public let content: Content
+
+    public var body: some View {
+        GeometryReader { geometry in
+            ScrollView(.horizontal, showsIndicators: false) {
+                content
+                    .frame(height: geometry.size.height)
+                    .frame(minWidth: geometry.size.width)
+            }
+        }
+    }
+}
 
 // MARK: - EnvState
 
-class EnvState: ObservableObject { @Published var recording = false }
+open class EnvState: ObservableObject { @Published var recording = false }
 
 // MARK: - LowtechView
 
-struct LowtechView<Content: View>: View {
-    @ViewBuilder let content: Content
+public struct LowtechView<Content: View>: View {
+    // MARK: Lifecycle
 
-    @Environment(\.colorScheme) var colorScheme
+    public init(accentColor: Color, @ViewBuilder content: () -> Content) {
+        self.content = content()
+        self.accentColor = accentColor
+    }
 
-    var body: some View {
+    // MARK: Public
+
+    @Environment(\.colorScheme) public var colorScheme
+    @State public var accentColor: Color = .red
+
+    @ViewBuilder public let content: Content
+
+    public var body: some View {
         content
             .environmentObject(EnvState())
-            .colors(Colors(colorScheme, accent: Colors.red))
+            .colors(Colors(colorScheme, accent: accentColor))
     }
 }

@@ -7,7 +7,7 @@ import SystemColors
 public struct Colors {
     // MARK: Lifecycle
 
-    init(_ colorScheme: ColorScheme = .light, accent: Color) {
+    public init(_ colorScheme: ColorScheme = .light, accent: Color) {
         self.accent = accent
         self.colorScheme = colorScheme
         bg = BG(colorScheme: colorScheme)
@@ -15,6 +15,34 @@ public struct Colors {
     }
 
     // MARK: Public
+
+    public struct FG {
+        // MARK: Public
+
+        public var colorScheme: ColorScheme
+
+        public var isDark: Bool { colorScheme == .dark }
+        public var isLight: Bool { colorScheme == .light }
+
+        // MARK: Internal
+
+        var gray: Color { isDark ? Colors.lightGray : Colors.darkGray }
+        var primary: Color { isDark ? .black : .white }
+    }
+
+    public struct BG {
+        // MARK: Public
+
+        public var colorScheme: ColorScheme
+
+        public var isDark: Bool { colorScheme == .dark }
+        public var isLight: Bool { colorScheme == .light }
+
+        // MARK: Internal
+
+        var gray: Color { isDark ? Colors.darkGray : Colors.lightGray }
+        var primary: Color { isDark ? .white : .black }
+    }
 
     public static var light = Colors(.light, accent: Colors.red)
     public static var dark = Colors(.dark, accent: Colors.red)
@@ -30,61 +58,33 @@ public struct Colors {
     public static let yellow = Color(hue: 39 / 360, saturation: 1.0, brightness: 0.64)
     public static let blue = Color(hue: 214 / 360, saturation: 1.0, brightness: 0.54)
     public static let green = Color(hue: 141 / 360, saturation: 0.59, brightness: 0.58)
+    public static let blackTurqoise = Color(hex: 0x1D2E32)
+    public static let burntSienna = Color(hex: 0xE48659)
 
     public var accent: Color
     public var colorScheme: ColorScheme
 
+    public var bg: BG
+    public var fg: FG
+
     public var isDark: Bool { colorScheme == .dark }
     public var isLight: Bool { colorScheme == .light }
-
-    // MARK: Internal
-
-    struct FG {
-        // MARK: Public
-
-        public var colorScheme: ColorScheme
-
-        public var isDark: Bool { colorScheme == .dark }
-        public var isLight: Bool { colorScheme == .light }
-
-        // MARK: Internal
-
-        var gray: Color { isDark ? Colors.lightGray : Colors.darkGray }
-        var primary: Color { isDark ? .black : .white }
-    }
-
-    struct BG {
-        // MARK: Public
-
-        public var colorScheme: ColorScheme
-
-        public var isDark: Bool { colorScheme == .dark }
-        public var isLight: Bool { colorScheme == .light }
-
-        // MARK: Internal
-
-        var gray: Color { isDark ? Colors.darkGray : Colors.lightGray }
-        var primary: Color { isDark ? .white : .black }
-    }
-
-    var bg: BG
-    var fg: FG
 }
 
 // MARK: - ColorsKey
 
 private struct ColorsKey: EnvironmentKey {
-    static let defaultValue = Colors.light
+    public static let defaultValue = Colors.light
 }
 
-extension EnvironmentValues {
+public extension EnvironmentValues {
     var colors: Colors {
         get { self[ColorsKey.self] }
         set { self[ColorsKey.self] = newValue }
     }
 }
 
-extension View {
+public extension View {
     func colors(_ colors: Colors) -> some View {
         environment(\.colors, colors)
     }
