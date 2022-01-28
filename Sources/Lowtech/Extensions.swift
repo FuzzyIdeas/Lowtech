@@ -263,6 +263,75 @@ public extension NumberFormatter {
 
 #endif
 
+public extension Float {
+    @inline(__always) func rounded(to scale: Int) -> Double {
+        let behavior = NSDecimalNumberHandler(
+            roundingMode: .plain,
+            scale: scale.i16,
+            raiseOnExactness: false,
+            raiseOnOverflow: false,
+            raiseOnUnderflow: false,
+            raiseOnDivideByZero: true
+        )
+
+        let roundedValue = NSDecimalNumber(value: self).rounding(accordingToBehavior: behavior)
+
+        return roundedValue.doubleValue
+    }
+
+    @inline(__always) var ns: NSNumber {
+        NSNumber(value: self)
+    }
+
+    @inline(__always) var cg: CGFloat {
+        CGFloat(self)
+    }
+
+    @inline(__always) var d: Double {
+        Double(self)
+    }
+
+    @inline(__always) var i: Int {
+        Int(self)
+    }
+
+    @inline(__always) var u8: UInt8 {
+        UInt8(cap(intround, minVal: 0, maxVal: 255))
+    }
+
+    @inline(__always) var u16: UInt16 {
+        UInt16(self)
+    }
+
+    @inline(__always) var u32: UInt32 {
+        UInt32(self)
+    }
+
+    @inline(__always) var i8: Int8 {
+        Int8(cap(intround, minVal: 0, maxVal: 255))
+    }
+
+    @inline(__always) var i16: Int16 {
+        Int16(self)
+    }
+
+    @inline(__always) var i32: Int32 {
+        Int32(self)
+    }
+
+    @inline(__always) var intround: Int {
+        rounded().i
+    }
+
+    func str(decimals: UInt8, padding: UInt8 = 0) -> String {
+        NumberFormatter.shared(decimals: decimals.i, padding: padding.i).string(from: ns) ?? String(format: "%.\(decimals)f", self)
+    }
+
+    func asPercentage(of value: Self, decimals: UInt8 = 2) -> String {
+        "\(((self / value) * 100.0).str(decimals: decimals))%"
+    }
+}
+
 public extension Double {
     @inline(__always) func rounded(to scale: Int) -> Double {
         let behavior = NSDecimalNumberHandler(
@@ -283,8 +352,8 @@ public extension Double {
         NSNumber(value: self)
     }
 
-    @inline(__always) var cg: CGGammaValue {
-        CGGammaValue(self)
+    @inline(__always) var cg: CGFloat {
+        CGFloat(self)
     }
 
     @inline(__always) var f: Float {
@@ -332,12 +401,6 @@ public extension Double {
     }
 }
 
-public extension CGFloat {
-    @inline(__always) var i32: Int32 {
-        Int32(self)
-    }
-}
-
 public extension UInt8 {
     var hex: String {
         String(format: "%02x", self)
@@ -367,8 +430,8 @@ public extension BinaryInteger {
         Double(self)
     }
 
-    @inline(__always) var cg: CGGammaValue {
-        CGGammaValue(self)
+    @inline(__always) var cg: CGFloat {
+        CGFloat(self)
     }
 
     @inline(__always) var f: Float {
@@ -462,6 +525,10 @@ public extension CAMediaTimingFunction {
 }
 
 public extension CGFloat {
+    @inline(__always) var i32: Int32 {
+        Int32(self)
+    }
+
     @inline(__always) var ns: NSNumber {
         NSNumber(value: Float(self))
     }

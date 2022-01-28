@@ -159,6 +159,50 @@ public var lshift: Bool {
         public static func < (lhs: TriggerKey, rhs: TriggerKey) -> Bool {
             lhs.rawValue < rhs.rawValue
         }
+
+        // MARK: Internal
+
+        var readableStr: String {
+            switch self {
+            case .rcmd:
+                return "Right Command"
+            case .ralt:
+                return "Right Option"
+            case .lcmd:
+                return "Left Command"
+            case .lalt:
+                return "Left Option"
+            case .lctrl:
+                return "Left Control"
+            case .lshift:
+                return "Left Shift"
+            case .rshift:
+                return "Right Shift"
+            case .rctrl:
+                return "Right Control"
+            }
+        }
+
+        var pressed: Bool {
+            switch self {
+            case .rcmd:
+                return _rcmd.load(ordering: .relaxed)
+            case .ralt:
+                return _ralt.load(ordering: .relaxed)
+            case .lcmd:
+                return _lcmd.load(ordering: .relaxed)
+            case .lalt:
+                return _lalt.load(ordering: .relaxed)
+            case .lctrl:
+                return _lctrl.load(ordering: .relaxed)
+            case .lshift:
+                return _lshift.load(ordering: .relaxed)
+            case .rshift:
+                return _rshift.load(ordering: .relaxed)
+            case .rctrl:
+                return _rctrl.load(ordering: .relaxed)
+            }
+        }
     }
 
     public extension Array where Element == TriggerKey {
@@ -172,31 +216,7 @@ public var lshift: Bool {
         }
 
         var str: String { map(\.str).joined() }
-
-        var allPressed: Bool {
-            var result = true
-            forEach { key in
-                switch key {
-                case .rcmd:
-                    result = result && rcmd
-                case .ralt:
-                    result = result && ralt
-                case .lcmd:
-                    result = result && lcmd
-                case .lalt:
-                    result = result && lalt
-                case .lctrl:
-                    result = result && lctrl
-                case .lshift:
-                    result = result && lshift
-                case .rshift:
-                    result = result && rshift
-                case .rctrl:
-                    result = result && rctrl
-                }
-            }
-            return result
-        }
+        var allPressed: Bool { allSatisfy(\.pressed) }
 
         func toggling(key: TriggerKey, on: Bool? = nil) -> [TriggerKey] {
             if on ?? !contains(key) {

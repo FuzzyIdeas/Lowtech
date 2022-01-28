@@ -340,50 +340,6 @@ public protocol Nameable {
 
 #endif
 
-// MARK: - VScrollView
-
-public struct VScrollView<Content>: View where Content: View {
-    // MARK: Lifecycle
-
-    public init(@ViewBuilder content: () -> Content) { self.content = content() }
-
-    // MARK: Public
-
-    @ViewBuilder public let content: Content
-
-    public var body: some View {
-        GeometryReader { geometry in
-            ScrollView(.vertical, showsIndicators: false) {
-                content
-                    .frame(width: geometry.size.width)
-                    .frame(minHeight: geometry.size.height)
-            }
-        }
-    }
-}
-
-// MARK: - HScrollView
-
-public struct HScrollView<Content>: View where Content: View {
-    // MARK: Lifecycle
-
-    public init(@ViewBuilder content: () -> Content) { self.content = content() }
-
-    // MARK: Public
-
-    @ViewBuilder public let content: Content
-
-    public var body: some View {
-        GeometryReader { geometry in
-            ScrollView(.horizontal, showsIndicators: false) {
-                content
-                    .frame(height: geometry.size.height)
-                    .frame(minWidth: geometry.size.width)
-            }
-        }
-    }
-}
-
 // MARK: - EnvState
 
 open class EnvState: ObservableObject { @Published var recording = false }
@@ -395,7 +351,7 @@ public struct LowtechView<Content: View>: View {
 
     public init(accentColor: Color, @ViewBuilder content: () -> Content) {
         self.content = content()
-        self.accentColor = accentColor
+        _accentColor = accentColor.state
     }
 
     // MARK: Public
