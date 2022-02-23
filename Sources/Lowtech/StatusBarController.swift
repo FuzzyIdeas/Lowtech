@@ -89,6 +89,8 @@ open class StatusBarController: NSObject, NSPopoverDelegate, NSWindowDelegate {
     public var statusItem: NSStatusItem
     @Atomic public var popoverShownAtLeastOnce = false
 
+    @Atomic public var shouldLeavePopoverOpen = false
+
     public var popoverWindow: NSWindow? {
         popover.contentViewController?.view.window
     }
@@ -143,9 +145,11 @@ open class StatusBarController: NSObject, NSPopoverDelegate, NSWindowDelegate {
         eventMonitor?.stop()
     }
 
-    public func mouseEventHandler(_ event: NSEvent?) {
-        if popover.isShown {
-            hidePopover(event!)
+    // MARK: Internal
+
+    func mouseEventHandler(_ event: NSEvent?) {
+        if popover.isShown, !shouldLeavePopoverOpen {
+            hidePopover(event ?? self)
         }
     }
 

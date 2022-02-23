@@ -269,3 +269,33 @@ public struct FlatButton: ButtonStyle {
     @Binding var radius: CGFloat
     @Binding var pressed: Bool
 }
+
+// MARK: - PaddedTextFieldStyle
+
+public struct PaddedTextFieldStyle: TextFieldStyle {
+    // MARK: Public
+
+    public func _body(configuration: TextField<Self._Label>) -> some View {
+        configuration
+            .textFieldStyle(.plain)
+            .font(.system(size: size, weight: .medium))
+            .padding(6)
+            .background(
+                RoundedRectangle(cornerRadius: 6, style: .continuous)
+                    .fill(.white.opacity(colorScheme == .dark ? 0.2 : 0.9))
+                    .shadow(color: Colors.blackMauve.opacity(0.1), radius: 3, x: 0, y: 2)
+            )
+    }
+
+    // MARK: Internal
+
+    @Environment(\.colorScheme) var colorScheme
+    @State var size: CGFloat = 13
+}
+
+prefix func ! (value: Binding<Bool>) -> Binding<Bool> {
+    Binding<Bool>(
+        get: { !value.wrappedValue },
+        set: { value.wrappedValue = !$0 }
+    )
+}

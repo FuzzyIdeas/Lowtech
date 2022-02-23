@@ -59,6 +59,10 @@ extension AnyHashable {
     var state: State<Self> { State(initialValue: self) }
 }
 
+extension String {
+    var state: State<Self> { State(initialValue: self) }
+}
+
 func st<T>(_ v: T) -> State<T> {
     State(initialValue: v)
 }

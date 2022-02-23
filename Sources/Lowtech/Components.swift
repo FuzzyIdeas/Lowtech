@@ -195,17 +195,20 @@ public struct HomekitSlider: View {
                 DragGesture(minimumDistance: 0)
                     .onChanged { value in
                         if scale == 1 {
+                            HomekitSlider.sliderTouched = true
                             withAnimation(.interactiveSpring()) {
                                 colorMultiply = hoverColor ?? colors.accent
                                 scale = 1.05
                             }
                         }
                         percentage = cap(Float((geometry.size.height - value.location.y) / geometry.size.height), minVal: 0, maxVal: 1)
-                    }.onEnded { _ in
+                    }.onEnded { value in
+                        HomekitSlider.sliderTouched = false
                         withAnimation(.spring()) {
                             scale = 1.0
                             colorMultiply = .white
                         }
+                        percentage = cap(Float((geometry.size.height - value.location.y) / geometry.size.height), minVal: 0, maxVal: 1)
                     }
             )
             .animation(.easeOut(duration: 0.1), value: percentage)
@@ -215,10 +218,12 @@ public struct HomekitSlider: View {
                     if hovering {
                         trackScrollWheel()
                     } else {
+                        HomekitSlider.sliderTouched = false
                         withAnimation(.spring()) {
                             scale = 1.0
                             colorMultiply = .white
                         }
+                        percentage = cap(percentage, minVal: 0, maxVal: 1)
                         subs.forEach { $0.cancel() }
                         subs.removeAll()
                     }
@@ -229,6 +234,8 @@ public struct HomekitSlider: View {
     }
 
     // MARK: Internal
+
+    @Atomic static var sliderTouched = false
 
     @Environment(\.colorScheme) var colorScheme
     @Environment(\.colors) var colors
@@ -260,13 +267,16 @@ public struct HomekitSlider: View {
                 )
                 .sink { event in
                     guard let event = event, event.deltaX == 0, event.scrollingDeltaY != 0 else {
+                        HomekitSlider.sliderTouched = false
                         withAnimation(.spring()) {
                             scale = 1.0
                             colorMultiply = .white
                         }
+                        self.percentage = cap(self.percentage, minVal: 0, maxVal: 1)
                         return
                     }
                     if scale == 1 {
+                        HomekitSlider.sliderTouched = true
                         withAnimation(.interactiveSpring()) {
                             colorMultiply = hoverColor ?? colors.accent
                             scale = 1.05
@@ -431,7 +441,8 @@ public struct UpDownButtons: View {
             RoundedRectangle(cornerRadius: radius, style: .continuous)
                 .fill(color ?? colors.accent)
                 .frame(width: size, height: size * 2, alignment: .center)
-            VStack {
+                .zIndex(0)
+            VStack(spacing: 0) {
                 Button(
                     action: { onPress?(.up) },
                     label: { Image(systemName: "plus").font(.system(size: size / 3, weight: .black)) }
@@ -443,6 +454,13 @@ public struct UpDownButtons: View {
                     height: size,
                     radius: radius
                 ))
+                .zIndex(upZ)
+                .onHover(perform: { hover in
+                    if hover {
+                        upZ = 2
+                        downZ = 1
+                    }
+                })
                 Button(
                     action: { onPress?(.down) },
                     label: { Image(systemName: "minus").font(.system(size: size / 3, weight: .black)) }
@@ -454,6 +472,13 @@ public struct UpDownButtons: View {
                     height: size,
                     radius: radius
                 ))
+                .zIndex(downZ)
+                .onHover(perform: { hover in
+                    if hover {
+                        upZ = 1
+                        downZ = 2
+                    }
+                })
             }
         }
     }
@@ -467,4 +492,82 @@ public struct UpDownButtons: View {
     @State var color: Color? = nil
     @State var textColor: Color = .black
     @State var onPress: ((ButtonDirection) -> Void)? = nil
+
+    @State var upZ: Double = 1
+    @State var downZ: Double = 2
+}
+
+// MARK: - TextInputView
+
+public struct TextInputView: View {
+    // MARK: Lifecycle
+
+    public init(
+        label: String,
+        placeholder: String,
+        data: Binding<String>,
+        size: CGFloat = 13
+    ) {
+        _label = label.state
+        _placeholder = placeholder.state
+        _data = data
+        _size = size.state
+    }
+
+    // MARK: Public
+
+    public var body: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Text(label).font(.system(size: size, weight: .semibold))
+            TextField(placeholder, text: $data)
+                .textFieldStyle(PaddedTextFieldStyle())
+        }
+    }
+
+    // MARK: Internal
+
+    @State var label: String
+    @State var placeholder: String
+    @Binding var data: String
+
+    @State var size: CGFloat = 13
+}
+
+// MARK: - ValueInputView
+
+public struct ValueInputView<T>: View {
+    // MARK: Lifecycle
+
+    public init(
+        label: String,
+        placeholder: String,
+        data: Binding<T>,
+        size: CGFloat = 13,
+        formatter: Formatter
+    ) {
+        _label = label.state
+        _placeholder = placeholder.state
+        _data = data
+        _size = size.state
+        _formatter = st(formatter)
+    }
+
+    // MARK: Public
+
+    public var body: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Text(label).font(.system(size: size, weight: .semibold))
+            TextField(placeholder, value: $data, formatter: formatter)
+                .textFieldStyle(PaddedTextFieldStyle())
+        }
+    }
+
+    // MARK: Internal
+
+    @State var label: String
+    @State var placeholder: String
+    @Binding var data: T
+    @State var formatter: Formatter
+
+    @State var size: CGFloat = 13
 }

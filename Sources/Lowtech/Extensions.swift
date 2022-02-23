@@ -489,6 +489,19 @@ public extension ArraySlice {
     }
 }
 
+public extension Set {
+    var arr: [Element] {
+        Array(self)
+    }
+}
+
+public extension Collection {
+    /// Returns the element at the specified index if it is within bounds, otherwise nil.
+    subscript(safe index: Index) -> Element? {
+        indices.contains(index) ? self[index] : nil
+    }
+}
+
 public extension CAMediaTimingFunction {
     // default
     static let `default` = CAMediaTimingFunction(name: .default)
@@ -561,6 +574,50 @@ public extension String {
     @inline(__always) var trimmed: String {
         trimmingCharacters(in: .whitespacesAndNewlines)
     }
+
+    /**
+     Counts the occurrences of a given substring by calling Strings `range(of:options:range:locale:)` method multiple times.
+
+     - Parameter substring : The string to search for, optional for convenience
+
+     - Parameter allowOverlap : Bool flag indicating whether the matched substrings may overlap. Count of "🐼🐼" in "🐼🐼🐼🐼" is 2 if allowOverlap is **false**, and 3 if it is **true**
+
+     - Parameter options : String compare-options to use while counting
+
+     - Parameter range : An optional range to limit the search, default is **nil**, meaning search whole string
+
+     - Parameter locale : Locale to use while counting
+
+     - Returns : The number of occurrences of the substring in this String
+     */
+    func count(
+        occurrencesOf substring: String?,
+        allowOverlap: Bool = false,
+        options: String.CompareOptions = [],
+        range searchRange: Range<String.Index>? = nil,
+        locale: Locale? = nil
+    ) -> Int {
+        guard let substring = substring, !substring.isEmpty else { return 0 }
+
+        var count = 0
+
+        let searchRange = searchRange ?? startIndex ..< endIndex
+
+        var searchStartIndex = searchRange.lowerBound
+        let searchEndIndex = searchRange.upperBound
+
+        while let rangeFound = range(of: substring, options: options, range: searchStartIndex ..< searchEndIndex, locale: locale) {
+            count += 1
+
+            if allowOverlap {
+                searchStartIndex = index(rangeFound.lowerBound, offsetBy: 1)
+            } else {
+                searchStartIndex = rangeFound.upperBound
+            }
+        }
+
+        return count
+    }
 }
 
 public extension CharacterSet {
@@ -621,5 +678,37 @@ public extension View {
         ChildSizeReader(size: size) {
             self
         }
+    }
+}
+
+public extension Array where Element: Equatable & Hashable {
+    var uniqued: Self { Set(self).arr }
+    func replacing(at index: Index, with element: Element) -> Self {
+        enumerated().map { $0.offset == index ? element : $0.element }
+    }
+
+    func replacing(_ element: Element, with newElement: Element) -> Self {
+        map { $0 == element ? newElement : $0 }
+    }
+
+    func without(index: Index) -> Self {
+        enumerated().filter { $0.offset != index }.map(\.element)
+    }
+
+    func without(indices: [Index]) -> Self {
+        enumerated().filter { !indices.contains($0.offset) }.map(\.element)
+    }
+
+    func without(_ element: Element) -> Self {
+        filter { $0 != element }
+    }
+
+    func without(_ elements: [Element]) -> Self {
+        filter { !elements.contains($0) }
+    }
+
+    func after(_ element: Element) -> Element? {
+        guard let idx = firstIndex(of: element) else { return nil }
+        return self[safe: index(after: idx)]
     }
 }
