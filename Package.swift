@@ -30,6 +30,7 @@ let package = Package(
         .package(url: "https://github.com/eonil/FSEvents", from: "0.1.7"),
         .package(url: "https://github.com/yannickl/DynamicColor", from: "5.0.1"),
         .package(url: "https://github.com/diniska/swiftui-system-colors", from: "1.1.0"),
+        .package(url: "https://github.com/malcommac/SwiftDate", from: "6.3.1"),
     ],
     targets: [
         // Targets are the basic building blocks of a package. A target can define a module or a test suite.
@@ -49,6 +50,7 @@ let package = Package(
                 .product(name: "DynamicColor", package: "DynamicColor"),
                 .product(name: "FuzzyFind", package: "FuzzyFind"),
                 .product(name: "SystemColors", package: "swiftui-system-colors"),
+                .product(name: "SwiftDate", package: "SwiftDate"),
             ]
         ),
         .testTarget(
