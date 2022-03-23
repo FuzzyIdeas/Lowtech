@@ -131,7 +131,7 @@ public func mainAsyncAfter(ms: Int, _ action: @escaping () -> Void) -> DispatchW
 }
 
 @discardableResult
-func asyncAfter(ms: Int, _ action: @escaping () -> Void) -> DispatchWorkItem {
+public func asyncAfter(ms: Int, _ action: @escaping () -> Void) -> DispatchWorkItem {
     let workItem = DispatchWorkItem(block: action)
     asyncAfter(ms: ms, workItem)
 
@@ -139,14 +139,14 @@ func asyncAfter(ms: Int, _ action: @escaping () -> Void) -> DispatchWorkItem {
 }
 
 @discardableResult
-func asyncNow(_ action: @escaping () -> Void) -> DispatchWorkItem {
+public func asyncNow(_ action: @escaping () -> Void) -> DispatchWorkItem {
     let workItem = DispatchWorkItem(block: action)
 
     DispatchQueue.global().async(execute: workItem)
     return workItem
 }
 
-func asyncAfter(ms: Int, _ action: DispatchWorkItem) {
+public func asyncAfter(ms: Int, _ action: DispatchWorkItem) {
     let deadline = DispatchTime(uptimeNanoseconds: DispatchTime.now().uptimeNanoseconds + UInt64(ms * 1_000_000))
 
     DispatchQueue.global().asyncAfter(deadline: deadline, execute: action)
