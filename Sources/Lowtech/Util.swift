@@ -11,11 +11,16 @@ import Combine
 import Defaults
 import Foundation
 import Path
+import SwiftDate
 import UserNotifications
 
 public typealias FilePath = Path
 public func p(_ string: String) -> FilePath? {
     FilePath(string)
+}
+
+public func timeSince(_ date: Date) -> TimeInterval {
+    DateInRegion().convertTo(region: .local) - date.convertTo(region: .local)
 }
 
 public func printerr(_ msg: String, end: String = "\n") {
