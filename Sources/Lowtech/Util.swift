@@ -125,6 +125,28 @@ public func mainAsyncAfter(ms: Int, _ action: @escaping () -> Void) -> DispatchW
     return workItem
 }
 
+@discardableResult
+func asyncAfter(ms: Int, _ action: @escaping () -> Void) -> DispatchWorkItem {
+    let workItem = DispatchWorkItem(block: action)
+    asyncAfter(ms: ms, workItem)
+
+    return workItem
+}
+
+@discardableResult
+func asyncNow(_ action: @escaping () -> Void) -> DispatchWorkItem {
+    let workItem = DispatchWorkItem(block: action)
+
+    DispatchQueue.global().async(execute: workItem)
+    return workItem
+}
+
+func asyncAfter(ms: Int, _ action: DispatchWorkItem) {
+    let deadline = DispatchTime(uptimeNanoseconds: DispatchTime.now().uptimeNanoseconds + UInt64(ms * 1_000_000))
+
+    DispatchQueue.global().asyncAfter(deadline: deadline, execute: action)
+}
+
 public func createWindow(
     _ identifier: String,
     controller: inout NSWindowController?,

@@ -36,6 +36,8 @@ open class LowtechAppDelegate: NSObject, NSApplicationDelegate, ObservableObject
         }
     }
 
+    @objc open func onHotkey(_: HotKey) {}
+
     // MARK: Public
 
     public private(set) static var instance: LowtechAppDelegate!
@@ -108,7 +110,6 @@ open class LowtechAppDelegate: NSObject, NSApplicationDelegate, ObservableObject
         }
     }
 
-    @objc open func onHotkey(_: HotKey) {}
     @objc public func handleHotkey(_ hotkey: HotKey) {
         #if DEBUG
             print(hotkey.identifier)

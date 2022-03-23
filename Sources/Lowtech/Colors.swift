@@ -17,28 +17,20 @@ public struct Colors {
     // MARK: Public
 
     public struct FG {
-        // MARK: Public
-
         public var colorScheme: ColorScheme
 
         public var isDark: Bool { colorScheme == .dark }
         public var isLight: Bool { colorScheme == .light }
-
-        // MARK: Internal
 
         public var gray: Color { isDark ? Colors.lightGray : Colors.darkGray }
         public var primary: Color { isDark ? .white : .black }
     }
 
     public struct BG {
-        // MARK: Public
-
         public var colorScheme: ColorScheme
 
         public var isDark: Bool { colorScheme == .dark }
         public var isLight: Bool { colorScheme == .light }
-
-        // MARK: Internal
 
         public var gray: Color { isDark ? Colors.darkGray : Colors.lightGray }
         public var primary: Color { isDark ? .black : .white }

@@ -5,9 +5,13 @@ import SwiftUI
 // MARK: - Semaphore
 
 public struct Semaphore: View {
+    // MARK: Lifecycle
+
+    public init() {}
+
+    // MARK: Public
+
     @State public var xVisible = false
-    
-    public init(){}
 
     public var body: some View {
         HStack {

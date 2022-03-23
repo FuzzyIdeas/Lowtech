@@ -157,6 +157,8 @@ public protocol Nameable {
     // MARK: - PopUpButton
 
     public struct PopUpButton<T: Nameable>: NSViewRepresentable {
+        // MARK: Open
+
         open class Coordinator: NSObject {
             // MARK: Lifecycle
 
@@ -178,12 +180,7 @@ public protocol Nameable {
             }()
         }
 
-        @Binding var selection: T
-        @State var width: CGFloat?
-        @State var height: CGFloat?
-        @State var noValueText: String?
-
-        @Binding var content: [T]
+        // MARK: Public
 
         public func makeCoordinator() -> Coordinator {
             Coordinator(self)
@@ -232,6 +229,15 @@ public protocol Nameable {
             button.width = width
             button.height = height
         }
+
+        // MARK: Internal
+
+        @Binding var selection: T
+        @State var width: CGFloat?
+        @State var height: CGFloat?
+        @State var noValueText: String?
+
+        @Binding var content: [T]
     }
 
     // MARK: - KeyEventHandling
