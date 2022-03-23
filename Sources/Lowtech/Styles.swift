@@ -13,6 +13,14 @@ import SystemColors
 // MARK: - CheckboxToggleStyle
 
 public struct CheckboxToggleStyle: ToggleStyle {
+    // MARK: Lifecycle
+
+    public init(style: Style = .circle) {
+        self.style = style
+    }
+
+    // MARK: Public
+
     public enum Style {
         case square, circle
 
@@ -136,8 +144,8 @@ public struct PickerButton<T: Equatable>: ButtonStyle {
         configuration
             .label
             .foregroundColor(enumValue == onValue ? onTextColor : offTextColor)
-            .padding(.vertical, horizontalPadding)
-            .padding(.horizontal, verticalPadding)
+            .padding(.vertical, verticalPadding)
+            .padding(.horizontal, horizontalPadding)
             .background(
                 RoundedRectangle(
                     cornerRadius: 8,
@@ -167,8 +175,8 @@ public struct PickerButton<T: Equatable>: ButtonStyle {
     @State var offColor: Color? = nil
     @State var onTextColor = Color.textBackground
     @State var offTextColor = Color.secondary
-    @State var horizontalPadding: CGFloat = 4
-    @State var verticalPadding: CGFloat = 8
+    @State var horizontalPadding: CGFloat = 8
+    @State var verticalPadding: CGFloat = 4
     @State var brightness = 0.0
     @State var scale: CGFloat = 1
     @State var hoverColor = Color.white

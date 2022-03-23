@@ -157,8 +157,6 @@ public protocol Nameable {
     // MARK: - PopUpButton
 
     public struct PopUpButton<T: Nameable>: NSViewRepresentable {
-        // MARK: Open
-
         open class Coordinator: NSObject {
             // MARK: Lifecycle
 
@@ -170,12 +168,34 @@ public protocol Nameable {
 
             var button: PopUpButton
             var observer: Cancellable?
+            lazy var defaultMenuItem: NSMenuItem = {
+                let m = NSMenuItem(title: button.noValueText ?? "", action: nil, keyEquivalent: "")
+                m.isHidden = true
+                m.isEnabled = true
+                m.identifier = NSUserInterfaceItemIdentifier("DEFAULT_MENU_ITEM")
+
+                return m
+            }()
         }
 
-        // MARK: Public
+        @Binding var selection: T
+        @State var width: CGFloat?
+        @State var height: CGFloat?
+        @State var noValueText: String?
+
+        @Binding var content: [T]
 
         public func makeCoordinator() -> Coordinator {
             Coordinator(self)
+        }
+
+        public func makeMenuItems(context: Context) -> [NSMenuItem] {
+            content.map { input -> NSMenuItem in
+                let item = NSMenuItem(title: input.name, action: nil, keyEquivalent: "")
+                item.identifier = NSUserInterfaceItemIdentifier(rawValue: input.name)
+
+                return item
+            } + [context.coordinator.defaultMenuItem]
         }
 
         public func makeNSView(context: Context) -> SizedPopUpButton {
@@ -189,15 +209,10 @@ public protocol Nameable {
             button.autoenablesItems = false
 
             let menu = NSMenu()
-            menu.items = content.map { input -> NSMenuItem in
-                let item = NSMenuItem(title: input.name, action: nil, keyEquivalent: "")
-                item.identifier = NSUserInterfaceItemIdentifier(rawValue: input.name)
-
-                return item
-            }
+            menu.items = makeMenuItems(context: context)
 
             button.menu = menu
-            button.select(menu.items.first(where: { $0.title == selection.name }))
+            button.select(menu.items.first(where: { $0.title == selection.name }) ?? context.coordinator.defaultMenuItem)
             context.coordinator.observer = button.selectionPublisher.sink { inputName in
                 guard let inputName = inputName else { return }
                 selection = content.first(where: { $0.name == inputName }) ?? selection
@@ -207,7 +222,8 @@ public protocol Nameable {
 
         public func updateNSView(_ button: SizedPopUpButton, context: Context) {
             guard let menu = button.menu else { return }
-            button.select(menu.items.first(where: { $0.title == selection.name }))
+            menu.items = makeMenuItems(context: context)
+            button.select(menu.items.first(where: { $0.title == selection.name }) ?? context.coordinator.defaultMenuItem)
             context.coordinator.observer = button.selectionPublisher.sink { inputName in
                 guard let inputName = inputName else { return }
                 selection = content.first(where: { $0.name == inputName }) ?? selection
@@ -216,14 +232,6 @@ public protocol Nameable {
             button.width = width
             button.height = height
         }
-
-        // MARK: Internal
-
-        @Binding var selection: T
-        @State var width: CGFloat?
-        @State var height: CGFloat?
-
-        var content: [T]
     }
 
     // MARK: - KeyEventHandling

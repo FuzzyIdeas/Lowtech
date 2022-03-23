@@ -59,12 +59,14 @@ open class LowtechAppDelegate: NSObject, NSApplicationDelegate, ObservableObject
 
     public var notificationView: AnyView?
     public var contentView: AnyView?
+    public var accentColor: Color?
 
-    @Published public var showPopoverModifiers: [TriggerKey] = [.ralt]
+    @Published public var specialKeyModifiers: [TriggerKey] = [.ralt]
     public var hotkeys: [HotKey] = []
-    public lazy var showPopoverIdentifier = "SHOW_POPOVER\(showPopoverKey)"
+    public lazy var specialKeyIdentifier = "SPECIAL_KEY\(specialKey)"
 
     @Atomic public var hotkeysRegistered = false
+    @Atomic public var showPopoverOnSpecialKey = true
 
     public var notificationCloser: DispatchWorkItem? {
         didSet {
@@ -75,10 +77,14 @@ open class LowtechAppDelegate: NSObject, NSApplicationDelegate, ObservableObject
         }
     }
 
-    @Published public var showPopoverKey = "" {
+    @Published public var specialKey = "" {
         didSet {
-            showPopoverIdentifier = "SHOW_POPOVER\(showPopoverKey)"
+            specialKeyIdentifier = "SPECIAL_KEY\(specialKey)"
         }
+    }
+
+    public func hidePopover() {
+        statusBar?.hidePopover(self)
     }
 
     public func showNotification(
@@ -102,18 +108,17 @@ open class LowtechAppDelegate: NSObject, NSApplicationDelegate, ObservableObject
         }
     }
 
-    @objc public func onHotkey(_: HotKey) {}
-
+    @objc open func onHotkey(_: HotKey) {}
     @objc public func handleHotkey(_ hotkey: HotKey) {
         #if DEBUG
             print(hotkey.identifier)
         #endif
-        guard showPopoverModifiers.allPressed else {
+        guard specialKeyModifiers.allPressed else {
             hotkey.forwardNextEvent = true
             return
         }
 
-        guard hotkey.identifier != showPopoverIdentifier else {
+        guard hotkey.identifier != specialKeyIdentifier || !showPopoverOnSpecialKey else {
             statusBar?.togglePopover(sender: self, at: .mouseLocation(centeredOn: statusBar?.window))
             return
         }
@@ -121,12 +126,12 @@ open class LowtechAppDelegate: NSObject, NSApplicationDelegate, ObservableObject
     }
 
     public func initHotkeys() {
-        if !showPopoverKey.isEmpty, !showPopoverModifiers.isEmpty {
+        if !specialKey.isEmpty, !specialKeyModifiers.isEmpty {
             hotkeys = buildHotkeys(
-                for: [showPopoverKey],
-                modifiers: showPopoverModifiers.sideIndependentModifiers,
+                for: [specialKey],
+                modifiers: specialKeyModifiers.sideIndependentModifiers,
                 action: #selector(handleHotkey(_:)),
-                identifier: "SHOW_POPOVER",
+                identifier: "SPECIAL_KEY",
                 detectKeyHold: false
             )
         }
@@ -137,7 +142,12 @@ open class LowtechAppDelegate: NSObject, NSApplicationDelegate, ObservableObject
             return
         }
 
-        statusBar = StatusBarController(HostingView(rootView: contentView))
+        statusBar = StatusBarController(
+            HostingView(
+                rootView:
+                AnyView(LowtechView(accentColor: accentColor ?? Colors.yellow) { contentView })
+            )
+        )
     }
 
     public func onFlagsChanged(event: NSEvent) {
@@ -150,7 +160,7 @@ open class LowtechAppDelegate: NSObject, NSApplicationDelegate, ObservableObject
         lctrl = (!event.modifierFlags.intersection([.leftControl, .control]).isEmpty && !rctrl)
         lshift = (!event.modifierFlags.intersection([.leftShift, .shift]).isEmpty && !rshift)
 
-        if showPopoverModifiers.allPressed {
+        if specialKeyModifiers.allPressed {
             registerHotkeys()
         } else {
             unregisterHotkeys()

@@ -2,6 +2,35 @@ import Combine
 import Foundation
 import SwiftUI
 
+// MARK: - Semaphore
+
+public struct Semaphore: View {
+    @State public var xVisible = false
+    
+    public init(){}
+
+    public var body: some View {
+        HStack {
+            Button(
+                action: { LowtechAppDelegate.instance.hidePopover() },
+                label: {
+                    ZStack(alignment: .center) {
+                        Circle().fill(Color.red).frame(width: 14, height: 14, alignment: .center)
+                        Image(systemName: "xmark").font(.system(size: 8, weight: .bold))
+                            .foregroundColor(.black.opacity(0.8))
+                            .opacity(xVisible ? 1 : 0)
+                    }
+                }
+            ).buttonStyle(.plain)
+                .onHover { hover in withAnimation(.easeOut(duration: 0.15)) { xVisible = hover }}
+            Circle().fill(Color.gray.opacity(0.3)).frame(width: 14, height: 14, alignment: .center)
+            Circle().fill(Color.gray.opacity(0.3)).frame(width: 14, height: 14, alignment: .center)
+        }.padding(.leading, -8)
+            .padding(.top, -8)
+            .padding(.bottom, 10)
+    }
+}
+
 // MARK: - VScrollView
 
 public struct VScrollView<Content>: View where Content: View {

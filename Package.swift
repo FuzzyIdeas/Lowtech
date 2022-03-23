@@ -18,7 +18,7 @@ let package = Package(
     ],
     dependencies: [
         // Dependencies declare other packages that this package depends on.
-        .package(url: "https://github.com/sindresorhus/Defaults", from: "6.1.0"),
+        .package(url: "https://github.com/sindresorhus/Defaults", from: "6.2.1"),
         .package(url: "https://github.com/mxcl/Path.swift", from: "1.4.0"),
         .package(url: "https://github.com/apple/swift-atomics", from: "1.0.2"),
         .package(url: "https://github.com/crossroadlabs/Regex", branch: "master"),

@@ -47,7 +47,7 @@ open class StatusBarController: NSObject, NSPopoverDelegate, NSWindowDelegate {
 
             guard popoverShownAtLeastOnce else { return }
             mainAsyncAfter(ms: 10) {
-                showPopover(self, at: windowLocation)
+                self.showPopover(self, at: windowLocation)
             }
         }.store(in: &observers)
 
