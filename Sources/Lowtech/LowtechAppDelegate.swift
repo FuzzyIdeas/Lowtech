@@ -29,9 +29,9 @@ open class LowtechAppDelegate: NSObject, NSApplicationDelegate, ObservableObject
         initHotkeys()
         initFlagsListener()
 
-        if Defaults[.launchCount] == 1 {
-            mainAsyncAfter(ms: 1000) {
-                guard let s = self.statusBar, !s.popover.isShown else {return}
+        if Defaults[.launchCount] == 1, showPopoverOnFirstLaunch {
+            mainAsyncAfter(ms: 3000) {
+                guard let s = self.statusBar, !s.popover.isShown else { return }
                 s.showPopover(self)
             }
         }
@@ -43,6 +43,7 @@ open class LowtechAppDelegate: NSObject, NSApplicationDelegate, ObservableObject
 
     public private(set) static var instance: LowtechAppDelegate!
 
+    public var showPopoverOnFirstLaunch = true
     public var statusBar: StatusBarController?
     public var application = NSApplication.shared
 
@@ -85,6 +86,7 @@ open class LowtechAppDelegate: NSObject, NSApplicationDelegate, ObservableObject
             initHotkeys()
         }
     }
+
     @Published public var specialKey = "" {
         didSet {
             unregisterHotkeys()

@@ -113,7 +113,7 @@ open class StatusBarController: NSObject, NSPopoverDelegate, NSWindowDelegate {
     }
 
     public func showPopover(_ sender: AnyObject, at point: NSPoint? = nil, center: Bool = false) {
-        guard statusItem.isVisible && !center else {
+        guard statusItem.isVisible, !center else {
             Defaults[.popoverClosed] = false
             popoverShownAtLeastOnce = true
             window.show(at: point)

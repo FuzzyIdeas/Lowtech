@@ -6,6 +6,16 @@ public extension Substring {
     var s: String { String(self) }
 }
 
+public extension Animation {
+    #if os(iOS)
+        static var fastTransition = Animation.easeOut(duration: 0.1)
+    #else
+        static var fastTransition = Animation.interactiveSpring(dampingFraction: 0.7)
+    #endif
+    static var fastSpring = Animation.interactiveSpring(dampingFraction: 0.7)
+    static var jumpySpring = Animation.spring(response: 0.4, dampingFraction: 0.45)
+}
+
 public extension NumberFormatter {
     static let shared = NumberFormatter()
     static var formatters: [Formatting: NumberFormatter] = [:]
