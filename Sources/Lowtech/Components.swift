@@ -29,9 +29,9 @@ public struct Semaphore: View {
                 .onHover { hover in withAnimation(.easeOut(duration: 0.15)) { xVisible = hover }}
             Circle().fill(Color.gray.opacity(0.3)).frame(width: 14, height: 14, alignment: .center)
             Circle().fill(Color.gray.opacity(0.3)).frame(width: 14, height: 14, alignment: .center)
-        }.padding(.leading, -8)
-            .padding(.top, -8)
-            .padding(.bottom, 10)
+        }
+        .padding(.leading, -8)
+        .padding(.top, -8)
     }
 }
 

@@ -31,7 +31,8 @@ open class LowtechAppDelegate: NSObject, NSApplicationDelegate, ObservableObject
 
         if Defaults[.launchCount] == 1 {
             mainAsyncAfter(ms: 1000) {
-                self.statusBar?.showPopover(self)
+                guard let s = self.statusBar, !s.popover.isShown else {return}
+                s.showPopover(self)
             }
         }
     }
@@ -63,7 +64,6 @@ open class LowtechAppDelegate: NSObject, NSApplicationDelegate, ObservableObject
     public var contentView: AnyView?
     public var accentColor: Color?
 
-    @Published public var specialKeyModifiers: [TriggerKey] = [.ralt]
     public var hotkeys: [HotKey] = []
     public lazy var specialKeyIdentifier = "SPECIAL_KEY\(specialKey)"
 
@@ -79,9 +79,17 @@ open class LowtechAppDelegate: NSObject, NSApplicationDelegate, ObservableObject
         }
     }
 
+    @Published public var specialKeyModifiers: [TriggerKey] = [.ralt] {
+        didSet {
+            unregisterHotkeys()
+            initHotkeys()
+        }
+    }
     @Published public var specialKey = "" {
         didSet {
+            unregisterHotkeys()
             specialKeyIdentifier = "SPECIAL_KEY\(specialKey)"
+            initHotkeys()
         }
     }
 
