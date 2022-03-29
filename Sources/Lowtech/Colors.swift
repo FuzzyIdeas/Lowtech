@@ -63,6 +63,7 @@ public struct Colors {
     public var isLight: Bool { colorScheme == .light }
     public var inverted: Color { isDark ? .black : .white }
     public var invertedGray: Color { isDark ? Colors.darkGray : Colors.lightGray }
+    public var gray: Color { isDark ? Colors.lightGray : Colors.darkGray }
 }
 
 // MARK: - ColorsKey

@@ -94,7 +94,7 @@ public struct DetailToggleStyle: ToggleStyle {
                     systemName: configuration
                         .isOn ? "arrowtriangle.up\(style.sfSymbolName).fill" : "arrowtriangle.down\(style.sfSymbolName).fill"
                 )
-                .imageScale(.large)
+                .imageScale(.medium)
                 configuration.label
             }
         })
