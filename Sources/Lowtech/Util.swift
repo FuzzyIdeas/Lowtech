@@ -23,10 +23,6 @@ public func timeSince(_ date: Date) -> TimeInterval {
     DateInRegion().convertTo(region: .local) - date.convertTo(region: .local)
 }
 
-public func printerr(_ msg: String, end: String = "\n") {
-    fputs("\(msg)\(end)", stderr)
-}
-
 public func cap<T: Comparable>(_ number: T, minVal: T, maxVal: T) -> T {
     max(min(number, maxVal), minVal)
 }
@@ -138,8 +134,19 @@ public func asyncAfter(ms: Int, _ action: @escaping () -> Void) -> DispatchWorkI
     return workItem
 }
 
+public extension DispatchWorkItem {
+    func wait(for timeout: TimeInterval) -> DispatchTimeoutResult {
+        let result = wait(timeout: .now() + timeout)
+        if result == .timedOut {
+            cancel()
+            return .timedOut
+        }
+        return .success
+    }
+}
+
 @discardableResult
-public func asyncNow(_ action: @escaping () -> Void) -> DispatchWorkItem {
+public func asyncNow(timeout: TimeInterval? = nil, _ action: @escaping () -> Void) -> DispatchWorkItem {
     let workItem = DispatchWorkItem(block: action)
 
     DispatchQueue.global().async(execute: workItem)
@@ -244,3 +251,43 @@ public let NO_SHADOW: NSShadow = {
     s.shadowBlurRadius = 0
     return s
 }()
+
+// MARK: - IndexedCollection
+
+public struct IndexedCollection<Base: RandomAccessCollection>: RandomAccessCollection where Base.Element: Hashable {
+    // MARK: Public
+
+    public typealias Index = Base.Index
+    public typealias Element = (index: Index, element: Base.Element) where Base.Element: Hashable
+
+    public var startIndex: Index { base.startIndex }
+    public var endIndex: Index { base.endIndex }
+
+    public func index(after i: Index) -> Index {
+        base.index(after: i)
+    }
+
+    public func index(before i: Index) -> Index {
+        base.index(before: i)
+    }
+
+    public func index(_ i: Index, offsetBy distance: Int) -> Index {
+        base.index(i, offsetBy: distance)
+    }
+
+    public subscript(position: Index) -> Element {
+        (index: position, element: base[position])
+    }
+
+    // MARK: Internal
+
+    let base: Base
+}
+
+public extension RandomAccessCollection where Element: Hashable {
+    func indexed() -> IndexedCollection<Self> {
+        IndexedCollection(base: self)
+    }
+}
+
+public let SWIFTUI_PREVIEW = ProcessInfo.processInfo.environment["XCODE_RUNNING_FOR_PREVIEWS"] == "1"

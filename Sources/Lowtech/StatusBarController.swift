@@ -161,7 +161,7 @@ open class StatusBarController: NSObject, NSPopoverDelegate, NSWindowDelegate {
 
 // MARK: - MainViewController
 
-class MainViewController: NSViewController {}
+public class MainViewController: NSViewController {}
 
 // MARK: - PopoverBackgroundView
 

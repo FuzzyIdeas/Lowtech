@@ -8,6 +8,14 @@ import SwiftUI
 open class LowtechAppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
     // MARK: Open
 
+    @Atomic open var hotkeysRegistered = false
+    @Atomic open var altHotkeysRegistered = false
+    @Atomic open var shiftHotkeysRegistered = false
+    @Atomic open var specialHotkeyRegistered = false
+    @Atomic open var showPopoverOnSpecialKey = true
+
+    open var initialized = false
+
     open func applicationDidBecomeActive(_ notification: Notification) {
         #if DEBUG
             print(notification)
@@ -37,7 +45,9 @@ open class LowtechAppDelegate: NSObject, NSApplicationDelegate, ObservableObject
         }
     }
 
-    @objc open func onHotkey(_: HotKey) {}
+    @objc open func onHotkey(_: String) {}
+    @objc open func onAltHotkey(_: String) {}
+    @objc open func onShiftHotkey(_: String) {}
 
     // MARK: Public
 
@@ -65,11 +75,55 @@ open class LowtechAppDelegate: NSObject, NSApplicationDelegate, ObservableObject
     public var contentView: AnyView?
     public var accentColor: Color?
 
-    public var hotkeys: [HotKey] = []
     public lazy var specialKeyIdentifier = "SPECIAL_KEY\(specialKey)"
 
-    @Atomic public var hotkeysRegistered = false
-    @Atomic public var showPopoverOnSpecialKey = true
+    public var normalKeys: [String] = []
+    public var altKeys: [String] = []
+    public var shiftKeys: [String] = []
+
+    public lazy var altKeyModifiers: [TriggerKey] = {
+        guard !normalKeyModifiers.isEmpty, !normalKeyModifiers.sideIndependentModifiers.contains(.option)
+        else {
+            return []
+        }
+        return normalKeyModifiers + [.ralt]
+    }()
+
+    public lazy var shiftKeyModifiers: [TriggerKey] = {
+        guard !normalKeyModifiers.isEmpty, !normalKeyModifiers.sideIndependentModifiers.contains(.shift)
+        else {
+            return []
+        }
+        return normalKeyModifiers + [.rshift]
+    }()
+
+    public var hotkeys: [HotKey] = [] {
+        didSet {
+            guard initialized else { return }
+            oldValue.forEach { $0.unregister() }
+        }
+    }
+
+    public var altHotkeys: [HotKey] = [] {
+        didSet {
+            guard initialized else { return }
+            oldValue.forEach { $0.unregister() }
+        }
+    }
+
+    public var shiftHotkeys: [HotKey] = [] {
+        didSet {
+            guard initialized else { return }
+            oldValue.forEach { $0.unregister() }
+        }
+    }
+
+    public var specialHotkey: HotKey? {
+        didSet {
+            guard initialized else { return }
+            oldValue?.unregister()
+        }
+    }
 
     public var notificationCloser: DispatchWorkItem? {
         didSet {
@@ -80,18 +134,46 @@ open class LowtechAppDelegate: NSObject, NSApplicationDelegate, ObservableObject
         }
     }
 
+    @Published public var normalKeyModifiers: [TriggerKey] = [] {
+        didSet {
+            reinitHotkeys()
+        }
+    }
+
     @Published public var specialKeyModifiers: [TriggerKey] = [.ralt] {
         didSet {
-            unregisterHotkeys()
-            initHotkeys()
+            reinitHotkeys()
         }
     }
 
     @Published public var specialKey = "" {
         didSet {
-            unregisterHotkeys()
-            specialKeyIdentifier = "SPECIAL_KEY\(specialKey)"
-            initHotkeys()
+            reinitHotkeys()
+        }
+    }
+
+    public func reinitHotkeys() {
+        guard initialized else { return }
+        unregisterHotkeys()
+        unregisterAltHotkeys()
+        unregisterShiftHotkeys()
+        unregisterSpecialHotkey()
+        computeKeyModifiers()
+        specialKeyIdentifier = "SPECIAL_KEY\(specialKey)"
+        initHotkeys()
+    }
+
+    public func computeKeyModifiers() {
+        if !normalKeyModifiers.isEmpty, !normalKeyModifiers.sideIndependentModifiers.contains(.option) {
+            altKeyModifiers = normalKeyModifiers + [.ralt]
+        } else {
+            altKeyModifiers = []
+        }
+
+        if !normalKeyModifiers.isEmpty, !normalKeyModifiers.sideIndependentModifiers.contains(.shift) {
+            shiftKeyModifiers = normalKeyModifiers + [.rshift]
+        } else {
+            shiftKeyModifiers = []
         }
     }
 
@@ -109,7 +191,7 @@ open class LowtechAppDelegate: NSObject, NSApplicationDelegate, ObservableObject
         action: ((Bool) -> Void)? = nil
     ) {
         notificationPopover.contentViewController?.view = HostingView(rootView: NotificationView(
-            notificationLines: ["# \(title)"] + lines,
+            notificationLines: (title.isEmpty ? [] : ["# \(title)"]) + lines,
             yesButtonText: yesButtonText, noButtonText: noButtonText, buttonAction: action
         ))
         notificationPopover.show(menubarIconHidden: menubarIconHidden)
@@ -120,7 +202,7 @@ open class LowtechAppDelegate: NSObject, NSApplicationDelegate, ObservableObject
         }
     }
 
-    @objc public func handleHotkey(_ hotkey: HotKey) {
+    @objc public func handleSpecialHotkey(_ hotkey: HotKey) {
         #if DEBUG
             print(hotkey.identifier)
         #endif
@@ -129,22 +211,98 @@ open class LowtechAppDelegate: NSObject, NSApplicationDelegate, ObservableObject
             return
         }
 
-        guard hotkey.identifier != specialKeyIdentifier || !showPopoverOnSpecialKey else {
-            statusBar?.togglePopover(sender: self, at: .mouseLocation(centeredOn: statusBar?.window))
+        guard showPopoverOnSpecialKey else {
             return
         }
-        onHotkey(hotkey)
+        statusBar?.togglePopover(sender: self, at: .mouseLocation(centeredOn: statusBar?.window))
+    }
+
+    @objc public func handleHotkey(_ hotkey: HotKey) {
+        #if DEBUG
+            print(hotkey.identifier)
+        #endif
+        guard normalKeyModifiers.allPressed else {
+            hotkey.forwardNextEvent = true
+            return
+        }
+
+        onHotkey(hotkey.identifier)
+    }
+
+    @objc public func handleAltHotkey(_ hotkey: HotKey) {
+        #if DEBUG
+            print(hotkey.identifier)
+        #endif
+        guard altKeyModifiers.allPressed else {
+            hotkey.forwardNextEvent = true
+            return
+        }
+
+        onAltHotkey(hotkey.identifier.suffix(1).s)
+    }
+
+    @objc public func handleShiftHotkey(_ hotkey: HotKey) {
+        #if DEBUG
+            print(hotkey.identifier)
+        #endif
+        guard shiftKeyModifiers.allPressed else {
+            hotkey.forwardNextEvent = true
+            return
+        }
+
+        onShiftHotkey(hotkey.identifier.suffix(1).s)
     }
 
     public func initHotkeys() {
         if !specialKey.isEmpty, !specialKeyModifiers.isEmpty {
-            hotkeys = buildHotkeys(
-                for: [specialKey],
-                modifiers: specialKeyModifiers.sideIndependentModifiers,
-                action: #selector(handleHotkey(_:)),
-                identifier: "SPECIAL_KEY",
+            specialHotkey = HotKey(
+                identifier: specialKeyIdentifier,
+                keyCombo: KeyCombo(
+                    key: .init(character: specialKey, virtualKeyCode: nil)!,
+                    cocoaModifiers: specialKeyModifiers.sideIndependentModifiers
+                )!,
+                target: self,
+                action: #selector(handleSpecialHotkey(_:)),
+                actionQueue: .main,
                 detectKeyHold: false
             )
+        } else {
+            specialHotkey = nil
+        }
+
+        if !normalKeys.isEmpty, !normalKeyModifiers.isEmpty {
+            hotkeys = buildHotkeys(
+                for: normalKeys,
+                modifiers: normalKeyModifiers.sideIndependentModifiers,
+                action: #selector(handleHotkey(_:)),
+                detectKeyHold: false
+            )
+        } else {
+            hotkeys = []
+        }
+
+        if !altKeys.isEmpty, !normalKeyModifiers.isEmpty, !normalKeyModifiers.sideIndependentModifiers.contains(.option) {
+            altHotkeys = buildHotkeys(
+                for: altKeys,
+                modifiers: altKeyModifiers.sideIndependentModifiers,
+                action: #selector(handleAltHotkey(_:)),
+                identifier: "alt-",
+                detectKeyHold: false
+            )
+        } else {
+            altHotkeys = []
+        }
+
+        if !shiftKeys.isEmpty, !normalKeyModifiers.isEmpty, !normalKeyModifiers.sideIndependentModifiers.contains(.shift) {
+            shiftHotkeys = buildHotkeys(
+                for: shiftKeys,
+                modifiers: shiftKeyModifiers.sideIndependentModifiers,
+                action: #selector(handleShiftHotkey(_:)),
+                identifier: "shift-",
+                detectKeyHold: false
+            )
+        } else {
+            shiftHotkeys = []
         }
     }
 
@@ -155,8 +313,7 @@ open class LowtechAppDelegate: NSObject, NSApplicationDelegate, ObservableObject
 
         statusBar = StatusBarController(
             HostingView(
-                rootView:
-                AnyView(LowtechView(accentColor: accentColor ?? Colors.yellow) { contentView })
+                rootView: AnyView(LowtechView(accentColor: accentColor ?? Colors.yellow) { contentView })
             )
         )
     }
@@ -172,9 +329,24 @@ open class LowtechAppDelegate: NSObject, NSApplicationDelegate, ObservableObject
         lshift = (!event.modifierFlags.intersection([.leftShift, .shift]).isEmpty && !rshift)
 
         if specialKeyModifiers.allPressed {
+            registerSpecialHotkey()
+        } else {
+            unregisterSpecialHotkey()
+        }
+        if normalKeyModifiers.allPressed {
             registerHotkeys()
         } else {
             unregisterHotkeys()
+        }
+        if altKeyModifiers.allPressed {
+            registerAltHotkeys()
+        } else {
+            unregisterAltHotkeys()
+        }
+        if shiftKeyModifiers.allPressed {
+            registerShiftHotkeys()
+        } else {
+            unregisterShiftHotkeys()
         }
     }
 
@@ -197,9 +369,13 @@ open class LowtechAppDelegate: NSObject, NSApplicationDelegate, ObservableObject
         modifiers: NSEvent.ModifierFlags,
         action: Selector,
         identifier: String = "",
-        detectKeyHold: Bool = false
+        detectKeyHold: Bool = false,
+        ignoredKeys: Set<String>? = nil
     ) -> [HotKey] {
-        Set(keys).map { ch in
+        var keys = Set(keys)
+        if let ignoredKeys { keys.subtract(ignoredKeys) }
+
+        return keys.map { ch in
             HotKey(
                 identifier: "\(identifier)\(ch)",
                 keyCombo: KeyCombo(key: .init(character: ch, virtualKeyCode: nil)!, cocoaModifiers: modifiers)!,
@@ -211,15 +387,51 @@ open class LowtechAppDelegate: NSObject, NSApplicationDelegate, ObservableObject
         }
     }
 
+    public func registerSpecialHotkey() {
+        guard let specialHotkey, !specialHotkeyRegistered, !SWIFTUI_PREVIEW else { return }
+        specialHotkey.register()
+        specialHotkeyRegistered = true
+    }
+
+    public func unregisterSpecialHotkey() {
+        guard let specialHotkey, specialHotkeyRegistered else { return }
+        specialHotkey.unregister()
+        specialHotkeyRegistered = false
+    }
+
     public func registerHotkeys() {
-        guard !hotkeysRegistered else { return }
+        guard !hotkeys.isEmpty, !hotkeysRegistered, !SWIFTUI_PREVIEW else { return }
         hotkeys.forEach { $0.register() }
         hotkeysRegistered = true
     }
 
     public func unregisterHotkeys() {
-        guard hotkeysRegistered else { return }
+        guard !hotkeys.isEmpty, hotkeysRegistered else { return }
         hotkeys.forEach { $0.unregister() }
         hotkeysRegistered = false
+    }
+
+    public func registerShiftHotkeys() {
+        guard !shiftHotkeys.isEmpty, !shiftHotkeysRegistered, !shiftHotkeys.isEmpty, !SWIFTUI_PREVIEW else { return }
+        shiftHotkeys.forEach { $0.register() }
+        shiftHotkeysRegistered = true
+    }
+
+    public func unregisterShiftHotkeys() {
+        guard !shiftHotkeys.isEmpty, shiftHotkeysRegistered else { return }
+        shiftHotkeys.forEach { $0.unregister() }
+        shiftHotkeysRegistered = false
+    }
+
+    public func registerAltHotkeys() {
+        guard !altHotkeys.isEmpty, !altHotkeysRegistered, !altHotkeys.isEmpty, !SWIFTUI_PREVIEW else { return }
+        altHotkeys.forEach { $0.register() }
+        altHotkeysRegistered = true
+    }
+
+    public func unregisterAltHotkeys() {
+        guard !altHotkeys.isEmpty, altHotkeysRegistered else { return }
+        altHotkeys.forEach { $0.unregister() }
+        altHotkeysRegistered = false
     }
 }

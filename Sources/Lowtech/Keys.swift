@@ -216,6 +216,7 @@ public var lshift: Bool {
         }
 
         var str: String { map(\.str).joined() }
+        var directionalStr: String { map(\.directionalStr).joined() }
         var allPressed: Bool { allSatisfy(\.pressed) }
 
         func toggling(key: TriggerKey, on: Bool? = nil) -> [TriggerKey] {

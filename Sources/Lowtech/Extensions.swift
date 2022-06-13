@@ -2,8 +2,48 @@ import Combine
 import Foundation
 import SwiftUI
 
-public extension Substring {
+public prefix func ! (value: Binding<Bool>) -> Binding<Bool> {
+    Binding<Bool>(
+        get: { !value.wrappedValue },
+        set: { value.wrappedValue = !$0 }
+    )
+}
+
+infix operator ?!
+
+public func ?! (_ str: String?, _ str2: String) -> String {
+    guard let str = str, !str.isEmpty else {
+        return str2
+    }
+    return str
+}
+
+infix operator %
+
+public func % (_ str: String, _ args: [CVarArg]) -> String {
+    String(format: str, arguments: args.map { String(describing: $0) })
+}
+
+public func % (_ str: String, _ arg: CVarArg) -> String {
+    String(format: str, arguments: [String(describing: arg)])
+}
+
+public extension Substring.SubSequence {
     var s: String { String(self) }
+}
+
+public extension String.SubSequence {
+    @inline(__always) var u32: UInt32? {
+        UInt32(self)
+    }
+
+    @inline(__always) var i32: Int32? {
+        Int32(self)
+    }
+
+    @inline(__always) var d: Double? {
+        Double(self)
+    }
 }
 
 public extension Animation {
@@ -16,31 +56,69 @@ public extension Animation {
     static var jumpySpring = Animation.spring(response: 0.4, dampingFraction: 0.45)
 }
 
-public extension NumberFormatter {
-    static let shared = NumberFormatter()
-    static var formatters: [Formatting: NumberFormatter] = [:]
+// MARK: - NumberFormatting
 
-    static func formatter(decimals: Int = 0, padding: Int = 0) -> NumberFormatter {
+struct NumberFormatting: Hashable {
+    let decimals: Int
+    let padding: Int
+    let format: String?
+    let decimalSeparator: String?
+
+    func hash(into hasher: inout Hasher) {
+        hasher.combine(padding)
+        hasher.combine(decimals)
+        hasher.combine(format)
+        hasher.combine(decimalSeparator)
+    }
+}
+
+extension NumberFormatter {
+    static let shared = NumberFormatter()
+    static var formatters: [NumberFormatting: NumberFormatter] = [:]
+
+    static func formatter(decimals: Int = 0, padding: Int = 0, format: String? = nil, decimalSeparator: String? = nil) -> NumberFormatter {
         let f = NumberFormatter()
         if decimals > 0 {
             f.alwaysShowsDecimalSeparator = true
             f.maximumFractionDigits = decimals
             f.minimumFractionDigits = decimals
+            if let decimalSeparator = decimalSeparator {
+                f.decimalSeparator = decimalSeparator
+            }
         }
         if padding > 0 {
             f.minimumIntegerDigits = padding
         }
+
+        if let format = format {
+            f.positiveFormat = format
+            f.negativeFormat = format
+        }
+
         return f
     }
 
-    static func shared(decimals: Int = 0, padding: Int = 0) -> NumberFormatter {
-        guard let f = formatters[Formatting(decimals: decimals, padding: padding)] else {
-            let newF = formatter(decimals: decimals, padding: padding)
-            formatters[Formatting(decimals: decimals, padding: padding)] = newF
+    static func shared(decimals: Int = 0, padding: Int = 0, format: String? = nil, decimalSeparator: String? = nil) -> NumberFormatter {
+        guard let f = formatters[NumberFormatting(decimals: decimals, padding: padding, format: format, decimalSeparator: decimalSeparator)]
+        else {
+            let newF = formatter(decimals: decimals, padding: padding, format: format, decimalSeparator: decimalSeparator)
+            formatters[NumberFormatting(decimals: decimals, padding: padding, format: format, decimalSeparator: decimalSeparator)] = newF
             return newF
         }
         return f
     }
+}
+
+extension Bool {
+    @inline(__always) var i: Int {
+        self ? 1 : 0
+    }
+
+    #if os(macOS)
+        @inline(__always) var state: NSControl.StateValue {
+            self ? .on : .off
+        }
+    #endif
 }
 
 #if os(macOS)
@@ -333,8 +411,9 @@ public extension Float {
         rounded().i
     }
 
-    func str(decimals: UInt8, padding: UInt8 = 0) -> String {
-        NumberFormatter.shared(decimals: decimals.i, padding: padding.i).string(from: ns) ?? String(format: "%.\(decimals)f", self)
+    func str(decimals: UInt8, padding: UInt8 = 0, separator: String? = nil) -> String {
+        NumberFormatter.shared(decimals: decimals.i, padding: padding.i, decimalSeparator: separator)
+            .string(from: ns) ?? String(format: "%.\(decimals)f", self)
     }
 
     func asPercentage(of value: Self, decimals: UInt8 = 2) -> String {
@@ -402,8 +481,9 @@ public extension Double {
         rounded().i
     }
 
-    func str(decimals: UInt8, padding: UInt8 = 0) -> String {
-        NumberFormatter.shared(decimals: decimals.i, padding: padding.i).string(from: ns) ?? String(format: "%.\(decimals)f", self)
+    func str(decimals: UInt8, padding: UInt8 = 0, separator: String? = nil) -> String {
+        NumberFormatter.shared(decimals: decimals.i, padding: padding.i, decimalSeparator: separator)
+            .string(from: ns) ?? String(format: "%.\(decimals)f", self)
     }
 
     func asPercentage(of value: Self, decimals: UInt8 = 2) -> String {
@@ -440,8 +520,8 @@ public extension BinaryInteger {
         Double(self)
     }
 
-    @inline(__always) var cg: CGFloat {
-        CGFloat(self)
+    @inline(__always) var cg: CGGammaValue {
+        CGGammaValue(self)
     }
 
     @inline(__always) var f: Float {
@@ -449,23 +529,23 @@ public extension BinaryInteger {
     }
 
     @inline(__always) var u: UInt {
-        UInt(self)
+        UInt(max(self, 0))
     }
 
     @inline(__always) var u8: UInt8 {
-        UInt8(cap(self, minVal: 0, maxVal: 255))
+        UInt8(max(self, 0))
     }
 
     @inline(__always) var u16: UInt16 {
-        UInt16(self)
+        UInt16(max(self, 0))
     }
 
     @inline(__always) var u32: UInt32 {
-        UInt32(self)
+        UInt32(max(self, 0))
     }
 
     @inline(__always) var u64: UInt64 {
-        UInt64(self)
+        UInt64(max(self, 0))
     }
 
     @inline(__always) var i: Int {
@@ -481,7 +561,7 @@ public extension BinaryInteger {
     }
 
     @inline(__always) var i32: Int32 {
-        Int32(self)
+        Int32(cap(Int(self), minVal: Int(Int32.min), maxVal: Int(Int32.max)))
     }
 
     @inline(__always) var i64: Int64 {
@@ -490,6 +570,98 @@ public extension BinaryInteger {
 
     @inline(__always) var s: String {
         String(self)
+    }
+
+    func asPercentage(of value: Self, decimals: UInt8 = 2) -> String {
+        "\(((d / value.d) * 100.0).str(decimals: decimals))%"
+    }
+}
+
+public extension String {
+    func parseHex(strict: Bool = false) -> Int? {
+        guard !strict || starts(with: "0x") || starts(with: "x") || hasSuffix("h") else { return nil }
+
+        var sub = self
+
+        if sub.starts(with: "0x") {
+            sub = String(sub.suffix(from: sub.index(sub.startIndex, offsetBy: 2)))
+        }
+
+        if sub.starts(with: "x") {
+            sub = String(sub.suffix(from: sub.index(after: sub.startIndex)))
+        }
+
+        if sub.hasSuffix("h") {
+            sub = String(sub.prefix(sub.count - 1))
+        }
+
+        return Int(sub, radix: 16)
+    }
+
+    @inline(__always) var d: Double? {
+        Double(replacingOccurrences(of: ",", with: "."))
+        // NumberFormatter.shared.number(from: self)?.doubleValue
+    }
+
+    @inline(__always) var f: Float? {
+        Float(replacingOccurrences(of: ",", with: "."))
+        // NumberFormatter.shared.number(from: self)?.floatValue
+    }
+
+    @inline(__always) var u: UInt? {
+        UInt(self)
+    }
+
+    @inline(__always) var u8: UInt8? {
+        UInt8(self)
+    }
+
+    @inline(__always) var u16: UInt16? {
+        UInt16(self)
+    }
+
+    @inline(__always) var u32: UInt32? {
+        UInt32(self)
+    }
+
+    @inline(__always) var u64: UInt64? {
+        UInt64(self)
+    }
+
+    @inline(__always) var i: Int? {
+        Int(self)
+    }
+
+    @inline(__always) var i8: Int8? {
+        Int8(self)
+    }
+
+    @inline(__always) var i16: Int16? {
+        Int16(self)
+    }
+
+    @inline(__always) var i32: Int32? {
+        Int32(self)
+    }
+
+    @inline(__always) var i64: Int64? {
+        Int64(self)
+    }
+
+    func replacingFirstOccurrence(of target: String, with replacement: String) -> String {
+        guard let range = range(of: target) else { return self }
+        return replacingCharacters(in: range, with: replacement)
+    }
+
+    func titleCase() -> String {
+        replacingOccurrences(
+            of: "([A-Z])",
+            with: " $1",
+            options: .regularExpression,
+            range: range(of: self)
+        )
+        .trimmingCharacters(in: .whitespacesAndNewlines)
+        .capitalized
     }
 }
 
@@ -509,6 +681,10 @@ public extension Collection {
     /// Returns the element at the specified index if it is within bounds, otherwise nil.
     subscript(safe index: Index) -> Element? {
         indices.contains(index) ? self[index] : nil
+    }
+
+    func dict<K: Hashable, V>(uniqueByLast: Bool = false, _ transformer: (Element) -> (K, V)?) -> [K: V] {
+        Dictionary(compactMap(transformer), uniquingKeysWith: uniqueByLast ? last(this:other:) : first(this:other:))
     }
 }
 
@@ -741,5 +917,15 @@ public extension NSParagraphStyle {
         let p = NSMutableParagraphStyle()
         p.alignment = .center
         return p
+    }
+}
+
+public extension Binding {
+    static func oneway(getter: @escaping () -> Value) -> Binding {
+        Binding(get: getter, set: { _ in })
+    }
+
+    var optional: Binding<Value?> {
+        .oneway { self.wrappedValue }
     }
 }

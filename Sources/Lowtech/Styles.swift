@@ -107,6 +107,22 @@ public struct DetailToggleStyle: ToggleStyle {
 // MARK: - OutlineButton
 
 public struct OutlineButton: ButtonStyle {
+    // MARK: Lifecycle
+
+    public init(
+        color: Color = Color.primary.opacity(0.8),
+        hoverColor: Color = Color.primary,
+        multiplyColor: Color = Color.white,
+        scale: CGFloat = 1,
+        font: Font = .body.bold()
+    ) {
+        _color = State(initialValue: color)
+        _hoverColor = State(initialValue: hoverColor)
+        _multiplyColor = State(initialValue: multiplyColor)
+        _scale = State(initialValue: scale)
+        _font = State(initialValue: font)
+    }
+
     // MARK: Public
 
     public func makeBody(configuration: Configuration) -> some View {
@@ -134,8 +150,8 @@ public struct OutlineButton: ButtonStyle {
     // MARK: Internal
 
     @State var color = Color.primary.opacity(0.8)
-    @State var hoverColor = Color.primary
-    @State var multiplyColor = Color.white
+    @State var hoverColor: Color = .primary
+    @State var multiplyColor: Color = .white
     @State var scale: CGFloat = 1
     @State var font: Font = .body.bold()
 }
@@ -143,6 +159,33 @@ public struct OutlineButton: ButtonStyle {
 // MARK: - ToggleButton
 
 public struct ToggleButton: ButtonStyle {
+    // MARK: Lifecycle
+
+    public init(
+        isOn: Binding<Bool>,
+        onColor: Color = Color.primary,
+        offColor: Color = Color.primary.opacity(0.1),
+        onTextColor: Color = Color.textBackground,
+        offTextColor: Color = Color.secondary,
+        hoverColor: Color = Color.white,
+        scale: CGFloat = 1,
+        isEnabled: Bool = true,
+        isEnabledBinding: Binding<Bool>? = nil,
+        width: CGFloat? = nil,
+        height: CGFloat? = nil
+    ) {
+        _onColor = State(initialValue: onColor)
+        _offColor = State(initialValue: offColor)
+        _onTextColor = State(initialValue: onTextColor)
+        _offTextColor = State(initialValue: offTextColor)
+        _hoverColor = State(initialValue: hoverColor)
+        _scale = State(initialValue: scale)
+        _isEnabled = isEnabledBinding ?? .constant(isEnabled)
+        _width = State(initialValue: width)
+        _height = State(initialValue: height)
+        _isOn = isOn
+    }
+
     // MARK: Public
 
     public func makeBody(configuration: Configuration) -> some View {
@@ -173,16 +216,17 @@ public struct ToggleButton: ButtonStyle {
 
     @Environment(\.colors) var colors
 
-    @State var onColor = Color.primary
+    @State var onColor: Color = .primary
     @State var offColor = Color.primary.opacity(0.1)
-    @State var onTextColor = Color.textBackground
-    @State var offTextColor = Color.secondary
+    @State var onTextColor: Color = .textBackground
+    @State var offTextColor: Color = .secondary
+    @State var hoverColor: Color = .white
     @State var scale: CGFloat = 1
-    @State var hoverColor = Color.white
-    @State var isEnabled = true
-    @Binding var isOn: Bool
     @State var width: CGFloat? = nil
     @State var height: CGFloat? = nil
+
+    @Binding var isEnabled: Bool
+    @Binding var isOn: Bool
 }
 
 // MARK: - PickerButton
@@ -191,7 +235,7 @@ public struct PickerButton<T: Equatable>: ButtonStyle {
     // MARK: Lifecycle
 
     public init(
-        color: Color = Color.white.opacity(0.15),
+        color: Color = Color.primary.opacity(0.15),
         onColor: Color = .primary,
         offColor: Color? = nil,
         onTextColor: Color? = nil,
@@ -261,7 +305,7 @@ public struct PickerButton<T: Equatable>: ButtonStyle {
     @Environment(\.colors) var colors
     @Environment(\.colorScheme) var colorScheme
 
-    @State var color = Color.white.opacity(0.15)
+    @State var color = Color.primary.opacity(0.15)
     @State var hovering = false
     @State var onColor: Color = .primary
     @State var offColor: Color? = nil
@@ -401,6 +445,12 @@ public struct FlatButton: ButtonStyle {
 // MARK: - PaddedTextFieldStyle
 
 public struct PaddedTextFieldStyle: TextFieldStyle {
+    // MARK: Lifecycle
+
+    public init(size: CGFloat = 13) {
+        _size = State(initialValue: size)
+    }
+
     // MARK: Public
 
     public func _body(configuration: TextField<Self._Label>) -> some View {
@@ -419,11 +469,4 @@ public struct PaddedTextFieldStyle: TextFieldStyle {
 
     @Environment(\.colorScheme) var colorScheme
     @State var size: CGFloat = 13
-}
-
-prefix func ! (value: Binding<Bool>) -> Binding<Bool> {
-    Binding<Bool>(
-        get: { !value.wrappedValue },
-        set: { value.wrappedValue = !$0 }
-    )
 }

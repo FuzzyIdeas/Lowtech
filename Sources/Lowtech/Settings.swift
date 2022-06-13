@@ -14,3 +14,7 @@ public extension Defaults.Keys {
 public func first<T>(this: T, other _: T) -> T {
     this
 }
+
+public func last<T>(this _: T, other: T) -> T {
+    other
+}
