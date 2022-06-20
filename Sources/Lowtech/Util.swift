@@ -14,11 +14,6 @@ import Path
 import SwiftDate
 import UserNotifications
 
-public typealias FilePath = Path
-public func p(_ string: String) -> FilePath? {
-    FilePath(string)
-}
-
 public func timeSince(_ date: Date) -> TimeInterval {
     DateInRegion().convertTo(region: .local) - date.convertTo(region: .local)
 }
@@ -287,6 +282,59 @@ public struct IndexedCollection<Base: RandomAccessCollection>: RandomAccessColle
 public extension RandomAccessCollection where Element: Hashable {
     func indexed() -> IndexedCollection<Self> {
         IndexedCollection(base: self)
+    }
+}
+
+public func promptForWorkingDirectoryPermission(message: String = "Choose your working directory", prompt: String = "Choose", initialPath: String = "/Users") -> URL? {
+    let openPanel = NSOpenPanel()
+    openPanel.message = message
+    openPanel.prompt = prompt
+    openPanel.resolvesAliases = true
+    openPanel.allowedFileTypes = ["none"]
+    openPanel.allowsOtherFileTypes = false
+    openPanel.allowsMultipleSelection = false
+    openPanel.canChooseFiles = false
+    openPanel.canChooseDirectories = true
+    openPanel.directoryURL = URL(fileURLWithPath: initialPath)
+
+    openPanel.runModal()
+    guard let url = openPanel.urls.first else { return nil }
+    saveBookmarkData(for: url)
+
+//    switch openPanel.runModal() {
+//    case .cancel, .abort:
+//        return nil
+//    case .OK:
+//        return openPanel.urls.first
+//    }
+
+    return url
+}
+
+public func saveBookmarkData(for workDir: URL, defaultsKey: Defaults.Key<Data?>? = nil) {
+    do {
+        let bookmarkData = try workDir.bookmarkData(options: .withSecurityScope, includingResourceValuesForKeys: nil, relativeTo: nil)
+
+        Defaults[defaultsKey ?? Defaults.Key("\(workDir.path.sha1)-BookmarkData")] = bookmarkData
+    } catch {
+        err("Failed to save bookmark data for \(workDir): \(error)")
+    }
+}
+
+public func restoreFileAccess(for workDir: URL? = nil, defaultsKey: Defaults.Key<Data?>? = nil) -> URL? {
+    guard let bookmarkData = Defaults[defaultsKey ?? Defaults.Key("\(workDir?.path.sha1 ?? "")-BookmarkData")] else { return nil }
+
+    do {
+        var isStale = false
+        let url = try URL(resolvingBookmarkData: bookmarkData, options: .withSecurityScope, relativeTo: nil, bookmarkDataIsStale: &isStale)
+        if isStale {
+            debug("Bookmark is stale, need to save a new one... ")
+            saveBookmarkData(for: url, defaultsKey: defaultsKey)
+        }
+        return url
+    } catch {
+        err("Error resolving bookmark: \(error)")
+        return nil
     }
 }
 

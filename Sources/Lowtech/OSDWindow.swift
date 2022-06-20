@@ -1,14 +1,18 @@
 import Cocoa
+import Defaults
 import Foundation
 import SwiftUI
 
 // MARK: - OSDWindow
 
-open class OSDWindow: NSWindow {
+open class OSDWindow: NSWindow, NSWindowDelegate {
     // MARK: Lifecycle
 
-    public convenience init(swiftuiView: some View, allSpaces: Bool = true, canScreenshot: Bool = true) {
+    public convenience init(swiftuiView: some View, allSpaces: Bool = true, canScreenshot: Bool = true, screen: NSScreen? = nil, corner: ScreenCorner? = nil) {
         self.init(contentViewController: NSHostingController(rootView: swiftuiView))
+
+        screenPlacement = screen
+        screenCorner = corner
 
         level = NSWindow.Level(CGShieldingWindowLevel().i)
         collectionBehavior = [.stationary, .ignoresCycle, .fullScreenDisallowsTiling]
@@ -30,6 +34,7 @@ open class OSDWindow: NSWindow {
         hasShadow = false
         styleMask = [.fullSizeContentView]
         hidesOnDeactivate = false
+        delegate = self
     }
 
     // MARK: Open
@@ -39,11 +44,15 @@ open class OSDWindow: NSWindow {
         closeAfter closeMilliseconds: Int = 3050,
         fadeAfter fadeMilliseconds: Int = 2000,
         offCenter: CGFloat? = nil,
-        centerWindow: Bool = true
+        centerWindow: Bool = true,
+        corner: ScreenCorner? = nil,
+        screen: NSScreen? = nil
     ) {
-        if let point = point {
+        if let corner {
+            moveToScreen(screen, corner: corner)
+        } else if let point {
             setFrameOrigin(point)
-        } else if let screenFrame = (NSScreen.withMouse ?? NSScreen.main)?.visibleFrame {
+        } else if let screenFrame = (screen ?? NSScreen.withMouse ?? NSScreen.main)?.visibleFrame {
             setFrameOrigin(screenFrame.origin)
             if centerWindow { center() }
             if offCenter != 0 {
@@ -74,11 +83,46 @@ open class OSDWindow: NSWindow {
 
     // MARK: Public
 
-    public func moveToScreen(_ screen: NSScreen? = nil) {
+    public func windowDidResize(_ notification: Notification) {
+        guard let screenCorner, let screenPlacement else { return }
+        moveToScreen(screen, corner: screenCorner)
+    }
+
+    public func resizeToScreenHeight(_ screen: NSScreen? = nil) {
         guard let screenFrame = (screen ?? NSScreen.withMouse ?? NSScreen.main)?.visibleFrame else {
             return
         }
-        setFrameOrigin(screenFrame.origin)
+        setContentSize(NSSize(width: frame.width, height: screenFrame.height))
+    }
+
+    public func moveToScreen(_ screen: NSScreen? = nil, corner: ScreenCorner? = nil) {
+        guard let screenFrame = (screen ?? NSScreen.withMouse ?? NSScreen.main)?.visibleFrame else {
+            return
+        }
+
+        if let screen {
+            screenPlacement = screen
+        }
+
+        guard let corner else {
+            setFrameOrigin(screenFrame.origin)
+            return
+        }
+
+        screenCorner = corner
+        let o = screenFrame.origin
+        let f = screenFrame
+
+        switch corner {
+        case .bottomLeft:
+            setFrameOrigin(screenFrame.origin)
+        case .bottomRight:
+            setFrameOrigin(NSPoint(x: (o.x + f.width) - frame.width, y: o.y))
+        case .topLeft:
+            setFrameOrigin(NSPoint(x: o.x, y: (o.y + f.height) - frame.height))
+        case .topRight:
+            setFrameOrigin(NSPoint(x: (o.x + f.width) - frame.width, y: (o.y + f.height) - frame.height))
+        }
     }
 
     public func centerOnScreen(_: NSScreen? = nil) {
@@ -89,6 +133,9 @@ open class OSDWindow: NSWindow {
     }
 
     // MARK: Internal
+
+    var screenPlacement: NSScreen?
+    var screenCorner: ScreenCorner?
 
     var closer: DispatchWorkItem? {
         didSet {
@@ -105,4 +152,13 @@ open class OSDWindow: NSWindow {
     // MARK: Private
 
     private lazy var wc = NSWindowController(window: self)
+}
+
+// MARK: - ScreenCorner
+
+public enum ScreenCorner: Int, Codable, DefaultsSerializable {
+    case bottomLeft
+    case bottomRight
+    case topLeft
+    case topRight
 }

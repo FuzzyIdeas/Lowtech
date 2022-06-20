@@ -18,6 +18,13 @@ public func ?! (_ str: String?, _ str2: String) -> String {
     return str
 }
 
+public func ?! <T: Collection>(_ seq: T?, _ seq2: T) -> T {
+    guard let seq = seq, !seq.isEmpty else {
+        return seq2
+    }
+    return seq
+}
+
 infix operator %
 
 public func % (_ str: String, _ args: [CVarArg]) -> String {
@@ -675,6 +682,10 @@ public extension Set {
     var arr: [Element] {
         Array(self)
     }
+
+    func hasElements(from otherSet: Set<Element>) -> Bool {
+        !intersection(otherSet).isEmpty
+    }
 }
 
 public extension Collection {
@@ -682,9 +693,26 @@ public extension Collection {
     subscript(safe index: Index) -> Element? {
         indices.contains(index) ? self[index] : nil
     }
+}
 
+public extension Sequence {
     func dict<K: Hashable, V>(uniqueByLast: Bool = false, _ transformer: (Element) -> (K, V)?) -> [K: V] {
         Dictionary(compactMap(transformer), uniquingKeysWith: uniqueByLast ? last(this:other:) : first(this:other:))
+    }
+
+    func group<K: Hashable>(by key: KeyPath<Element, K?>, ignoring: Set<K>? = nil) -> [K: [Element]] {
+        var grouped = [K: [Element]]()
+        for v in self {
+            guard let k = v[keyPath: key], !(ignoring?.contains(k) ?? false) else { continue }
+            guard grouped[k] != nil else {
+                grouped[k] = [v]
+                continue
+            }
+
+            grouped[k]!.append(v)
+        }
+
+        return grouped
     }
 }
 
@@ -867,34 +895,47 @@ public extension View {
     }
 }
 
-public extension Array where Element: Equatable & Hashable {
-    var uniqued: Self { Set(self).arr }
-    func replacing(at index: Index, with element: Element) -> Self {
-        enumerated().map { $0.offset == index ? element : $0.element }
-    }
-
-    func replacing(_ element: Element, with newElement: Element) -> Self {
-        map { $0 == element ? newElement : $0 }
-    }
-
-    func without(index: Index) -> Self {
-        enumerated().filter { $0.offset != index }.map(\.element)
-    }
-
-    func without(indices: [Index]) -> Self {
-        enumerated().filter { !indices.contains($0.offset) }.map(\.element)
-    }
-
-    func without(_ element: Element) -> Self {
+public extension Sequence where Element: Equatable & Hashable {
+    func without(_ element: Element) -> [Element] {
         filter { $0 != element }
     }
 
-    func without(_ elements: [Element]) -> Self {
+    func without(_ elements: Set<Element>) -> [Element] {
         filter { !elements.contains($0) }
+    }
+
+    var uniqued: [Element] { Set(self).arr }
+
+    func replacing(_ element: Element, with newElement: Element) -> [Element] {
+        map { $0 == element ? newElement : $0 }
+    }
+
+    func without(_ elements: [Element]) -> [Element] {
+        let elSet = Set(elements)
+        return filter { !elSet.contains($0) }
+    }
+}
+
+public extension Collection where Element: Equatable & Hashable, Index: BinaryInteger {
+    func replacing(at index: Index, with element: Element) -> [Element] {
+        enumerated().map { $0.offset == index ? element : $0.element }
+    }
+
+    func without(index: Index) -> [Element] {
+        enumerated().filter { $0.offset != index }.map(\.element)
+    }
+
+    func without(indices: [Index]) -> [Element] {
+        enumerated().filter { !indices.contains(Index($0.offset)) }.map(\.element)
     }
 
     func after(_ element: Element) -> Element? {
         guard let idx = firstIndex(of: element) else { return nil }
+        return self[safe: index(after: idx)]
+    }
+
+    func after(_ element: Element?) -> Element? {
+        guard let element, let idx = firstIndex(of: element) else { return nil }
         return self[safe: index(after: idx)]
     }
 }
@@ -904,8 +945,43 @@ public extension StringProtocol {
     func distance<S: StringProtocol>(of string: S) -> Int? { range(of: string)?.lowerBound.distance(in: self) }
 }
 
+// MARK: - BackportSortOrder
+
+public enum BackportSortOrder {
+    case forward
+    case reverse
+}
+
 public extension Collection {
     func distance(to index: Index) -> Int { distance(from: startIndex, to: index) }
+
+//    @available(macOS 12.0, *)
+//    func sorted<Value: Comparable>(by keyPath: KeyPath<Element, Value>, order: SortOrder) -> [Element] {
+//        return sorted(using: KeyPathComparator(keyPath, order: order))
+//    }
+
+    func sorted<Value: Comparable>(by keyPath: KeyPath<Element, Value>, order: BackportSortOrder = .forward) -> [Element] {
+        sorted(by: { e1, e2 in
+            switch order {
+            case .forward:
+                return e1[keyPath: keyPath] < e2[keyPath: keyPath]
+            case .reverse:
+                return e1[keyPath: keyPath] > e2[keyPath: keyPath]
+            }
+        })
+    }
+
+    func max<Value: Comparable>(by keyPath: KeyPath<Element, Value>) -> Element? {
+        self.max(by: { e1, e2 in
+            e1[keyPath: keyPath] < e2[keyPath: keyPath]
+        })
+    }
+
+    func min<Value: Comparable>(by keyPath: KeyPath<Element, Value>) -> Element? {
+        self.min(by: { e1, e2 in
+            e1[keyPath: keyPath] < e2[keyPath: keyPath]
+        })
+    }
 }
 
 public extension String.Index {
@@ -927,5 +1003,28 @@ public extension Binding {
 
     var optional: Binding<Value?> {
         .oneway { self.wrappedValue }
+    }
+}
+
+import CryptoKit
+
+public extension String {
+    var sha1: String {
+        var s = Insecure.SHA1()
+        s.update(data: data(using: .utf8)!)
+        return s.finalize().description
+    }
+}
+
+public extension OptionSet {
+    mutating func toggle(_ element: Element, minSet: Self? = nil, emptySet: Self? = nil) {
+        if contains(element) {
+            remove(element)
+            if let minSet, isEmpty || self == emptySet {
+                formUnion(minSet)
+            }
+        } else {
+            insert(element)
+        }
     }
 }

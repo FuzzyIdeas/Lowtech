@@ -57,6 +57,12 @@ public var lshift: Bool {
     set { _lshift.store(newValue, ordering: .sequentiallyConsistent) }
 }
 
+var _fn = ManagedAtomic<Bool>(false)
+public var fn: Bool {
+    get { _fn.load(ordering: .relaxed) }
+    set { _fn.store(newValue, ordering: .sequentiallyConsistent) }
+}
+
 #if os(macOS)
     import Cocoa
 
@@ -183,6 +189,27 @@ public var lshift: Bool {
             }
         }
 
+        var shortReadableStr: String {
+            switch self {
+            case .rcmd:
+                return "rcmd"
+            case .ralt:
+                return "ralt"
+            case .lcmd:
+                return "lcmd"
+            case .lalt:
+                return "lalt"
+            case .lctrl:
+                return "lctrl"
+            case .lshift:
+                return "lshift"
+            case .rshift:
+                return "rshift"
+            case .rctrl:
+                return "rctrl"
+            }
+        }
+
         var pressed: Bool {
             switch self {
             case .rcmd:
@@ -217,6 +244,9 @@ public var lshift: Bool {
 
         var str: String { map(\.str).joined() }
         var directionalStr: String { map(\.directionalStr).joined() }
+        var readableStr: String { map(\.readableStr).joined(separator: "+") }
+        var shortReadableStr: String { map(\.shortReadableStr).joined(separator: "+") }
+
         var allPressed: Bool { allSatisfy(\.pressed) }
 
         func toggling(key: TriggerKey, on: Bool? = nil) -> [TriggerKey] {

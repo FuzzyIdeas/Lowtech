@@ -125,6 +125,8 @@ public struct OutlineButton: ButtonStyle {
 
     // MARK: Public
 
+    @Environment(\.isEnabled) public var isEnabled
+
     public func makeBody(configuration: Configuration) -> some View {
         configuration
             .label
@@ -140,11 +142,20 @@ public struct OutlineButton: ButtonStyle {
             ).scaleEffect(scale).colorMultiply(multiplyColor)
             .contentShape(Rectangle())
             .onHover(perform: { hover in
+                guard isEnabled else { return }
                 withAnimation(.easeOut(duration: 0.2)) {
                     multiplyColor = hover ? hoverColor : .white
                     scale = hover ? 1.02 : 1.0
                 }
             })
+            .onChange(of: isEnabled) { e in
+                if !e {
+                    withAnimation(.easeOut(duration: 0.2)) {
+                        multiplyColor = .white
+                        scale = 1.0
+                    }
+                }
+            }
     }
 
     // MARK: Internal
@@ -154,6 +165,16 @@ public struct OutlineButton: ButtonStyle {
     @State var multiplyColor: Color = .white
     @State var scale: CGFloat = 1
     @State var font: Font = .body.bold()
+}
+
+func roundRect(_ radius: CGFloat, fill: Color) -> some View {
+    RoundedRectangle(cornerRadius: radius, style: .continuous)
+        .fill(fill)
+}
+
+func roundRect(_ radius: CGFloat, stroke: Color) -> some View {
+    RoundedRectangle(cornerRadius: radius, style: .continuous)
+        .stroke(stroke)
 }
 
 // MARK: - ToggleButton
@@ -167,10 +188,8 @@ public struct ToggleButton: ButtonStyle {
         offColor: Color = Color.primary.opacity(0.1),
         onTextColor: Color = Color.textBackground,
         offTextColor: Color = Color.secondary,
-        hoverColor: Color = Color.white,
+        hoverColor: Color = Color.white.opacity(0.5),
         scale: CGFloat = 1,
-        isEnabled: Bool = true,
-        isEnabledBinding: Binding<Bool>? = nil,
         width: CGFloat? = nil,
         height: CGFloat? = nil
     ) {
@@ -178,38 +197,45 @@ public struct ToggleButton: ButtonStyle {
         _offColor = State(initialValue: offColor)
         _onTextColor = State(initialValue: onTextColor)
         _offTextColor = State(initialValue: offTextColor)
-        _hoverColor = State(initialValue: hoverColor)
         _scale = State(initialValue: scale)
-        _isEnabled = isEnabledBinding ?? .constant(isEnabled)
         _width = State(initialValue: width)
         _height = State(initialValue: height)
         _isOn = isOn
+
+        _hoverColor = State(initialValue: hoverColor)
+        _hoverTextColor = State(initialValue: hoverColor.ns.isLight() ? Color.black : Color.white)
     }
 
     // MARK: Public
 
+    @Environment(\.isEnabled) public var isEnabled
+
     public func makeBody(configuration: Configuration) -> some View {
         configuration
             .label
-            .foregroundColor(isOn ? onTextColor : offTextColor)
+            .foregroundColor((hovering && !configuration.isPressed) ? hoverTextColor : fgColor(configuration))
             .padding(.vertical, 4.0)
             .padding(.horizontal, 8.0)
             .background(
-                RoundedRectangle(
-                    cornerRadius: 8,
-                    style: .continuous
-                ).fill(isOn ? onColor : offColor)
+                roundRect(8, fill: (hovering && !configuration.isPressed) ? hoverColor.opacity(isOn ? 1.0 : 0.5) : bgColor(configuration))
                     .frame(width: width, height: height, alignment: .center)
-
-            ).scaleEffect(scale).colorMultiply(hoverColor)
+            )
+            .brightness(hovering ? 0.05 : 0.0)
+            .contrast(hovering ? 1.02 : 1.0)
+            .scaleEffect(hovering ? 1.05 : 1)
             .contentShape(Rectangle())
             .onHover(perform: { hover in
                 guard isEnabled else { return }
                 withAnimation(.easeOut(duration: 0.1)) {
-                    hoverColor = hover ? colors.accent : .white
-                    scale = hover ? 1.05 : 1.0
+                    hovering = hover
                 }
-            })
+            }).onChange(of: isEnabled) { e in
+                if !e {
+                    withAnimation(.easeOut(duration: 0.1)) {
+                        hovering = false
+                    }
+                }
+            }
     }
 
     // MARK: Internal
@@ -220,13 +246,28 @@ public struct ToggleButton: ButtonStyle {
     @State var offColor = Color.primary.opacity(0.1)
     @State var onTextColor: Color = .textBackground
     @State var offTextColor: Color = .secondary
-    @State var hoverColor: Color = .white
+    @State var hoverColor: Color
+    @State var hoverTextColor: Color
     @State var scale: CGFloat = 1
     @State var width: CGFloat? = nil
     @State var height: CGFloat? = nil
+    @State var hovering = false
 
-    @Binding var isEnabled: Bool
     @Binding var isOn: Bool
+
+    func bgColor(_ configuration: Configuration) -> Color {
+        configuration.isPressed ? (isOn ? offColor : onColor) : (isOn ? onColor : offColor)
+    }
+
+    func fgColor(_ configuration: Configuration) -> Color {
+        configuration.isPressed ? (isOn ? offTextColor : onTextColor) : (isOn ? onTextColor : offTextColor)
+    }
+}
+
+extension Color {
+    var ns: NSColor {
+        NSColor(self)
+    }
 }
 
 // MARK: - PickerButton
@@ -244,7 +285,7 @@ public struct PickerButton<T: Equatable>: ButtonStyle {
         verticalPadding: CGFloat = 4,
         brightness: Double = 0.0,
         scale: CGFloat = 1,
-        hoverColor: Color? = nil,
+        hoverColor: Color = .white.opacity(0.15),
         enumValue: Binding<T>,
         onValue: T
     ) {
@@ -260,7 +301,9 @@ public struct PickerButton<T: Equatable>: ButtonStyle {
         _onValue = st(onValue)
 
         _onTextColor = onTextColor.state
-        _hoverColor = hoverColor.state
+
+        _hoverColor = State(initialValue: hoverColor)
+        _hoverTextColor = State(initialValue: hoverColor.ns.isLight() ? Color.black : Color.white)
     }
 
     // MARK: Public
@@ -269,7 +312,9 @@ public struct PickerButton<T: Equatable>: ButtonStyle {
         configuration
             .label
             .foregroundColor(
-                enumValue == onValue
+                hovering
+                    ? hoverTextColor
+                    : enumValue == onValue
                     ? (onTextColor ?? colors.inverted)
                     : offTextColor
             )
@@ -283,10 +328,11 @@ public struct PickerButton<T: Equatable>: ButtonStyle {
                     enumValue == onValue
                         ? onColor
                         :
-                        (hovering ? .white.opacity(0.15) : (offColor ?? color.opacity(colorScheme == .dark ? 0.5 : 0.8)))
+                        (hovering ? hoverColor : (offColor ?? color.opacity(colorScheme == .dark ? 0.5 : 0.8)))
                 )
-                .colorMultiply(hovering ? (hoverColor ?? colors.accent) : .white)
             )
+            .brightness(hovering ? 0.05 : 0.0)
+            .contrast(hovering ? 1.01 : 1.0)
             .scaleEffect(hovering ? 1.05 : 1.00)
             .contentShape(Rectangle())
             .onHover(perform: { hover in
@@ -315,7 +361,8 @@ public struct PickerButton<T: Equatable>: ButtonStyle {
     @State var verticalPadding: CGFloat = 4
     @State var brightness = 0.0
     @State var scale: CGFloat = 1
-    @State var hoverColor: Color? = nil
+    @State var hoverColor: Color
+    @State var hoverTextColor: Color
     @Binding var enumValue: T
     @State var onValue: T
 }
@@ -356,10 +403,12 @@ public struct FlatButton: ButtonStyle {
 
     // MARK: Public
 
+    @Environment(\.isEnabled) public var isEnabled
+
     public func makeBody(configuration: Configuration) -> some View {
         configuration
             .label
-            .foregroundColor(hovering ? .white : (textColor ?? colors.inverted))
+            .foregroundColor(textColor ?? colors.inverted)
             .padding(.vertical, verticalPadding)
             .padding(.horizontal, horizontalPadding)
             .frame(
@@ -371,25 +420,31 @@ public struct FlatButton: ButtonStyle {
                 alignment: .center
             )
             .background(
-                bg.colorMultiply(
-                    configuration.isPressed || pressed
-                        ? pressedColor
-                        : (hovering ? (hoverColor ?? colors.accent.opacity(0.2)) : .white)
-                )
+                bg.colorMultiply(configuration.isPressed || pressed ? pressedColor : .white)
             )
+            .brightness(hovering ? 0.05 : 0.0)
+            .contrast(hovering ? 1.01 : 1.0)
             .scaleEffect(
                 configuration.isPressed || pressed
                     ? 1.02
                     : (hovering ? 1.05 : 1.00)
             )
             .onAppear {
-                pressedColor = (hoverColor ?? colors.accent).blended(withFraction: 0.5, of: .white)
+                pressedColor = hoverColor?.blended(withFraction: 0.5, of: .white) ?? color.blended(withFraction: 0.2, of: colors.accent)
             }
             .onHover(perform: { hover in
+                guard isEnabled else { return }
                 withAnimation(.fastTransition) {
                     hovering = hover
                 }
             })
+            .onChange(of: isEnabled) { e in
+                if !e {
+                    withAnimation(.fastTransition) {
+                        hovering = false
+                    }
+                }
+            }
     }
 
     // MARK: Internal

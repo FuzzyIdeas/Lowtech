@@ -10,6 +10,7 @@ public let ALPHANUMERICS = (
     CharacterSet.decimalDigits.characters().filter(\.isASCII) + CharacterSet.lowercaseLetters.characters()
         .filter(\.isASCII)
 ).map { String($0) }
+public let ALPHANUMERICS_SET = Set(ALPHANUMERICS)
 
 extension NSButton {
     override open var focusRingType: NSFocusRingType {
@@ -101,7 +102,7 @@ public struct NotificationView: View {
                 .padding(.horizontal, 20)
                 .padding(.bottom, 20)
                 .shadow(color: Colors.blackMauve.opacity(colorScheme == .dark ? 0.5 : 0.25), radius: 4, x: 0, y: 3)
-        )
+        ).focusable(false)
     }
 
     // MARK: Internal
@@ -634,4 +635,93 @@ public struct LowtechView<Content: View>: View {
 
 public extension View {
     var any: AnyView { AnyView(self) }
+}
+
+// MARK: - PaddedPopoverView
+
+public struct PaddedPopoverView<Content>: View where Content: View {
+    // MARK: Lifecycle
+
+    public init(background: AnyView, @ViewBuilder content: () -> Content) {
+        self.content = content()
+        _background = background.state
+    }
+
+    // MARK: Public
+
+    public var body: some View {
+        ZStack {
+            background.scaleEffect(1.5)
+            VStack(alignment: .leading, spacing: 10) {
+                content
+            }
+            .padding()
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+        }.preferredColorScheme(.light)
+    }
+
+    // MARK: Internal
+
+    @State var background: AnyView
+    @ViewBuilder let content: Content
+}
+
+// MARK: - ErrorPopoverView
+
+public struct ErrorPopoverView: View {
+    // MARK: Lifecycle
+
+    public init(error: Binding<String>) {
+        _error = error
+    }
+
+    // MARK: Public
+
+    public var body: some View {
+        ZStack {
+            Color.red.brightness(0.4).scaleEffect(1.5)
+            VStack(alignment: .leading, spacing: 10) {
+                HStack {
+                    Text("Error").font(.system(size: 24, weight: .heavy)).foregroundColor(.black).padding(.trailing)
+                    Spacer()
+                    SwiftUI.Button(
+                        action: { error = "" },
+                        label: { Image(systemName: "xmark.circle.fill").font(.system(size: 18, weight: .semibold)) }
+                    )
+                    .buttonStyle(FlatButton(color: .clear, textColor: .black, circle: true))
+                }
+                ErrorTextView(error: error)
+            }
+            .padding()
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+        }
+        .preferredColorScheme(.light)
+        .onDisappear { error = "" }
+    }
+
+    // MARK: Internal
+
+    @Binding var error: String
+}
+
+// MARK: - ErrorTextView
+
+public struct ErrorTextView: View {
+    // MARK: Lifecycle
+
+    public init(error: String) {
+        _error = error.state
+    }
+
+    // MARK: Public
+
+    public var body: some View {
+        Text(error).font(.system(size: 16, weight: .medium))
+            .foregroundColor(.black)
+            .frame(width: 340, alignment: .topLeading)
+    }
+
+    // MARK: Internal
+
+    @State var error: String
 }
