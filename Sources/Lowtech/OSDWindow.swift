@@ -1,4 +1,5 @@
 import Cocoa
+import Combine
 import Defaults
 import Foundation
 import SwiftUI
@@ -83,9 +84,11 @@ open class OSDWindow: NSWindow, NSWindowDelegate {
 
     // MARK: Public
 
+    @Published public var screenPlacement: NSScreen?
+
     public func windowDidResize(_ notification: Notification) {
         guard let screenCorner, let screenPlacement else { return }
-        moveToScreen(screen, corner: screenCorner)
+        moveToScreen(screenPlacement, corner: screenCorner)
     }
 
     public func resizeToScreenHeight(_ screen: NSScreen? = nil) {
@@ -134,7 +137,6 @@ open class OSDWindow: NSWindow, NSWindowDelegate {
 
     // MARK: Internal
 
-    var screenPlacement: NSScreen?
     var screenCorner: ScreenCorner?
 
     var closer: DispatchWorkItem? {
