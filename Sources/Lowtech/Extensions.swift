@@ -1028,3 +1028,73 @@ public extension OptionSet {
         }
     }
 }
+
+public extension Bundle {
+    var name: String? {
+        infoDictionary?["CFBundleName"] as? String ?? executable?.basename(dropExtension: true)
+    }
+
+    var isMenuBarApp: Bool {
+        (object(forInfoDictionaryKey: "LSUIElement") as? Bool) ?? false
+    }
+}
+
+import Regex
+
+public let BUNDLE_IDENTIFIER_PATTERN = #"([^:]+):(\d+)"#.r!
+
+import MemoZ
+
+public extension NSRunningApplication {
+    var binaryIsValid: Bool {
+        binaryValidCache.fetch(key: identifier, create: { _ in
+            guard let bundleExe = bundle?.executable?.fileReferenceURL, let exePath = executableURL?.path,
+                  let exe = p(exePath)?.fileReferenceURL else { return true }
+            return bundleExe == exe
+        })
+    }
+
+    var isRegular: Bool {
+        activationPolicyCache.fetch(key: identifier, create: { _ in activationPolicy }) == .regular
+    }
+
+    var identifier: String {
+        guard let bundleIdentifier = bundleIdentifier else { return processIdentifier.s }
+        return "\(bundleIdentifier):\(processIdentifier)"
+    }
+
+    static func runningApplications(withIdentifier identifier: String) -> NSRunningApplication? {
+        NSWorkspace.shared.runningApplications.first(where: { $0.identifier == identifier })
+    }
+
+    var bundleName: String? {
+        bundle?.name
+    }
+
+    var name: String? { localizedName ?? bundleName }
+
+    var bundle: Bundle? {
+        guard let bundleURL = bundleURL else {
+            return nil
+        }
+
+        return bundleCache.fetch(key: bundleURL, create: { url in Bundle(url: url) })
+    }
+
+    func binaryMatchesLaunchDate(path: String) -> Bool {
+        let binaryModifiedDate = (try? FileManager.default.attributesOfItem(atPath: path))?[.modificationDate] as? Date
+        guard let launchDate = launchDate, let binaryModifiedDate = binaryModifiedDate else { return true }
+
+        #if DEBUG
+            print("Launch date: \(launchDate)")
+            print("Binary modified date: \(binaryModifiedDate)")
+        #endif
+
+        return binaryModifiedDate <= launchDate || ignoredBinaryDates[path] == binaryModifiedDate
+    }
+}
+
+var ignoredBinaryDates: [String: Date] = [:]
+var activationPolicyCache = Cache<String, NSApplication.ActivationPolicy>()
+let bundleCache = Cache<URL, Bundle?>()
+let binaryValidCache = Cache<String, Bool>()

@@ -725,3 +725,28 @@ public struct ErrorTextView: View {
 
     @State var error: String
 }
+
+// MARK: - TrialOSDContainer
+
+struct TrialOSDContainer: View {
+    var body: some View {
+        HStack {
+            if let img = NSImage(named: NSImage.applicationIconName) {
+                Image(nsImage: img)
+                    .resizable()
+                    .frame(width: 40, height: 40)
+            }
+            VStack(alignment: .leading) {
+                Text("Trial period of") + Text(" \(Bundle.main.name ?? "the app") ").bold() + Text("expired for the current session.")
+                Text("Buy the full version from") + Text(" App Store ").bold() + Text("to remove this limitation.")
+            }.fixedSize()
+        }
+        .padding()
+        .background(
+            VisualEffectBlur(material: .hudWindow, blendingMode: .withinWindow, state: .active)
+                .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
+                .shadow(radius: 6, x: 0, y: 3)
+        )
+        .padding()
+    }
+}

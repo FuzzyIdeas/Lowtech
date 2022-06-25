@@ -5,6 +5,8 @@ import Foundation
 import Magnet
 import SwiftUI
 
+// MARK: - LowtechAppDelegate
+
 open class LowtechAppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
     // MARK: Open
 
@@ -50,6 +52,26 @@ open class LowtechAppDelegate: NSObject, NSApplicationDelegate, ObservableObject
     @objc open func onSecondaryHotkey(_: String) {}
     @objc open func onAltHotkey(_: String) {}
     @objc open func onShiftHotkey(_: String) {}
+
+    open func trialExpired() -> Bool {
+        false
+    }
+
+    @inline(__always)
+    open func hideTrialOSD() {
+        guard Self.trialMode, trialExpired() else {
+            return
+        }
+        trialOSD.alphaValue = 0
+    }
+
+    @inline(__always)
+    open func showTrialOSD() {
+        guard Self.trialMode, trialExpired() else {
+            return
+        }
+        trialOSD.show(closeAfter: 0, fadeAfter: 0, offCenter: 0, centerWindow: false, corner: .bottomRight, screen: .main)
+    }
 
     open func onFlagsChanged(event: NSEvent) {
         rcmd = event.modifierFlags.contains(.rightCommand)
@@ -153,6 +175,8 @@ open class LowtechAppDelegate: NSObject, NSApplicationDelegate, ObservableObject
 
     public private(set) static var instance: LowtechAppDelegate!
 
+    public static let trialMode = !validReceipt()
+
     public var showPopoverOnFirstLaunch = true
     public var statusBar: StatusBarController?
     public var application = NSApplication.shared
@@ -197,6 +221,8 @@ open class LowtechAppDelegate: NSObject, NSApplicationDelegate, ObservableObject
         }
         return primaryKeyModifiers + [.rshift]
     }()
+
+    public lazy var trialOSD = OSDWindow(swiftuiView: TrialOSDContainer().any)
 
     public var primaryHotkeys: [HotKey] = [] {
         didSet {
@@ -508,5 +534,17 @@ open class LowtechAppDelegate: NSObject, NSApplicationDelegate, ObservableObject
                 detectKeyHold: detectKeyHold
             )
         }
+    }
+}
+
+import AppReceiptValidator
+
+@inline(__always)
+func validReceipt() -> Bool {
+    switch AppReceiptValidator().validateReceipt() {
+    case .success(_, receiptData: _, deviceIdentifier: _):
+        return true
+    default:
+        return false
     }
 }
