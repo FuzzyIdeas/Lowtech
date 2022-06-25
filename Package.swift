@@ -32,7 +32,7 @@ let package = Package(
         .package(url: "https://github.com/diniska/swiftui-system-colors", from: "1.1.0"),
         .package(url: "https://github.com/malcommac/SwiftDate", from: "6.3.1"),
         .package(url: "https://github.com/marcprux/MemoZ.git", from: "1.3.0"),
-        .package(url: "https://github.com/IdeasOnCanvas/AppReceiptValidator.git", branch: "main"),
+        .package(url: "https://github.com/alin23/AppReceiptValidator.git", branch: "main"),
     ],
     targets: [
         // Targets are the basic building blocks of a package. A target can define a module or a test suite.
