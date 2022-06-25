@@ -53,6 +53,9 @@ open class StatusBarController: NSObject, NSPopoverDelegate, NSWindowDelegate {
 
         eventMonitor = GlobalEventMonitor(mask: [.leftMouseDown, .rightMouseDown], handler: mouseEventHandler)
         popover.delegate = self
+
+        NSApp.publisher(for: \.mainMenu).sink { _ in self.fixMenu() }
+            .store(in: &observers)
     }
 
     // MARK: Open
@@ -110,6 +113,26 @@ open class StatusBarController: NSObject, NSPopoverDelegate, NSWindowDelegate {
     public func showPopoverIfNotVisible(at point: NSPoint? = nil) {
         guard !window.isVisible, !(popoverWindow?.isVisible ?? false) else { return }
         showPopover(self, at: point)
+    }
+
+    public func fixMenu() {
+        let menu = NSMenu(title: "Edit")
+
+        menu.addItem(withTitle: "Quit", action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q")
+        menu.addItem(withTitle: "Select All", action: #selector(NSText.selectAll(_:)), keyEquivalent: "a")
+        menu.addItem(withTitle: "Copy", action: #selector(NSText.copy(_:)), keyEquivalent: "c")
+        menu.addItem(withTitle: "Cut", action: #selector(NSText.cut(_:)), keyEquivalent: "x")
+        menu.addItem(withTitle: "Paste", action: #selector(NSText.paste(_:)), keyEquivalent: "v")
+        menu.addItem(withTitle: "Undo", action: Selector(("undo:")), keyEquivalent: "z")
+        menu.addItem(withTitle: "Redo", action: Selector(("redo:")), keyEquivalent: "Z")
+
+        let editMenuItem = NSMenuItem()
+        editMenuItem.title = "Edit"
+        editMenuItem.submenu = menu
+        if NSApp.mainMenu == nil {
+            NSApp.mainMenu = NSMenu()
+        }
+        NSApp.mainMenu?.items = [editMenuItem]
     }
 
     public func showPopover(_ sender: AnyObject, at point: NSPoint? = nil, center: Bool = false) {

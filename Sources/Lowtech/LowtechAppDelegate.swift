@@ -51,6 +51,104 @@ open class LowtechAppDelegate: NSObject, NSApplicationDelegate, ObservableObject
     @objc open func onAltHotkey(_: String) {}
     @objc open func onShiftHotkey(_: String) {}
 
+    open func onFlagsChanged(event: NSEvent) {
+        rcmd = event.modifierFlags.contains(.rightCommand)
+        ralt = event.modifierFlags.contains(.rightOption)
+        rshift = event.modifierFlags.contains(.rightShift)
+        rctrl = event.modifierFlags.contains(.rightControl)
+        lcmd = (!event.modifierFlags.intersection([.leftCommand, .command]).isEmpty && !rcmd)
+        lalt = (!event.modifierFlags.intersection([.leftOption, .option]).isEmpty && !ralt)
+        lctrl = (!event.modifierFlags.intersection([.leftControl, .control]).isEmpty && !rctrl)
+        lshift = (!event.modifierFlags.intersection([.leftShift, .shift]).isEmpty && !rshift)
+        fn = event.modifierFlags.contains(.fn)
+
+        if specialKeyModifiers.allPressed {
+            registerSpecialHotkey()
+        } else {
+            unregisterSpecialHotkey()
+        }
+        if primaryKeyModifiers.allPressed {
+            registerPrimaryHotkeys()
+        } else {
+            unregisterPrimaryHotkeys()
+        }
+        if secondaryKeyModifiers.allPressed {
+            registerSecondaryHotkeys()
+        } else {
+            unregisterSecondaryHotkeys()
+        }
+        if altKeyModifiers.allPressed {
+            registerAltHotkeys()
+        } else {
+            unregisterAltHotkeys()
+        }
+        if shiftKeyModifiers.allPressed {
+            registerShiftHotkeys()
+        } else {
+            unregisterShiftHotkeys()
+        }
+    }
+
+    open func registerSpecialHotkey() {
+        guard let specialHotkey, !specialHotkeyRegistered, !SWIFTUI_PREVIEW else { return }
+        specialHotkey.register()
+        specialHotkeyRegistered = true
+    }
+
+    open func unregisterSpecialHotkey() {
+        guard let specialHotkey, specialHotkeyRegistered else { return }
+        specialHotkey.unregister()
+        specialHotkeyRegistered = false
+    }
+
+    open func registerPrimaryHotkeys() {
+        guard !primaryHotkeys.isEmpty, !primaryHotkeysRegistered, !SWIFTUI_PREVIEW else { return }
+        primaryHotkeys.forEach { $0.register() }
+        primaryHotkeysRegistered = true
+    }
+
+    open func unregisterPrimaryHotkeys() {
+        guard !primaryHotkeys.isEmpty, primaryHotkeysRegistered else { return }
+        primaryHotkeys.forEach { $0.unregister() }
+        primaryHotkeysRegistered = false
+    }
+
+    open func registerSecondaryHotkeys() {
+        guard !secondaryHotkeys.isEmpty, !secondaryHotkeysRegistered, !SWIFTUI_PREVIEW else { return }
+        secondaryHotkeys.forEach { $0.register() }
+        secondaryHotkeysRegistered = true
+    }
+
+    open func unregisterSecondaryHotkeys() {
+        guard !secondaryHotkeys.isEmpty, secondaryHotkeysRegistered else { return }
+        secondaryHotkeys.forEach { $0.unregister() }
+        secondaryHotkeysRegistered = false
+    }
+
+    open func registerShiftHotkeys() {
+        guard !shiftHotkeys.isEmpty, !shiftHotkeysRegistered, !shiftHotkeys.isEmpty, !SWIFTUI_PREVIEW else { return }
+        shiftHotkeys.forEach { $0.register() }
+        shiftHotkeysRegistered = true
+    }
+
+    open func unregisterShiftHotkeys() {
+        guard !shiftHotkeys.isEmpty, shiftHotkeysRegistered else { return }
+        shiftHotkeys.forEach { $0.unregister() }
+        shiftHotkeysRegistered = false
+    }
+
+    open func registerAltHotkeys() {
+        guard !altHotkeys.isEmpty, !altHotkeysRegistered, !altHotkeys.isEmpty, !SWIFTUI_PREVIEW else { return }
+        altHotkeys.forEach { $0.register() }
+        altHotkeysRegistered = true
+    }
+
+    open func unregisterAltHotkeys() {
+        guard !altHotkeys.isEmpty, altHotkeysRegistered else { return }
+        altHotkeys.forEach { $0.unregister() }
+        altHotkeysRegistered = false
+    }
+
     // MARK: Public
 
     public private(set) static var instance: LowtechAppDelegate!
@@ -375,44 +473,6 @@ open class LowtechAppDelegate: NSObject, NSApplicationDelegate, ObservableObject
         )
     }
 
-    public func onFlagsChanged(event: NSEvent) {
-        rcmd = event.modifierFlags.contains(.rightCommand)
-        ralt = event.modifierFlags.contains(.rightOption)
-        rshift = event.modifierFlags.contains(.rightShift)
-        rctrl = event.modifierFlags.contains(.rightControl)
-        lcmd = (!event.modifierFlags.intersection([.leftCommand, .command]).isEmpty && !rcmd)
-        lalt = (!event.modifierFlags.intersection([.leftOption, .option]).isEmpty && !ralt)
-        lctrl = (!event.modifierFlags.intersection([.leftControl, .control]).isEmpty && !rctrl)
-        lshift = (!event.modifierFlags.intersection([.leftShift, .shift]).isEmpty && !rshift)
-        fn = event.modifierFlags.contains(.fn)
-
-        if specialKeyModifiers.allPressed {
-            registerSpecialHotkey()
-        } else {
-            unregisterSpecialHotkey()
-        }
-        if primaryKeyModifiers.allPressed {
-            registerPrimaryHotkeys()
-        } else {
-            unregisterPrimaryHotkeys()
-        }
-        if secondaryKeyModifiers.allPressed {
-            registerSecondaryHotkeys()
-        } else {
-            unregisterSecondaryHotkeys()
-        }
-        if altKeyModifiers.allPressed {
-            registerAltHotkeys()
-        } else {
-            unregisterAltHotkeys()
-        }
-        if shiftKeyModifiers.allPressed {
-            registerShiftHotkeys()
-        } else {
-            unregisterShiftHotkeys()
-        }
-    }
-
     public func initFlagsListener() {
         globalEventMonitor = GlobalEventMonitor(mask: .flagsChanged) { [self] event in
             guard let event = event else { return }
@@ -448,65 +508,5 @@ open class LowtechAppDelegate: NSObject, NSApplicationDelegate, ObservableObject
                 detectKeyHold: detectKeyHold
             )
         }
-    }
-
-    public func registerSpecialHotkey() {
-        guard let specialHotkey, !specialHotkeyRegistered, !SWIFTUI_PREVIEW else { return }
-        specialHotkey.register()
-        specialHotkeyRegistered = true
-    }
-
-    public func unregisterSpecialHotkey() {
-        guard let specialHotkey, specialHotkeyRegistered else { return }
-        specialHotkey.unregister()
-        specialHotkeyRegistered = false
-    }
-
-    public func registerPrimaryHotkeys() {
-        guard !primaryHotkeys.isEmpty, !primaryHotkeysRegistered, !SWIFTUI_PREVIEW else { return }
-        primaryHotkeys.forEach { $0.register() }
-        primaryHotkeysRegistered = true
-    }
-
-    public func unregisterPrimaryHotkeys() {
-        guard !primaryHotkeys.isEmpty, primaryHotkeysRegistered else { return }
-        primaryHotkeys.forEach { $0.unregister() }
-        primaryHotkeysRegistered = false
-    }
-
-    public func registerSecondaryHotkeys() {
-        guard !secondaryHotkeys.isEmpty, !secondaryHotkeysRegistered, !SWIFTUI_PREVIEW else { return }
-        secondaryHotkeys.forEach { $0.register() }
-        secondaryHotkeysRegistered = true
-    }
-
-    public func unregisterSecondaryHotkeys() {
-        guard !secondaryHotkeys.isEmpty, secondaryHotkeysRegistered else { return }
-        secondaryHotkeys.forEach { $0.unregister() }
-        secondaryHotkeysRegistered = false
-    }
-
-    public func registerShiftHotkeys() {
-        guard !shiftHotkeys.isEmpty, !shiftHotkeysRegistered, !shiftHotkeys.isEmpty, !SWIFTUI_PREVIEW else { return }
-        shiftHotkeys.forEach { $0.register() }
-        shiftHotkeysRegistered = true
-    }
-
-    public func unregisterShiftHotkeys() {
-        guard !shiftHotkeys.isEmpty, shiftHotkeysRegistered else { return }
-        shiftHotkeys.forEach { $0.unregister() }
-        shiftHotkeysRegistered = false
-    }
-
-    public func registerAltHotkeys() {
-        guard !altHotkeys.isEmpty, !altHotkeysRegistered, !altHotkeys.isEmpty, !SWIFTUI_PREVIEW else { return }
-        altHotkeys.forEach { $0.register() }
-        altHotkeysRegistered = true
-    }
-
-    public func unregisterAltHotkeys() {
-        guard !altHotkeys.isEmpty, altHotkeysRegistered else { return }
-        altHotkeys.forEach { $0.unregister() }
-        altHotkeysRegistered = false
     }
 }
