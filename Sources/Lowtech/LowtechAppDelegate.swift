@@ -19,6 +19,10 @@ open class LowtechAppDelegate: NSObject, NSApplicationDelegate, ObservableObject
 
     open var initialized = false
 
+    open func isTrialMode() -> Bool {
+        false
+    }
+
     open func applicationDidBecomeActive(_ notification: Notification) {
         #if DEBUG
             print(notification)
@@ -59,7 +63,7 @@ open class LowtechAppDelegate: NSObject, NSApplicationDelegate, ObservableObject
 
     @inline(__always)
     open func hideTrialOSD() {
-        guard Self.trialMode, trialExpired() else {
+        guard trialMode, trialExpired() else {
             return
         }
         trialOSD.alphaValue = 0
@@ -67,7 +71,7 @@ open class LowtechAppDelegate: NSObject, NSApplicationDelegate, ObservableObject
 
     @inline(__always)
     open func showTrialOSD() {
-        guard Self.trialMode, trialExpired() else {
+        guard trialMode, trialExpired() else {
             return
         }
         trialOSD.show(closeAfter: 0, fadeAfter: 0, offCenter: 0, centerWindow: false, corner: .bottomRight, screen: .main)
@@ -175,7 +179,7 @@ open class LowtechAppDelegate: NSObject, NSApplicationDelegate, ObservableObject
 
     public private(set) static var instance: LowtechAppDelegate!
 
-    public static let trialMode = !validReceipt()
+    public lazy var trialMode = isTrialMode()
 
     public var showPopoverOnFirstLaunch = true
     public var statusBar: StatusBarController?
@@ -540,7 +544,7 @@ open class LowtechAppDelegate: NSObject, NSApplicationDelegate, ObservableObject
 import AppReceiptValidator
 
 @inline(__always)
-func validReceipt() -> Bool {
+public func validReceipt() -> Bool {
     switch AppReceiptValidator().validateReceipt() {
     case .success(_, receiptData: _, deviceIdentifier: _):
         return true
