@@ -491,6 +491,8 @@ open class LowtechAppDelegate: NSObject, NSApplicationDelegate, ObservableObject
         }
     }
 
+    public var appStoreURL: String? = nil
+
     public func initMenubar() {
         guard let contentView = contentView else {
             return
