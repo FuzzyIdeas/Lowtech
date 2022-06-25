@@ -9,7 +9,7 @@ import SwiftUI
 open class OSDWindow: NSWindow, NSWindowDelegate {
     // MARK: Lifecycle
 
-    public convenience init(swiftuiView: some View, allSpaces: Bool = true, canScreenshot: Bool = true, screen: NSScreen? = nil, corner: ScreenCorner? = nil) {
+    public convenience init(swiftuiView: some View, allSpaces: Bool = true, canScreenshot: Bool = true, screen: NSScreen? = nil, corner: ScreenCorner? = nil, allowsMouse: Bool = false) {
         self.init(contentViewController: NSHostingController(rootView: swiftuiView))
 
         screenPlacement = screen
@@ -25,7 +25,7 @@ open class OSDWindow: NSWindow, NSWindowDelegate {
         if !canScreenshot {
             sharingType = .none
         }
-        ignoresMouseEvents = true
+        ignoresMouseEvents = !allowsMouse
         setAccessibilityRole(.popover)
         setAccessibilitySubrole(.unknown)
 
@@ -39,6 +39,13 @@ open class OSDWindow: NSWindow, NSWindowDelegate {
     }
 
     // MARK: Open
+
+    open var onClick: ((NSEvent) -> Void)?
+
+    override open func mouseDown(with event: NSEvent) {
+        guard !ignoresMouseEvents, let onClick else { return }
+        onClick(event)
+    }
 
     open func show(
         at point: NSPoint? = nil,

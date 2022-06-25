@@ -66,6 +66,7 @@ open class LowtechAppDelegate: NSObject, NSApplicationDelegate, ObservableObject
         guard trialMode, trialExpired() else {
             return
         }
+        trialOSD.ignoresMouseEvents = true
         trialOSD.alphaValue = 0
     }
 
@@ -74,6 +75,7 @@ open class LowtechAppDelegate: NSObject, NSApplicationDelegate, ObservableObject
         guard trialMode, trialExpired() else {
             return
         }
+        trialOSD.ignoresMouseEvents = false
         trialOSD.show(closeAfter: 0, fadeAfter: 0, offCenter: 0, centerWindow: false, corner: .bottomRight, screen: .main)
     }
 
@@ -227,6 +229,8 @@ open class LowtechAppDelegate: NSObject, NSApplicationDelegate, ObservableObject
     }()
 
     public lazy var trialOSD = OSDWindow(swiftuiView: TrialOSDContainer().any)
+
+    public var appStoreURL: URL?
 
     public var primaryHotkeys: [HotKey] = [] {
         didSet {
@@ -490,8 +494,6 @@ open class LowtechAppDelegate: NSObject, NSApplicationDelegate, ObservableObject
             shiftHotkeys = []
         }
     }
-
-    public var appStoreURL: String? = nil
 
     public func initMenubar() {
         guard let contentView = contentView else {
