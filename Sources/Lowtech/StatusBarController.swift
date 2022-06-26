@@ -119,6 +119,7 @@ open class StatusBarController: NSObject, NSPopoverDelegate, NSWindowDelegate {
         let menu = NSMenu(title: "Edit")
 
         menu.addItem(withTitle: "Quit", action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q")
+        menu.addItem(withTitle: "Close Window", action: #selector(StatusBarController.hidePopover(_:)), keyEquivalent: "w")
         menu.addItem(withTitle: "Select All", action: #selector(NSText.selectAll(_:)), keyEquivalent: "a")
         menu.addItem(withTitle: "Copy", action: #selector(NSText.copy(_:)), keyEquivalent: "c")
         menu.addItem(withTitle: "Cut", action: #selector(NSText.cut(_:)), keyEquivalent: "x")
@@ -146,6 +147,8 @@ open class StatusBarController: NSObject, NSPopoverDelegate, NSWindowDelegate {
 
         guard let button = statusItem.button else { return }
 
+        popover.contentViewController = MainViewController()
+        popover.contentViewController!.view = view
         popoverShownAtLeastOnce = true
         let positioningView = NSView(frame: button.bounds)
         positioningView.identifier = NSUserInterfaceItemIdentifier(rawValue: "positioningView")
@@ -162,9 +165,10 @@ open class StatusBarController: NSObject, NSPopoverDelegate, NSWindowDelegate {
         eventMonitor?.start()
     }
 
-    public func hidePopover(_ sender: AnyObject) {
+    @objc public func hidePopover(_ sender: AnyObject) {
         window.close()
         popover.performClose(sender)
+        popover.contentViewController = nil
         eventMonitor?.stop()
     }
 

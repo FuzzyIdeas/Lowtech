@@ -25,6 +25,8 @@ open class PanelWindow: NSWindow {
 
     // MARK: Open
 
+    override open var canBecomeKey: Bool { true }
+
     open func show(at point: NSPoint? = nil) {
         if let point = point {
             setFrameOrigin(point)
@@ -35,6 +37,7 @@ open class PanelWindow: NSWindow {
         wc.showWindow(nil)
         makeKeyAndOrderFront(nil)
         orderFrontRegardless()
+        NSApp.activate(ignoringOtherApps: true)
     }
 
     // MARK: Private

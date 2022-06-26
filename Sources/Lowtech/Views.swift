@@ -556,13 +556,15 @@ public protocol Nameable {
 open class EnvState: ObservableObject {
     // MARK: Lifecycle
 
-    public init(recording: Bool = false) {
+    public init(recording: Bool = false, closed: Bool = true) {
         self.recording = recording
+        self.closed = closed
     }
 
     // MARK: Public
 
     @Published public var recording = false
+    @Published public var closed = true
 }
 
 var menuHideTask: DispatchWorkItem? {
@@ -582,7 +584,7 @@ public struct PopoverView<Content: View>: View {
 
     public var body: some View {
         VStack {
-            if !hidden {
+            if !env.closed {
                 content().focusable(false)
             } else {
                 EmptyView()
@@ -595,19 +597,20 @@ public struct PopoverView<Content: View>: View {
     let content: () -> Content
 
     @Default(.popoverClosed) var popoverClosed
-    @State var hidden = false
+    @EnvironmentObject var env: EnvState
 
     func setup(_ closed: Bool? = nil) {
         guard !(closed ?? popoverClosed) else {
             debug("Deallocating menu")
             menuHideTask = mainAsyncAfter(ms: 2000) {
-                hidden = true
+                debug("Deallocated menu")
+                env.closed = true
             }
             return
         }
         debug("Reallocating menu")
         menuHideTask = nil
-        hidden = false
+        env.closed = false
     }
 }
 
