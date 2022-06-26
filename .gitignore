@@ -5,3 +5,7 @@
 xcuserdata/
 DerivedData/
 .swiftpm/xcode/package.xcworkspace/contents.xcworkspacedata
+.gitsecret/keys/random_seed
+!*.secret
+enc.swift
+enc.fish

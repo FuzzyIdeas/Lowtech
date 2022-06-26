@@ -20,6 +20,15 @@
         }
       },
       {
+        "package": "CryptorECC",
+        "repositoryURL": "https://github.com/Kitura/BlueECC",
+        "state": {
+          "branch": "master",
+          "revision": "baf6ed3fc1a622675f0041b4aff7c02dd1a93818",
+          "version": null
+        }
+      },
+      {
         "package": "Defaults",
         "repositoryURL": "https://github.com/sindresorhus/Defaults",
         "state": {

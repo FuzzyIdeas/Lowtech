@@ -33,6 +33,7 @@ let package = Package(
         .package(url: "https://github.com/malcommac/SwiftDate", from: "6.3.1"),
         .package(url: "https://github.com/marcprux/MemoZ.git", from: "1.3.0"),
         .package(url: "https://github.com/alin23/AppReceiptValidator.git", branch: "main"),
+        .package(url: "https://github.com/Kitura/BlueECC", branch: "master"),
     ],
     targets: [
         // Targets are the basic building blocks of a package. A target can define a module or a test suite.
@@ -55,6 +56,7 @@ let package = Package(
                 .product(name: "SwiftDate", package: "SwiftDate"),
                 .product(name: "MemoZ", package: "MemoZ"),
                 .product(name: "AppReceiptValidator", package: "AppReceiptValidator"),
+                .product(name: "CryptorECC", package: "BlueECC"),
             ]
         ),
         .testTarget(
