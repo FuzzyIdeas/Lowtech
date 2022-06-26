@@ -574,18 +574,16 @@ var menuHideTask: DispatchWorkItem? {
 public struct PopoverView<Content: View>: View {
     // MARK: Lifecycle
 
-    public init(@ViewBuilder content: () -> Content) {
-        self.content = content()
+    public init(@ViewBuilder content: @escaping () -> Content) {
+        self.content = content
     }
 
     // MARK: Public
 
-    @ViewBuilder public let content: Content
-
     public var body: some View {
         VStack {
             if !hidden {
-                content.focusable(false)
+                content().focusable(false)
             } else {
                 EmptyView()
             }
@@ -594,13 +592,17 @@ public struct PopoverView<Content: View>: View {
 
     // MARK: Internal
 
+    let content: () -> Content
+
     @Default(.popoverClosed) var popoverClosed
     @State var hidden = false
 
     func setup(_ closed: Bool? = nil) {
         guard !(closed ?? popoverClosed) else {
             debug("Deallocating menu")
-            menuHideTask = mainAsyncAfter(ms: 2000) { hidden = true }
+            menuHideTask = mainAsyncAfter(ms: 2000) {
+                hidden = true
+            }
             return
         }
         debug("Reallocating menu")
