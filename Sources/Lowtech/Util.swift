@@ -14,8 +14,24 @@ import Path
 import SwiftDate
 import UserNotifications
 
-public func timeSince(_ date: Date) -> TimeInterval {
+@inline(__always)
+public func localTimeSince(_ date: Date) -> TimeInterval {
     DateInRegion().convertTo(region: .local) - date.convertTo(region: .local)
+}
+
+@inline(__always)
+public func localTimeUntil(_ date: Date) -> TimeInterval {
+    date.convertTo(region: .local) - DateInRegion().convertTo(region: .local)
+}
+
+@inline(__always)
+public func timeSince(_ date: Date) -> TimeInterval {
+    date.timeIntervalSinceNow * -1
+}
+
+@inline(__always)
+public func timeUntil(_ date: Date) -> TimeInterval {
+    date.timeIntervalSinceNow
 }
 
 public func cap<T: Comparable>(_ number: T, minVal: T, maxVal: T) -> T {

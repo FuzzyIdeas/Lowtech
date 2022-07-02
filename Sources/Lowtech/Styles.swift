@@ -167,12 +167,125 @@ public struct OutlineButton: ButtonStyle {
     @State var font: Font = .body.bold()
 }
 
-func roundRect(_ radius: CGFloat, fill: Color) -> some View {
+public extension Font {
+    static func mono(_ size: CGFloat, weight: Font.Weight = .medium) -> Font {
+        .system(size: size, weight: weight, design: .monospaced)
+    }
+
+    static func round(_ size: CGFloat, weight: Font.Weight = .medium) -> Font {
+        .system(size: size, weight: weight, design: .rounded)
+    }
+
+    static func serif(_ size: CGFloat, weight: Font.Weight = .medium) -> Font {
+        .system(size: size, weight: weight, design: .serif)
+    }
+
+    static func medium(_ size: CGFloat) -> Font {
+        .system(size: size, weight: .medium, design: .default)
+    }
+
+    static func semibold(_ size: CGFloat) -> Font {
+        .system(size: size, weight: .semibold, design: .default)
+    }
+
+    static func bold(_ size: CGFloat) -> Font {
+        .system(size: size, weight: .bold, design: .default)
+    }
+
+    static func heavy(_ size: CGFloat) -> Font {
+        .system(size: size, weight: .heavy, design: .default)
+    }
+
+    static func black(_ size: CGFloat) -> Font {
+        .system(size: size, weight: .black, design: .default)
+    }
+}
+
+public extension Text {
+    func mono(_ size: CGFloat, weight: Font.Weight = .medium) -> Text {
+        font(.system(size: size, weight: weight, design: .monospaced))
+    }
+
+    func round(_ size: CGFloat, weight: Font.Weight = .medium) -> Text {
+        font(.system(size: size, weight: weight, design: .rounded))
+    }
+
+    func serif(_ size: CGFloat, weight: Font.Weight = .medium) -> Text {
+        font(.system(size: size, weight: weight, design: .serif))
+    }
+
+    func medium(_ size: CGFloat) -> Text {
+        font(.system(size: size, weight: .medium, design: .default))
+    }
+
+    func semibold(_ size: CGFloat) -> Text {
+        font(.system(size: size, weight: .semibold, design: .default))
+    }
+
+    func bold(_ size: CGFloat) -> Text {
+        font(.system(size: size, weight: .bold, design: .default))
+    }
+
+    func heavy(_ size: CGFloat) -> Text {
+        font(.system(size: size, weight: .heavy, design: .default))
+    }
+
+    func black(_ size: CGFloat) -> Text {
+        font(.system(size: size, weight: .black, design: .default))
+    }
+
+    func roundbg(size: CGFloat = 2.5, color: Color = .primary, shadowSize: CGFloat = 0) -> some View {
+        modifier(RoundBG(size: size, color: color, shadowSize: shadowSize))
+            .foregroundColor(color.textColor)
+    }
+}
+
+// MARK: - RoundBG
+
+public struct RoundBG: ViewModifier {
+    // MARK: Public
+
+    public func body(content: Content) -> some View {
+        content
+            .padding(.horizontal, size * 2.2)
+            .padding(.vertical, size)
+            .background(
+                roundRect(size * 2, fill: color)
+                    .shadow(color: .black.opacity(0.15), radius: shadowSize, x: 0, y: shadowSize / 2)
+            )
+    }
+
+    // MARK: Internal
+
+    @State var size: CGFloat
+    @State var color: Color
+    @State var shadowSize: CGFloat
+}
+
+public extension View {
+    func roundbg(size: CGFloat = 2.5, color: Color = .primary, shadowSize: CGFloat = 0) -> some View {
+        modifier(RoundBG(size: size, color: color, shadowSize: shadowSize))
+    }
+
+    func hfill(_ alignment: Alignment = .center) -> some View {
+        frame(maxWidth: .infinity, alignment: alignment)
+    }
+
+    func vfill(_ alignment: Alignment = .center) -> some View {
+        frame(maxHeight: .infinity, alignment: alignment)
+    }
+
+    func fill(_ alignment: Alignment = .center) -> some View {
+        frame(maxWidth: .infinity, maxHeight: .infinity, alignment: alignment)
+    }
+}
+
+public func roundRect(_ radius: CGFloat, fill: Color) -> some View {
     RoundedRectangle(cornerRadius: radius, style: .continuous)
         .fill(fill)
 }
 
-func roundRect(_ radius: CGFloat, stroke: Color) -> some View {
+public func roundRect(_ radius: CGFloat, stroke: Color) -> some View {
     RoundedRectangle(cornerRadius: radius, style: .continuous)
         .stroke(stroke)
 }

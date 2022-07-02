@@ -110,3 +110,9 @@ public extension View {
         environment(\.colors, colors)
     }
 }
+
+public extension Color {
+    var textColor: Color {
+        NSColor(self).isLight() ? .black : .white
+    }
+}
