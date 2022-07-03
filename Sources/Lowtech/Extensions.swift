@@ -1018,7 +1018,14 @@ public extension String {
     var sha1: String {
         var s = Insecure.SHA1()
         s.update(data: data(using: .utf8)!)
-        return s.finalize().description
+        return s.finalize().hexEncodedString()
+    }
+}
+
+public extension Data {
+    func hexEncodedString(upperCased: Bool = false) -> String {
+        let format = upperCased ? "%02hhX" : "%02hhx"
+        return map { String(format: format, $0) }.joined()
     }
 }
 
