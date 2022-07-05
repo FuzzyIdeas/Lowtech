@@ -301,7 +301,7 @@ public extension RandomAccessCollection where Element: Hashable {
     }
 }
 
-public func promptForWorkingDirectoryPermission(message: String = "Choose your working directory", prompt: String = "Choose", initialPath: String = "/Users") -> URL? {
+public func promptForWorkingDirectoryPermission(message: String = "Choose your working directory", prompt: String = "Choose", initialPath: String = "/Users", defaultsKey: Defaults.Key<Data?>? = nil) -> URL? {
     let openPanel = NSOpenPanel()
     openPanel.message = message
     openPanel.prompt = prompt
@@ -315,7 +315,7 @@ public func promptForWorkingDirectoryPermission(message: String = "Choose your w
 
     openPanel.runModal()
     guard let url = openPanel.urls.first else { return nil }
-    saveBookmarkData(for: url)
+    saveBookmarkData(for: url, defaultsKey: defaultsKey)
 
 //    switch openPanel.runModal() {
 //    case .cancel, .abort:

@@ -221,6 +221,17 @@ public class KeysManager: ObservableObject {
     @Published public var disabledAltKeys = false
     @Published public var disabledShiftKeys = false
 
+    @Published public var testHotkey: HotKey? = nil {
+        didSet {
+            if let testHotkey, oldValue == nil {
+                testHotkey.register()
+            }
+            if let oldValue, testHotkey == nil {
+                oldValue.unregister()
+            }
+        }
+    }
+
     @Published public var altKeyModifiers: [TriggerKey] = [] {
         didSet {
             disabledAltKeys = altKeyModifiers.isEmpty

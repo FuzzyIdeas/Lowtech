@@ -61,19 +61,28 @@ open class StatusBarController: NSObject, NSPopoverDelegate, NSWindowDelegate {
     // MARK: Open
 
     open func windowWillClose(_: Notification) {
-        Defaults[.popoverClosed] = true
+        debug("windowWillClose")
+        if !Defaults[.popoverClosed] {
+            Defaults[.popoverClosed] = true
+        }
     }
 
     open func popoverDidClose(_: Notification) {
+        debug("popoverDidClose")
         let positioningView = statusItem.button?.subviews.first {
             $0.identifier == NSUserInterfaceItemIdentifier(rawValue: "positioningView")
         }
         positioningView?.removeFromSuperview()
-        Defaults[.popoverClosed] = true
+        if !Defaults[.popoverClosed] {
+            Defaults[.popoverClosed] = true
+        }
     }
 
     open func popoverWillShow(_: Notification) {
-        Defaults[.popoverClosed] = false
+        debug("popoverWillShow")
+        if Defaults[.popoverClosed] {
+            Defaults[.popoverClosed] = false
+        }
         popoverShownAtLeastOnce = true
     }
 
@@ -91,7 +100,6 @@ open class StatusBarController: NSObject, NSPopoverDelegate, NSWindowDelegate {
     public var observers: Set<AnyCancellable> = []
     public var statusItem: NSStatusItem
     @Atomic public var popoverShownAtLeastOnce = false
-
     @Atomic public var shouldLeavePopoverOpen = false
 
     public var popoverWindow: NSWindow? {
@@ -99,7 +107,14 @@ open class StatusBarController: NSObject, NSPopoverDelegate, NSWindowDelegate {
     }
 
     @objc public func togglePopover(sender: AnyObject) {
-        togglePopover(sender: sender, at: nil)
+        tryc += 1
+        if tryc == 1 {
+            mainAsyncAfter(ms: 100) {
+                self.togglePopover(sender: LowtechAppDelegate.instance, at: nil)
+            }
+        } else {
+            togglePopover(sender: LowtechAppDelegate.instance, at: nil)
+        }
     }
 
     public func togglePopover(sender: AnyObject, at point: NSPoint? = nil) {
@@ -136,6 +151,14 @@ open class StatusBarController: NSObject, NSPopoverDelegate, NSWindowDelegate {
         NSApp.mainMenu?.items = [editMenuItem]
     }
 
+    public func refresh() {
+        guard popover.isShown, let positioningView, let popoverWindow else { return }
+
+        popover.show(relativeTo: positioningView.bounds, of: positioningView, preferredEdge: .maxY)
+        popoverWindow.setFrame(popoverWindow.frame.offsetBy(dx: 0, dy: 12), display: false)
+        popoverWindow.makeKeyAndOrderFront(LowtechAppDelegate.instance)
+    }
+
     public func showPopover(_ sender: AnyObject, at point: NSPoint? = nil, center: Bool = false) {
         guard statusItem.isVisible, !center else {
             Defaults[.popoverClosed] = false
@@ -150,7 +173,9 @@ open class StatusBarController: NSObject, NSPopoverDelegate, NSWindowDelegate {
         popover.contentViewController = MainViewController()
         popover.contentViewController!.view = view
         popoverShownAtLeastOnce = true
-        let positioningView = NSView(frame: button.bounds)
+        positioningView = NSView(frame: button.bounds)
+
+        guard let positioningView else { return }
         positioningView.identifier = NSUserInterfaceItemIdentifier(rawValue: "positioningView")
         button.addSubview(positioningView)
 
@@ -173,6 +198,9 @@ open class StatusBarController: NSObject, NSPopoverDelegate, NSWindowDelegate {
     }
 
     // MARK: Internal
+
+    var positioningView: NSView?
+    var tryc = 0
 
     func mouseEventHandler(_ event: NSEvent?) {
         if popover.isShown, !shouldLeavePopoverOpen {
@@ -223,10 +251,10 @@ extension NSVisualEffectView {
             window.styleMask = .borderless
             window.hasShadow = false
 
-            if let screenFrame = NSScreen.main?.visibleFrame {
+            if window.identifier == AUTO_X_POPOVER_IDENTIFIER, let screenFrame = NSScreen.main?.visibleFrame {
                 #if DEBUG
-                    print("window.frame: x=\(window.frame.origin.x) width=\(window.frame.width)")
-                    print("screenFrame: x=\(screenFrame.origin.x) width=\(screenFrame.width)")
+                    print("window.frame: x=\(window.frame.origin.x) y=\(window.frame.origin.y) width=\(window.frame.height) width=\(window.frame.height)")
+                    print("screenFrame: x=\(screenFrame.origin.x) y=\(screenFrame.origin.y) width=\(screenFrame.width) height=\(screenFrame.height)")
                 #endif
 
                 var xOffset: CGFloat = 0
@@ -276,6 +304,7 @@ func swizzlePopoverBackground() {
 }
 
 let TRANSPARENT_POPOVER_IDENTIFIER = NSUserInterfaceItemIdentifier("TRANSPARENT_POPOVER")
+let AUTO_X_POPOVER_IDENTIFIER = NSUserInterfaceItemIdentifier("AUTO_X_POPOVER")
 
 func removePopoverBackground(view: NSView, backgroundView: inout PopoverBackgroundView?) {
     if let frameView = view.window?.contentView?.superview as? NSVisualEffectView {
