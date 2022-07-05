@@ -108,7 +108,7 @@ open class StatusBarController: NSObject, NSPopoverDelegate, NSWindowDelegate {
 
     @objc public func togglePopover(sender: AnyObject) {
         tryc += 1
-        if tryc == 1 {
+        if tryc <= 3 {
             mainAsyncAfter(ms: 100) {
                 self.togglePopover(sender: LowtechAppDelegate.instance, at: nil)
             }
