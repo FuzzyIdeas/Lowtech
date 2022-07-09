@@ -100,14 +100,14 @@ public class KeysManager: ObservableObject {
     }
 
     open func registerSpecialHotkey() {
-        guard let specialHotkey, !specialHotkeyRegistered, !SWIFTUI_PREVIEW else { return }
+        guard let specialHotkey = specialHotkey, !specialHotkeyRegistered, !SWIFTUI_PREVIEW else { return }
         specialHotkey.register()
         specialHotkeyRegistered = true
         onRegisterSpecialHotkey?()
     }
 
     open func unregisterSpecialHotkey() {
-        guard let specialHotkey, specialHotkeyRegistered else { return }
+        guard let specialHotkey = specialHotkey, specialHotkeyRegistered else { return }
         specialHotkey.unregister()
         specialHotkeyRegistered = false
         onUnregisterSpecialHotkey?()
@@ -223,10 +223,10 @@ public class KeysManager: ObservableObject {
 
     @Published public var testHotkey: HotKey? = nil {
         didSet {
-            if let testHotkey, oldValue == nil {
+            if let testHotkey = testHotkey, oldValue == nil {
                 testHotkey.register()
             }
-            if let oldValue, testHotkey == nil {
+            if let oldValue = oldValue, testHotkey == nil {
                 oldValue.unregister()
             }
         }
@@ -434,7 +434,7 @@ public class KeysManager: ObservableObject {
         guard modifiers.isNotEmpty else { return [] }
 
         var keys = Set(keys)
-        if let ignoredKeys { keys.subtract(ignoredKeys) }
+        if let ignoredKeys = ignoredKeys { keys.subtract(ignoredKeys) }
 
         return keys.compactMap { ch in
             guard let key = Key(character: ch, virtualKeyCode: nil), let combo = KeyCombo(key: key, cocoaModifiers: modifiers)

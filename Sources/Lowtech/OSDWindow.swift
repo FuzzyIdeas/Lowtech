@@ -9,7 +9,7 @@ import SwiftUI
 open class OSDWindow: NSWindow, NSWindowDelegate {
     // MARK: Lifecycle
 
-    public convenience init(swiftuiView: some View, allSpaces: Bool = true, canScreenshot: Bool = true, screen: NSScreen? = nil, corner: ScreenCorner? = nil, allowsMouse: Bool = false) {
+    public convenience init(swiftuiView: AnyView, allSpaces: Bool = true, canScreenshot: Bool = true, screen: NSScreen? = nil, corner: ScreenCorner? = nil, allowsMouse: Bool = false) {
         self.init(contentViewController: NSHostingController(rootView: swiftuiView))
 
         screenPlacement = screen
@@ -43,7 +43,7 @@ open class OSDWindow: NSWindow, NSWindowDelegate {
     open var onClick: ((NSEvent) -> Void)?
 
     override open func mouseDown(with event: NSEvent) {
-        guard !ignoresMouseEvents, let onClick else { return }
+        guard !ignoresMouseEvents, let onClick = onClick else { return }
         onClick(event)
     }
 
@@ -56,9 +56,9 @@ open class OSDWindow: NSWindow, NSWindowDelegate {
         corner: ScreenCorner? = nil,
         screen: NSScreen? = nil
     ) {
-        if let corner {
+        if let corner = corner {
             moveToScreen(screen, corner: corner)
-        } else if let point {
+        } else if let point = point {
             setFrameOrigin(point)
         } else if let screenFrame = (screen ?? NSScreen.withMouse ?? NSScreen.main)?.visibleFrame {
             setFrameOrigin(screenFrame.origin)
@@ -77,7 +77,7 @@ open class OSDWindow: NSWindow, NSWindowDelegate {
         closer?.cancel()
         guard closeMilliseconds > 0 else { return }
         fader = mainAsyncAfter(ms: fadeMilliseconds) { [weak self] in
-            guard let self, self.isVisible else { return }
+            guard let self = self, self.isVisible else { return }
             NSAnimationContext.runAnimationGroup { ctx in
                 ctx.duration = 1
                 self.animator().alphaValue = 0.01
@@ -94,7 +94,7 @@ open class OSDWindow: NSWindow, NSWindowDelegate {
     @Published public var screenPlacement: NSScreen?
 
     public func windowDidResize(_ notification: Notification) {
-        guard let screenCorner, let screenPlacement else { return }
+        guard let screenCorner = screenCorner, let screenPlacement = screenPlacement else { return }
         moveToScreen(screenPlacement, corner: screenCorner)
     }
 
@@ -110,11 +110,11 @@ open class OSDWindow: NSWindow, NSWindowDelegate {
             return
         }
 
-        if let screen {
+        if let screen = screen {
             screenPlacement = screen
         }
 
-        guard let corner else {
+        guard let corner = corner else {
             setFrameOrigin(screenFrame.origin)
             return
         }

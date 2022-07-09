@@ -7,7 +7,7 @@ import SwiftUI
 open class PanelWindow: NSWindow {
     // MARK: Lifecycle
 
-    public convenience init(swiftuiView: some View) {
+    public convenience init(swiftuiView: AnyView) {
         self.init(contentViewController: NSHostingController(rootView: swiftuiView))
 
         level = .floating

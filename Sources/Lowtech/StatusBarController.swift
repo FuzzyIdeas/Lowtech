@@ -152,7 +152,7 @@ open class StatusBarController: NSObject, NSPopoverDelegate, NSWindowDelegate {
     }
 
     public func refresh() {
-        guard popover.isShown, let positioningView, let popoverWindow else { return }
+        guard popover.isShown, let positioningView = positioningView, let popoverWindow = popoverWindow else { return }
 
         popover.show(relativeTo: positioningView.bounds, of: positioningView, preferredEdge: .maxY)
         popoverWindow.setFrame(popoverWindow.frame.offsetBy(dx: 0, dy: 12), display: false)
@@ -175,7 +175,7 @@ open class StatusBarController: NSObject, NSPopoverDelegate, NSWindowDelegate {
         popoverShownAtLeastOnce = true
         positioningView = NSView(frame: button.bounds)
 
-        guard let positioningView else { return }
+        guard let positioningView = positioningView else { return }
         positioningView.identifier = NSUserInterfaceItemIdentifier(rawValue: "positioningView")
         button.addSubview(positioningView)
 
