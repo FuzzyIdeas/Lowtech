@@ -9,6 +9,23 @@ public prefix func ! (value: Binding<Bool>) -> Binding<Bool> {
     )
 }
 
+public prefix func ! <T>(keyPath: KeyPath<T, Bool>) -> (T) -> Bool {
+    { !$0[keyPath: keyPath] }
+}
+
+prefix operator !?
+public prefix func !? <T, V>(keyPath: KeyPath<T, V?>) -> (T) -> Bool {
+    { $0[keyPath: keyPath] != nil }
+}
+
+public func == <T, V: Equatable>(lhs: KeyPath<T, V>, rhs: V) -> (T) -> Bool {
+    { $0[keyPath: lhs] == rhs }
+}
+
+public func != <T, V: Equatable>(lhs: KeyPath<T, V>, rhs: V) -> (T) -> Bool {
+    { $0[keyPath: lhs] != rhs }
+}
+
 infix operator ?!
 
 public func ?! (_ str: String?, _ str2: String) -> String {
@@ -55,12 +72,12 @@ public extension String.SubSequence {
 
 public extension Animation {
     #if os(iOS)
-        static var fastTransition = Animation.easeOut(duration: 0.1)
+        static let fastTransition = Animation.easeOut(duration: 0.1)
     #else
-        static var fastTransition = Animation.interactiveSpring(dampingFraction: 0.7)
+        static let fastTransition = Animation.interactiveSpring(dampingFraction: 0.7)
     #endif
-    static var fastSpring = Animation.interactiveSpring(dampingFraction: 0.7)
-    static var jumpySpring = Animation.spring(response: 0.4, dampingFraction: 0.45)
+    static let fastSpring = Animation.interactiveSpring(dampingFraction: 0.7)
+    static let jumpySpring = Animation.spring(response: 0.4, dampingFraction: 0.45)
 }
 
 // MARK: - NumberFormatting
@@ -901,6 +918,20 @@ public extension View {
     }
 }
 
+public extension Set where Element: Equatable & Hashable {
+    func without(_ element: Element) -> Set<Element> {
+        subtracting([element])
+    }
+
+    func without(_ elements: Set<Element>) -> Set<Element> {
+        subtracting(elements)
+    }
+
+    func with(_ element: Element) -> Set<Element> {
+        union([element])
+    }
+}
+
 public extension Sequence where Element: Equatable & Hashable {
     func without(_ element: Element) -> [Element] {
         filter { $0 != element }
@@ -1247,4 +1278,20 @@ public extension Defaults.CollectionSerializable where Element: Defaults.Seriali
 
 public extension Defaults.SetAlgebraSerializable where Element: Defaults.Serializable & Hashable {
     static var bridge: Defaults.SetAlgebraBridge<Self> { Defaults.SetAlgebraBridge() }
+}
+
+public extension Dictionary {
+    func copyWithout(key: Key) -> Self {
+        var m = self
+
+        m.removeValue(forKey: key)
+        return m
+    }
+
+    func copyWith(key: Key, value: Value) -> Self {
+        var m = self
+
+        m[key] = value
+        return m
+    }
 }

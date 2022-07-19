@@ -565,6 +565,11 @@ open class EnvState: ObservableObject {
 
     @Published public var recording = false
     @Published public var closed = true
+
+    // MARK: Internal
+
+    @Published var hoveringSlider = false
+    @Published var draggingSlider = false
 }
 
 var menuHideTask: DispatchWorkItem? {
@@ -733,8 +738,14 @@ public struct ErrorTextView: View {
 
 // MARK: - TrialOSDContainer
 
-struct TrialOSDContainer: View {
-    var body: some View {
+public struct TrialOSDContainer: View {
+    // MARK: Lifecycle
+
+    public init() {}
+
+    // MARK: Public
+
+    public var body: some View {
         HStack {
             if let img = NSImage(named: NSImage.applicationIconName) {
                 Image(nsImage: img)

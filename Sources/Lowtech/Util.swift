@@ -109,6 +109,60 @@ public struct Atomic<Value: AtomicValue> {
     var value: ManagedAtomic<Value>
 }
 
+// MARK: - Setting
+
+@available(macOS 10.15, iOS 13.0, tvOS 13.0, watchOS 6.0, *)
+@propertyWrapper
+public class Setting<Value: Defaults.Serializable> {
+    // MARK: Lifecycle
+
+    public init(_ key: Defaults.Key<Value>) {
+        self.key = key
+        storage = Storage(initialValue: Defaults[key])
+        observer = Defaults.publisher(key)
+            .debounce(for: .milliseconds(10), scheduler: RunLoop.main)
+            .sink { [weak self] in
+                guard let self = self else { return }
+                self.storage.value = $0.newValue
+                self.storage.oldValue = $0.oldValue
+            }
+    }
+
+    // MARK: Public
+
+    public typealias Publisher = AnyPublisher<Defaults.KeyChange<Value>, Never>
+
+    public var wrappedValue: Value {
+        get { storage.value }
+        set {
+            storage.value = newValue
+            storage.oldValue = wrappedValue
+            Defaults.withoutPropagation {
+                Defaults[key] = newValue
+            }
+        }
+    }
+
+    // MARK: Private
+
+    private class Storage {
+        // MARK: Lifecycle
+
+        init(initialValue: Value) {
+            value = initialValue
+        }
+
+        // MARK: Internal
+
+        var value: Value
+        var oldValue: Value?
+    }
+
+    private var observer: Cancellable?
+    private var storage: Storage
+    private let key: Defaults.Key<Value>
+}
+
 @discardableResult
 @inline(__always) public func mainThread<T>(_ action: () -> T) -> T {
     guard !Thread.isMainThread else {

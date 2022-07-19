@@ -3,6 +3,11 @@ import Combine
 import Defaults
 import SwiftUI
 
+public extension NSNotification.Name {
+    static let closePopover: NSNotification.Name = .init("closePopover")
+    static let openPopover: NSNotification.Name = .init("openPopover")
+}
+
 // MARK: - StatusBarController
 
 open class StatusBarController: NSObject, NSPopoverDelegate, NSWindowDelegate {
@@ -20,6 +25,15 @@ open class StatusBarController: NSObject, NSPopoverDelegate, NSWindowDelegate {
 
         super.init()
 
+        NotificationCenter.default.publisher(for: .closePopover)
+            .debounce(for: .milliseconds(10), scheduler: RunLoop.main)
+            .sink { _ in self.hidePopover(LowtechAppDelegate.instance) }
+            .store(in: &observers)
+        NotificationCenter.default.publisher(for: .openPopover)
+            .debounce(for: .milliseconds(10), scheduler: RunLoop.main)
+            .sink { _ in self.showPopover(LowtechAppDelegate.instance) }
+            .store(in: &observers)
+
         if let statusBarButton = statusItem.button {
             statusBarButton.image = NSImage(named: image)
             statusBarButton.image?.size = NSSize(width: 18.0, height: 18.0)
@@ -35,11 +49,8 @@ open class StatusBarController: NSObject, NSPopoverDelegate, NSWindowDelegate {
         }
 
         Defaults.publisher(.hideMenubarIcon).removeDuplicates().filter { $0.oldValue != $0.newValue }.sink { [self] hidden in
-            let wasHidingMenubarIcon = hidden.oldValue
             let showingMenubarIcon = !hidden.newValue
             let hidingMenubarIcon = hidden.newValue
-
-            let windowLocation = wasHidingMenubarIcon ? window.frame.origin : popoverWindow?.frame.origin
 
             hidePopover(self)
             statusItem.isVisible = showingMenubarIcon
@@ -47,7 +58,7 @@ open class StatusBarController: NSObject, NSPopoverDelegate, NSWindowDelegate {
 
             guard popoverShownAtLeastOnce else { return }
             mainAsyncAfter(ms: 10) {
-                self.showPopover(self, at: windowLocation)
+                self.showPopover(self)
             }
         }.store(in: &observers)
 

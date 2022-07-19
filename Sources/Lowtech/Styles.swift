@@ -15,8 +15,9 @@ import SystemColors
 public struct CheckboxToggleStyle: ToggleStyle {
     // MARK: Lifecycle
 
-    public init(style: Style = .circle) {
+    public init(style: Style = .circle, scale: Image.Scale = .large) {
         self.style = style
+        self.scale = scale
     }
 
     // MARK: Public
@@ -37,7 +38,8 @@ public struct CheckboxToggleStyle: ToggleStyle {
     }
 
     @Environment(\.isEnabled) public var isEnabled
-    public let style: Style // custom param
+    public let style: Style
+    public let scale: Image.Scale
 
     public func makeBody(configuration: Configuration) -> some View {
         Button(action: {
@@ -45,7 +47,7 @@ public struct CheckboxToggleStyle: ToggleStyle {
         }, label: {
             HStack {
                 Image(systemName: configuration.isOn ? "checkmark.\(style.sfSymbolName).fill" : style.sfSymbolName)
-                    .imageScale(.large)
+                    .imageScale(scale)
                 configuration.label
             }
         })
@@ -297,26 +299,22 @@ public struct ToggleButton: ButtonStyle {
 
     public init(
         isOn: Binding<Bool>,
-        onColor: Color = Color.primary,
-        offColor: Color = Color.primary.opacity(0.1),
-        onTextColor: Color = Color.textBackground,
-        offTextColor: Color = Color.secondary,
-        hoverColor: Color = Color.white.opacity(0.5),
+        color: Color = Color.primary,
         scale: CGFloat = 1,
+        radius: CGFloat? = nil,
         width: CGFloat? = nil,
-        height: CGFloat? = nil
+        height: CGFloat? = nil,
+        horizontalPadding: CGFloat = 8.0,
+        verticalPadding: CGFloat = 4.0
     ) {
-        _onColor = State(initialValue: onColor)
-        _offColor = State(initialValue: offColor)
-        _onTextColor = State(initialValue: onTextColor)
-        _offTextColor = State(initialValue: offTextColor)
+        _color = State(initialValue: color)
         _scale = State(initialValue: scale)
         _width = State(initialValue: width)
         _height = State(initialValue: height)
+        _horizontalPadding = State(initialValue: horizontalPadding)
+        _verticalPadding = State(initialValue: verticalPadding)
+        _radius = radius?.state ?? (height != nil ? height! * 0.4 : 8).state
         _isOn = isOn
-
-        _hoverColor = State(initialValue: hoverColor)
-        _hoverTextColor = State(initialValue: hoverColor.ns.isLight() ? Color.black : Color.white)
     }
 
     // MARK: Public
@@ -326,16 +324,16 @@ public struct ToggleButton: ButtonStyle {
     public func makeBody(configuration: Configuration) -> some View {
         configuration
             .label
-            .foregroundColor((hovering && !configuration.isPressed) ? hoverTextColor : fgColor(configuration))
-            .padding(.vertical, 4.0)
-            .padding(.horizontal, 8.0)
+            .foregroundColor(fgColor(configuration))
+            .padding(.vertical, verticalPadding)
+            .padding(.horizontal, horizontalPadding)
             .background(
-                roundRect(8, fill: (hovering && !configuration.isPressed) ? hoverColor.opacity(isOn ? 1.0 : 0.5) : bgColor(configuration))
+                roundRect(radius, fill: bgColor(configuration))
                     .frame(width: width, height: height, alignment: .center)
             )
             .brightness(hovering ? 0.05 : 0.0)
             .contrast(hovering ? 1.02 : 1.0)
-            .scaleEffect(hovering ? 1.05 : 1)
+            .scaleEffect(configuration.isPressed ? 1.02 : (hovering ? 1.05 : 1))
             .contentShape(Rectangle())
             .onHover(perform: { hover in
                 guard isEnabled else { return }
@@ -355,25 +353,24 @@ public struct ToggleButton: ButtonStyle {
 
     @Environment(\.colors) var colors
 
-    @State var onColor: Color = .primary
-    @State var offColor = Color.primary.opacity(0.1)
-    @State var onTextColor: Color = .textBackground
-    @State var offTextColor: Color = .secondary
-    @State var hoverColor: Color
-    @State var hoverTextColor: Color
+    @State var color: Color = .primary
     @State var scale: CGFloat = 1
     @State var width: CGFloat? = nil
     @State var height: CGFloat? = nil
+    @State var radius: CGFloat = 10
+    @State var horizontalPadding: CGFloat = 8.0
+    @State var verticalPadding: CGFloat = 4.0
     @State var hovering = false
 
     @Binding var isOn: Bool
 
     func bgColor(_ configuration: Configuration) -> Color {
-        configuration.isPressed ? (isOn ? offColor : onColor) : (isOn ? onColor : offColor)
+        hovering ? (isOn ? color.opacity(0.9) : color.opacity(0.2)) : (isOn ? color : color.opacity(0.1))
     }
 
     func fgColor(_ configuration: Configuration) -> Color {
-        configuration.isPressed ? (isOn ? offTextColor : onTextColor) : (isOn ? onTextColor : offTextColor)
+        let textColor = color.textColor
+        return hovering ? (isOn ? textColor : .primary) : (isOn ? textColor : .primary)
     }
 }
 

@@ -112,7 +112,14 @@ public extension View {
 }
 
 public extension Color {
+    var isLight: Bool {
+        let components = ns.toRGBAComponents()
+        let brightness = ((components.r * 299.0) + (components.g * 587.0) + (components.b * 114.0)) / 1000.0
+
+        return brightness >= 0.4
+    }
+
     var textColor: Color {
-        NSColor(self).isLight() ? .black : .white
+        memoz.isLight ? .black : .white
     }
 }

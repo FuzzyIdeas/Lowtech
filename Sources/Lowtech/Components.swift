@@ -333,15 +333,38 @@ public struct BigSurSlider: View {
         sliderWidth: CGFloat = 200,
         sliderHeight: CGFloat = 22,
         image: String? = nil,
+        imageBinding: Binding<String?>? = nil,
         color: Color? = nil,
-        backgroundColor: Color = .black.opacity(0.1)
+        colorBinding: Binding<Color?>? = nil,
+        backgroundColor: Color = .black.opacity(0.1),
+        backgroundColorBinding: Binding<Color>? = nil,
+        knobColor: Color? = nil,
+        knobColorBinding: Binding<Color?>? = nil,
+        knobTextColor: Color? = nil,
+        knobTextColorBinding: Binding<Color?>? = nil,
+        showValue: Binding<Bool>? = nil,
+        acceptsMouseEvents: Binding<Bool>? = nil,
+        disabled: Binding<Bool>? = nil,
+        enableText: String? = nil,
+        mark: Binding<Float>? = nil
     ) {
+        _knobColor = .constant(knobColor)
+        _knobTextColor = .constant(knobTextColor)
+
         _percentage = percentage
         _sliderWidth = sliderWidth.state
         _sliderHeight = sliderHeight.state
-        _image = image.state
-        _color = color.state
-        _backgroundColor = backgroundColor.state
+        _image = imageBinding ?? .constant(image)
+        _color = colorBinding ?? .constant(color)
+        _showValue = showValue ?? .constant(false)
+        _backgroundColor = backgroundColorBinding ?? .constant(backgroundColor)
+        _acceptsMouseEvents = acceptsMouseEvents ?? .constant(true)
+        _disabled = disabled ?? .constant(false)
+        _enableText = State(initialValue: enableText)
+        _mark = mark ?? .constant(0)
+
+        _knobColor = knobColorBinding ?? colorBinding ?? .constant(knobColor ?? colors.accent)
+        _knobTextColor = knobTextColorBinding ?? .constant(knobTextColor ?? ((color ?? colors.accent).textColor))
     }
 
     // MARK: Public
@@ -349,41 +372,68 @@ public struct BigSurSlider: View {
     public var body: some View {
         GeometryReader { geometry in
             let w = geometry.size.width - self.sliderHeight
-            let cgPercentage = percentage.cg
+            let cgPercentage = cap(percentage, minVal: 0, maxVal: 1).cg
 
             ZStack(alignment: .leading) {
                 Rectangle()
                     .foregroundColor(backgroundColor)
-                Rectangle()
-                    .foregroundColor(color ?? colors.accent)
-                    .frame(width: 10)
                 ZStack(alignment: .leading) {
                     Rectangle()
                         .foregroundColor(color ?? colors.accent)
-                        .frame(width: w * cgPercentage + sliderHeight / 2)
+                        .frame(width: cgPercentage == 1 ? geometry.size.width : w * cgPercentage + sliderHeight / 2)
                     if let image = image {
+                        let imgColor = color?.textColor ?? Color.black
                         Image(systemName: image)
                             .resizable()
                             .frame(width: 12, height: 12, alignment: .center)
                             .font(.body.weight(.heavy))
                             .frame(width: sliderHeight - 7, height: sliderHeight - 7)
-                            .foregroundColor(Color.black.opacity(0.5))
+                            .foregroundColor(imgColor.opacity(imgColor.isLight ? 0.9 : 0.6))
                             .offset(x: 3, y: 0)
                     }
                     ZStack {
                         Circle()
-                            .foregroundColor(colorScheme == .dark ? colors.accent : Colors.darkGray)
-                            .shadow(color: Colors.blackMauve.opacity(percentage > 0.5 ? 0.5 : percentage.d), radius: 5, x: -1, y: 0)
+                            .foregroundColor(knobColor)
+                            .shadow(color: Colors.blackMauve.opacity(percentage > 0.3 ? 0.3 : percentage.d), radius: 5, x: -1, y: 0)
                             .frame(width: sliderHeight, height: sliderHeight, alignment: .trailing)
-
-                        Text((percentage * 100).str(decimals: 0))
-                            .foregroundColor(colorScheme == .dark ? Colors.darkGray : Color.white)
-                            .font(.system(size: 9, weight: .heavy))
-                            .allowsHitTesting(false)
+                            .brightness(env.draggingSlider && hovering ? -0.2 : 0)
+                        if showValue {
+                            Text((percentage * 100).str(decimals: 0))
+                                .foregroundColor(knobTextColor)
+                                .font(.system(size: 8, weight: .medium, design: .monospaced))
+                                .allowsHitTesting(false)
+                        }
                     }.offset(
                         x: cgPercentage * w,
                         y: 0
                     )
+                    if mark > 0 {
+                        RoundedRectangle(cornerRadius: 1, style: .continuous)
+                            .fill(Color.red.opacity(0.7))
+                            .frame(width: 3, height: sliderHeight - 5, alignment: .center)
+                            .offset(
+                                x: cap(mark, minVal: 0, maxVal: 1).cg * w,
+                                y: 0
+                            ).animation(.jumpySpring, value: mark)
+                    }
+                }
+                .disabled(disabled)
+                .contrast(disabled ? 0.4 : 1.0)
+                .saturation(disabled ? 0.4 : 1.0)
+
+                if disabled, hovering, let enableText = enableText {
+                    SwiftUI.Button(enableText) {
+                        disabled = false
+                    }
+                    .buttonStyle(FlatButton(
+                        color: Colors.red.opacity(0.7),
+                        textColor: .white,
+                        horizontalPadding: 6,
+                        verticalPadding: 2
+                    ))
+                    .font(.system(size: 10, weight: .medium, design: .rounded))
+                    .transition(.scale.animation(.fastSpring))
+                    .frame(maxWidth: .infinity, alignment: .center)
                 }
             }
             .frame(width: sliderWidth, height: sliderHeight)
@@ -391,56 +441,134 @@ public struct BigSurSlider: View {
             .gesture(
                 DragGesture(minimumDistance: 0)
                     .onChanged { value in
+                        guard acceptsMouseEvents, !disabled else { return }
+                        if !env.draggingSlider {
+                            if draggingSliderSetter == nil {
+                                draggingSliderSetter = mainAsyncAfter(ms: 200) {
+                                    env.draggingSlider = true
+                                }
+                            } else {
+                                draggingSliderSetter = nil
+                                env.draggingSlider = true
+                            }
+                        }
+
                         self.percentage = cap(Float(value.location.x / geometry.size.width), minVal: 0, maxVal: 1)
                     }
-            )
-            .animation(.easeOut(duration: 0.1), value: percentage)
-            #if os(macOS)
-                .onHover { hovering in
-                    if hovering {
-                        trackScrollWheel()
-                    } else {
-                        subs.forEach { $0.cancel() }
-                        subs.removeAll()
+                    .onEnded { value in
+                        guard acceptsMouseEvents, !disabled else { return }
+                        draggingSliderSetter = nil
+                        self.percentage = cap(Float(value.location.x / geometry.size.width), minVal: 0, maxVal: 1)
+                        env.draggingSlider = false
                     }
-                }
-            #endif
+            )
+            #if os(macOS)
+            .onHover { hov in
+                hovering = hov
+                guard acceptsMouseEvents, !disabled else { return }
 
-        }.frame(width: sliderWidth, height: sliderHeight)
+                if hovering {
+                    lastCursorPosition = NSEvent.mouseLocation
+                    hoveringSliderSetter = mainAsyncAfter(ms: 200) {
+                        guard lastCursorPosition != NSEvent.mouseLocation else { return }
+                        env.hoveringSlider = hovering
+                    }
+                    trackScrollWheel()
+                } else {
+                    hoveringSliderSetter = nil
+                    env.hoveringSlider = false
+                }
+            }
+            #endif
+        }
+        .frame(width: sliderWidth, height: sliderHeight)
     }
 
     // MARK: Internal
 
     @Environment(\.colorScheme) var colorScheme
     @Environment(\.colors) var colors
+    @EnvironmentObject var env: EnvState
 
     @Binding var percentage: Float
     @State var sliderWidth: CGFloat = 200
     @State var sliderHeight: CGFloat = 22
-    @State var image: String? = nil
-    @State var color: Color? = nil
-    @State var backgroundColor: Color = .black.opacity(0.1)
+    @Binding var image: String?
+    @Binding var color: Color?
+    @Binding var backgroundColor: Color
+    @Binding var knobColor: Color?
+    @Binding var knobTextColor: Color?
+    @Binding var showValue: Bool
 
-    @State var subs = Set<AnyCancellable>()
+    @State var scrollWheelListener: Cancellable?
+
+    @State var hovering = false
+    @State var enableText: String? = nil
+    @State var lastCursorPosition = NSEvent.mouseLocation
+    @Binding var acceptsMouseEvents: Bool
+    @Binding var disabled: Bool
+    @Binding var mark: Float
 
     #if os(macOS)
         func trackScrollWheel() {
-            let pub = NSApp.publisher(for: \.currentEvent)
-            pub
+            guard scrollWheelListener == nil else { return }
+            scrollWheelListener = NSApp.publisher(for: \.currentEvent)
                 .filter { event in event?.type == .scrollWheel }
-                .throttle(
-                    for: .milliseconds(20),
-                    scheduler: DispatchQueue.main,
-                    latest: true
-                )
+                .throttle(for: .milliseconds(20), scheduler: DispatchQueue.main, latest: true)
                 .sink { event in
-                    guard let event = event, event.deltaY == 0 else { return }
+                    guard hovering, env.hoveringSlider, let event = event, event.momentumPhase.rawValue == 0 else {
+                        if let event = event, event.scrollingDeltaX + event.scrollingDeltaY == 0, event.phase.rawValue == 0,
+                           env.draggingSlider
+                        {
+                            env.draggingSlider = false
+                        }
+                        return
+                    }
+
                     let delta = Float(event.scrollingDeltaX) * (event.isDirectionInvertedFromDevice ? -1 : 1)
+                        + Float(event.scrollingDeltaY) * (event.isDirectionInvertedFromDevice ? 1 : -1)
+
+                    switch event.phase {
+                    case .changed, .began, .mayBegin:
+                        if !env.draggingSlider {
+                            env.draggingSlider = true
+                        }
+                    case .ended, .cancelled, .stationary:
+                        if env.draggingSlider {
+                            env.draggingSlider = false
+                        }
+                    default:
+                        if delta == 0, env.draggingSlider {
+                            env.draggingSlider = false
+                        }
+                    }
                     self.percentage = cap(self.percentage - (delta / 100), minVal: 0, maxVal: 1)
                 }
-                .store(in: &subs)
         }
     #endif
+}
+
+extension NSEvent.Phase {
+    var str: String {
+        switch self {
+        case .mayBegin: return "mayBegin"
+        case .began: return "began"
+        case .changed: return "changed"
+        case .stationary: return "stationary"
+        case .cancelled: return "cancelled"
+        case .ended: return "ended"
+        default:
+            return "phase(\(rawValue))"
+        }
+    }
+}
+
+var hoveringSliderSetter: DispatchWorkItem? {
+    didSet { oldValue?.cancel() }
+}
+
+var draggingSliderSetter: DispatchWorkItem? {
+    didSet { oldValue?.cancel() }
 }
 
 // MARK: - UpDownButtons

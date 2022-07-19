@@ -27,7 +27,7 @@ open class LowtechAppDelegate: NSObject, NSApplicationDelegate, ObservableObject
         }
     }
 
-    open func applicationDidFinishLaunching(_ notification: Notification) {
+    @MainActor open func applicationDidFinishLaunching(_ notification: Notification) {
         #if DEBUG
             print(notification)
         #endif
@@ -55,10 +55,13 @@ open class LowtechAppDelegate: NSObject, NSApplicationDelegate, ObservableObject
         KM.initialized = true
     }
 
+    @MainActor
+    @inline(__always)
     open func trialExpired() -> Bool {
         false
     }
 
+    @MainActor
     @inline(__always)
     open func hideTrialOSD() {
         guard trialMode, trialExpired() else {
@@ -68,6 +71,7 @@ open class LowtechAppDelegate: NSObject, NSApplicationDelegate, ObservableObject
         trialOSD.alphaValue = 0
     }
 
+    @MainActor
     @inline(__always)
     open func showTrialOSD() {
         guard trialMode, trialExpired() else {
