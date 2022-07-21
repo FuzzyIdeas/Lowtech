@@ -26,19 +26,11 @@ public class KeysManager: ObservableObject {
             shiftKeyModifiers = primaryKeyModifiers + [.rshift]
         }
 
-        NotificationCenter.default
-            .publisher(for: NSApplication.didChangeScreenParametersNotification, object: nil)
-            .eraseToAnyPublisher().map { $0 as Any? }
-            .merge(with: NSWorkspace.shared.publisher(for: \.frontmostApplication).eraseToAnyPublisher().map { $0 as Any? })
-            .merge(
-                with:
-                NSWorkspace.shared.notificationCenter
-                    .publisher(for: NSWorkspace.activeSpaceDidChangeNotification, object: nil)
-                    .eraseToAnyPublisher().map { $0 as Any? }
-            )
-            .debounce(for: .milliseconds(100), scheduler: RunLoop.main)
+        NSWorkspace.shared.notificationCenter
+            .publisher(for: NSWorkspace.activeSpaceDidChangeNotification, object: nil)
+            .debounce(for: .milliseconds(50), scheduler: RunLoop.main)
             .sink { notification in
-                self.onFlagsChanged(modifierFlags: NSEvent.modifierFlags)
+                self.recheckFlags()
             }.store(in: &observers)
     }
 
@@ -58,6 +50,8 @@ public class KeysManager: ObservableObject {
     }
 
     open func onFlagsChanged(modifierFlags: NSEvent.ModifierFlags) {
+        KM.lastModifierFlags = modifierFlags
+
         KM.rcmd = modifierFlags.contains(.rightCommand)
         KM.ralt = modifierFlags.contains(.rightOption)
         KM.rshift = modifierFlags.contains(.rightShift)
@@ -215,6 +209,7 @@ public class KeysManager: ObservableObject {
     @Published public var lshift = false
     @Published public var fn = false
     @Published public var flags = [TriggerKey]()
+    @Published public var lastModifierFlags: NSEvent.ModifierFlags = NSEvent.modifierFlags
 
     @Published public var testKeyHandler: (() -> Void)? = nil
     @Published public var testKeyCombo: KeyCombo? = nil
@@ -429,12 +424,12 @@ public class KeysManager: ObservableObject {
     public func initFlagsListener() {
         globalEventMonitor = GlobalEventMonitor(mask: .flagsChanged) { [self] event in
             guard let event = event else { return }
-            onFlagsChanged(modifierFlags: event.modifierFlags)
+            onFlagsChanged(modifierFlags: event.modifierFlags.filterUnsupportModifiers())
         }
         globalEventMonitor.start()
 
         localEventMonitor = LocalEventMonitor(mask: .flagsChanged) { [self] event in
-            onFlagsChanged(modifierFlags: event.modifierFlags)
+            onFlagsChanged(modifierFlags: event.modifierFlags.filterUnsupportModifiers())
             return event
         }
         localEventMonitor.start()
@@ -547,6 +542,15 @@ public class KeysManager: ObservableObject {
     // MARK: Internal
 
     static var MULTI_TAP_THRESHOLD_INTERVAL: TimeInterval = 0.4
+
+    func recheckFlags() {
+        guard lastModifierFlags.isNotEmpty else { return }
+
+        let flags = NSEvent.modifierFlags.filterUnsupportModifiers()
+        if flags.isEmpty || !lastModifierFlags.contains(flags) {
+            onFlagsChanged(modifierFlags: flags)
+        }
+    }
 }
 
 public let KM = KeysManager()
