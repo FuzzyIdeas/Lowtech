@@ -25,6 +25,21 @@ public class KeysManager: ObservableObject {
         if !primaryKeyModifiers.isEmpty, !primaryKeyModifiers.sideIndependentModifiers.contains(.shift) {
             shiftKeyModifiers = primaryKeyModifiers + [.rshift]
         }
+
+        NotificationCenter.default
+            .publisher(for: NSApplication.didChangeScreenParametersNotification, object: nil)
+            .eraseToAnyPublisher().map { $0 as Any? }
+            .merge(with: NSWorkspace.shared.publisher(for: \.frontmostApplication).eraseToAnyPublisher().map { $0 as Any? })
+            .merge(
+                with:
+                NSWorkspace.shared.notificationCenter
+                    .publisher(for: NSWorkspace.activeSpaceDidChangeNotification, object: nil)
+                    .eraseToAnyPublisher().map { $0 as Any? }
+            )
+            .debounce(for: .milliseconds(100), scheduler: RunLoop.main)
+            .sink { notification in
+                self.onFlagsChanged(modifierFlags: NSEvent.modifierFlags)
+            }.store(in: &observers)
     }
 
     // MARK: Open
@@ -42,25 +57,25 @@ public class KeysManager: ObservableObject {
         }
     }
 
-    open func onFlagsChanged(event: NSEvent) {
-        KM.rcmd = event.modifierFlags.contains(.rightCommand)
-        KM.ralt = event.modifierFlags.contains(.rightOption)
-        KM.rshift = event.modifierFlags.contains(.rightShift)
-        KM.rctrl = event.modifierFlags.contains(.rightControl)
+    open func onFlagsChanged(modifierFlags: NSEvent.ModifierFlags) {
+        KM.rcmd = modifierFlags.contains(.rightCommand)
+        KM.ralt = modifierFlags.contains(.rightOption)
+        KM.rshift = modifierFlags.contains(.rightShift)
+        KM.rctrl = modifierFlags.contains(.rightControl)
 
-        KM.lcmd = event.modifierFlags.contains(.leftCommand)
-        KM.lalt = event.modifierFlags.contains(.leftOption)
-        KM.lshift = event.modifierFlags.contains(.leftShift)
-        KM.lctrl = event.modifierFlags.contains(.leftControl)
+        KM.lcmd = modifierFlags.contains(.leftCommand)
+        KM.lalt = modifierFlags.contains(.leftOption)
+        KM.lshift = modifierFlags.contains(.leftShift)
+        KM.lctrl = modifierFlags.contains(.leftControl)
 
-//        KM.lcmd = (!event.modifierFlags.intersection([.leftCommand, .command]).isEmpty && !KM.rcmd)
-//        KM.lalt = (!event.modifierFlags.intersection([.leftOption, .option]).isEmpty && !KM.ralt)
-//        KM.lctrl = (!event.modifierFlags.intersection([.leftControl, .control]).isEmpty && !KM.rctrl)
-//        KM.lshift = (!event.modifierFlags.intersection([.leftShift, .shift]).isEmpty && !KM.rshift)
+//        KM.lcmd = (!modifierFlags.intersection([.leftCommand, .command]).isEmpty && !KM.rcmd)
+//        KM.lalt = (!modifierFlags.intersection([.leftOption, .option]).isEmpty && !KM.ralt)
+//        KM.lctrl = (!modifierFlags.intersection([.leftControl, .control]).isEmpty && !KM.rctrl)
+//        KM.lshift = (!modifierFlags.intersection([.leftShift, .shift]).isEmpty && !KM.rshift)
 
-        KM.fn = event.modifierFlags.contains(.fn)
+        KM.fn = modifierFlags.contains(.fn)
 
-        KM.flags = event.modifierFlags.triggerKeys
+        KM.flags = modifierFlags.triggerKeys
 
         if specialKeyModifiers.allPressed {
             registerSpecialHotkey()
@@ -115,6 +130,7 @@ public class KeysManager: ObservableObject {
 
     open func registerPrimaryHotkeys() {
         guard !primaryHotkeys.isEmpty, !primaryHotkeysRegistered, !SWIFTUI_PREVIEW else { return }
+        debug("registerPrimaryHotkeys")
         primaryHotkeys.forEach { $0.register() }
         primaryHotkeysRegistered = true
         onRegisterPrimaryHotkeys?()
@@ -122,6 +138,7 @@ public class KeysManager: ObservableObject {
 
     open func unregisterPrimaryHotkeys() {
         guard !primaryHotkeys.isEmpty, primaryHotkeysRegistered else { return }
+        debug("unregisterPrimaryHotkeys")
         primaryHotkeys.forEach { $0.unregister() }
         primaryHotkeysRegistered = false
         onUnregisterPrimaryHotkeys?()
@@ -412,12 +429,12 @@ public class KeysManager: ObservableObject {
     public func initFlagsListener() {
         globalEventMonitor = GlobalEventMonitor(mask: .flagsChanged) { [self] event in
             guard let event = event else { return }
-            onFlagsChanged(event: event)
+            onFlagsChanged(modifierFlags: event.modifierFlags)
         }
         globalEventMonitor.start()
 
         localEventMonitor = LocalEventMonitor(mask: .flagsChanged) { [self] event in
-            onFlagsChanged(event: event)
+            onFlagsChanged(modifierFlags: event.modifierFlags)
             return event
         }
         localEventMonitor.start()
