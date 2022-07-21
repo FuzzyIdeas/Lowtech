@@ -238,7 +238,6 @@ public extension Text {
 
     func roundbg(size: CGFloat = 2.5, color: Color = .primary, shadowSize: CGFloat = 0) -> some View {
         modifier(RoundBG(size: size, color: color, shadowSize: shadowSize))
-            .foregroundColor(color.textColor)
     }
 }
 
@@ -255,9 +254,13 @@ public struct RoundBG: ViewModifier {
                 roundRect(size * 2, fill: color)
                     .shadow(color: .black.opacity(0.15), radius: shadowSize, x: 0, y: shadowSize / 2)
             )
+            .foregroundColor(color.textColor(colors: colors))
     }
 
     // MARK: Internal
+
+    @Environment(\.colorScheme) var colorScheme
+    @Environment(\.colors) var colors
 
     @State var size: CGFloat
     @State var color: Color
@@ -369,8 +372,9 @@ public struct ToggleButton: ButtonStyle {
     }
 
     func fgColor(_ configuration: Configuration) -> Color {
-        let textColor = color.textColor
-        return hovering ? (isOn ? textColor : .primary) : (isOn ? textColor : .primary)
+        let textColor = color.textColor(colors: colors)
+//        return hovering ? (isOn ? textColor : .primary) : (isOn ? textColor : .primary)
+        return isOn ? textColor : .primary
     }
 }
 

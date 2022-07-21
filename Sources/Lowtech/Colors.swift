@@ -88,6 +88,7 @@ public struct Colors {
     public var isDark: Bool { colorScheme == .dark }
     public var isLight: Bool { colorScheme == .light }
     public var inverted: Color { isDark ? .black : .white }
+    public var highContrast: Color { isDark ? .white : .black }
     public var invertedGray: Color { isDark ? Colors.darkGray : Colors.lightGray }
     public var gray: Color { isDark ? Colors.lightGray : Colors.darkGray }
 }
@@ -119,7 +120,22 @@ public extension Color {
         return brightness >= 0.4
     }
 
-    var textColor: Color {
-        memoz.isLight ? .black : .white
+    func textColor(colors: Colors) -> Color {
+        if initialColorScheme == nil {
+            initialColorScheme = colors.colorScheme
+        }
+
+        switch initialColorScheme {
+        case .light:
+            return memoz.isLight ? colors.highContrast : colors.inverted
+        case .dark:
+            return memoz.isLight ? colors.inverted : colors.highContrast
+        case .none:
+            return memoz.isLight ? colors.highContrast : colors.inverted
+        @unknown default:
+            return memoz.isLight ? colors.highContrast : colors.inverted
+        }
     }
 }
+
+var initialColorScheme: ColorScheme!

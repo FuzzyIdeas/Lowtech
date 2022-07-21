@@ -364,7 +364,7 @@ public struct BigSurSlider: View {
         _mark = mark ?? .constant(0)
 
         _knobColor = knobColorBinding ?? colorBinding ?? .constant(knobColor ?? colors.accent)
-        _knobTextColor = knobTextColorBinding ?? .constant(knobTextColor ?? ((color ?? colors.accent).textColor))
+        _knobTextColor = knobTextColorBinding ?? .constant(knobTextColor ?? ((color ?? colors.accent).textColor(colors: colors)))
     }
 
     // MARK: Public
@@ -382,7 +382,7 @@ public struct BigSurSlider: View {
                         .foregroundColor(color ?? colors.accent)
                         .frame(width: cgPercentage == 1 ? geometry.size.width : w * cgPercentage + sliderHeight / 2)
                     if let image = image {
-                        let imgColor = color?.textColor ?? Color.black
+                        let imgColor = color?.textColor(colors: colors) ?? Color.black
                         Image(systemName: image)
                             .resizable()
                             .frame(width: 12, height: 12, alignment: .center)
