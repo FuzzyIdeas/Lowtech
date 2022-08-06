@@ -40,6 +40,14 @@ open class PanelWindow: NSWindow {
         NSApp.activate(ignoringOtherApps: true)
     }
 
+    // MARK: Public
+
+    public func forceClose() {
+        wc.close()
+        wc.window = nil
+        close()
+    }
+
     // MARK: Private
 
     private lazy var wc = NSWindowController(window: self)

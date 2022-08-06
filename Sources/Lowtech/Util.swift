@@ -5,24 +5,10 @@
 //  Created by Alin Panaitiu on 09.11.2021.
 //
 
-import Atomics
 import Cocoa
 import Combine
 import Defaults
 import Foundation
-import Path
-import SwiftDate
-import UserNotifications
-
-@inline(__always)
-public func localTimeSince(_ date: Date) -> TimeInterval {
-    DateInRegion().convertTo(region: .local) - date.convertTo(region: .local)
-}
-
-@inline(__always)
-public func localTimeUntil(_ date: Date) -> TimeInterval {
-    date.convertTo(region: .local) - DateInRegion().convertTo(region: .local)
-}
 
 @inline(__always)
 public func timeSince(_ date: Date) -> TimeInterval {
@@ -36,39 +22,6 @@ public func timeUntil(_ date: Date) -> TimeInterval {
 
 public func cap<T: Comparable>(_ number: T, minVal: T, maxVal: T) -> T {
     max(min(number, maxVal), minVal)
-}
-
-public func notify(identifier: String, title: String, body: String) {
-    let sendNotification = { (nc: UNUserNotificationCenter) in
-        let content = UNMutableNotificationContent()
-        content.title = title
-        content.body = body
-        content.sound = UNNotificationSound.default
-        nc.add(
-            UNNotificationRequest(identifier: identifier, content: content, trigger: nil),
-            withCompletionHandler: nil
-        )
-    }
-
-    let nc = UNUserNotificationCenter.current()
-    nc.getNotificationSettings { settings in
-        mainAsync {
-            let enabled = settings.alertSetting == .enabled
-            Defaults[.notificationsPermissionsGranted] = enabled
-            guard enabled else {
-                nc.requestAuthorization(options: [], completionHandler: { granted, _ in
-                    guard granted else { return }
-                    sendNotification(nc)
-                })
-                return
-            }
-            sendNotification(nc)
-        }
-    }
-}
-
-public func removeNotifications(withIdentifiers ids: [String]) {
-    UNUserNotificationCenter.current().removeDeliveredNotifications(withIdentifiers: ids)
 }
 
 // MARK: - Formatting
@@ -85,28 +38,6 @@ public struct Formatting: Hashable {
 
     let decimals: Int
     let padding: Int
-}
-
-// MARK: - Atomic
-
-@propertyWrapper
-public struct Atomic<Value: AtomicValue> {
-    // MARK: Lifecycle
-
-    public init(wrappedValue: Value) {
-        value = ManagedAtomic<Value>(wrappedValue)
-    }
-
-    // MARK: Public
-
-    public var wrappedValue: Value {
-        get { value.load(ordering: .relaxed) }
-        set { value.store(newValue, ordering: .sequentiallyConsistent) }
-    }
-
-    // MARK: Internal
-
-    var value: ManagedAtomic<Value>
 }
 
 // MARK: - Setting
@@ -211,7 +142,7 @@ public extension DispatchWorkItem {
 }
 
 @discardableResult
-public func asyncNow(timeout: TimeInterval? = nil, _ action: @escaping () -> Void) -> DispatchWorkItem {
+public func asyncNow(timeout _: TimeInterval? = nil, _ action: @escaping () -> Void) -> DispatchWorkItem {
     let workItem = DispatchWorkItem(block: action)
 
     DispatchQueue.global().async(execute: workItem)
@@ -355,7 +286,12 @@ public extension RandomAccessCollection where Element: Hashable {
     }
 }
 
-public func promptForWorkingDirectoryPermission(message: String = "Choose your working directory", prompt: String = "Choose", initialPath: String = "/Users", defaultsKey: Defaults.Key<Data?>? = nil) -> URL? {
+public func promptForWorkingDirectoryPermission(
+    message: String = "Choose your working directory",
+    prompt: String = "Choose",
+    initialPath: URL = FileManager.default.homeDirectoryForCurrentUser.deletingLastPathComponent(),
+    defaultsKey: Defaults.Key<Data?>? = nil
+) -> URL? {
     let openPanel = NSOpenPanel()
     openPanel.message = message
     openPanel.prompt = prompt
@@ -365,20 +301,50 @@ public func promptForWorkingDirectoryPermission(message: String = "Choose your w
     openPanel.allowsMultipleSelection = false
     openPanel.canChooseFiles = false
     openPanel.canChooseDirectories = true
-    openPanel.directoryURL = URL(fileURLWithPath: initialPath)
+    openPanel.directoryURL = initialPath
 
     openPanel.runModal()
     guard let url = openPanel.urls.first else { return nil }
-    saveBookmarkData(for: url, defaultsKey: defaultsKey)
 
-//    switch openPanel.runModal() {
-//    case .cancel, .abort:
-//        return nil
-//    case .OK:
-//        return openPanel.urls.first
-//    }
+    switch openPanel.runModal() {
+    case .cancel, .abort:
+        return nil
+    case .OK:
+        saveBookmarkData(for: url, defaultsKey: defaultsKey)
+        return url
+    default:
+        return nil
+    }
+}
 
-    return url
+public func promptForFilePermission(
+    message: String = "Choose a file",
+    prompt: String = "Choose",
+    initialPath: URL = FileManager.default.homeDirectoryForCurrentUser,
+    defaultsKey: Defaults.Key<Data?>? = nil
+) -> URL? {
+    let openPanel = NSOpenPanel()
+    openPanel.message = message
+    openPanel.prompt = prompt
+    openPanel.resolvesAliases = true
+    openPanel.allowsOtherFileTypes = false
+    openPanel.allowsMultipleSelection = false
+    openPanel.canChooseFiles = true
+    openPanel.canChooseDirectories = true
+    openPanel.directoryURL = initialPath
+
+    openPanel.runModal()
+    guard let url = openPanel.urls.first else { return nil }
+
+    switch openPanel.runModal() {
+    case .cancel, .abort:
+        return nil
+    case .OK:
+        saveBookmarkData(for: url, defaultsKey: defaultsKey)
+        return url
+    default:
+        return nil
+    }
 }
 
 public func saveBookmarkData(for workDir: URL, defaultsKey: Defaults.Key<Data?>? = nil) {

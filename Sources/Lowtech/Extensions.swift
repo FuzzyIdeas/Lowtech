@@ -737,6 +737,22 @@ public extension Sequence {
 
         return grouped
     }
+
+    func group<K: Hashable>(by key: KeyPath<Element, K>, ignoring: Set<K>? = nil) -> [K: [Element]] {
+        var grouped = [K: [Element]]()
+        for v in self {
+            let k = v[keyPath: key]
+            guard !(ignoring?.contains(k) ?? false) else { continue }
+            guard grouped[k] != nil else {
+                grouped[k] = [v]
+                continue
+            }
+
+            grouped[k]!.append(v)
+        }
+
+        return grouped
+    }
 }
 
 public extension CAMediaTimingFunction {
@@ -1043,8 +1059,6 @@ public extension Binding {
     }
 }
 
-import CryptoKit
-
 public extension Sequence where Self.Element == UInt8 {
     func hexEncodedString(upperCased: Bool = false) -> String {
         let format = upperCased ? "%02hhX" : "%02hhx"
@@ -1052,19 +1066,11 @@ public extension Sequence where Self.Element == UInt8 {
     }
 }
 
-public extension String {
-    var sha1: String {
-        var s = Insecure.SHA1()
-        s.update(data: data(using: .utf8)!)
-        return s.finalize().hexEncodedString()
-    }
-}
-
 public extension OptionSet {
     mutating func toggle(_ element: Element, minSet: Self? = nil, emptySet: Self? = nil) {
         if contains(element) {
             remove(element)
-            if let minSet = minSet, isEmpty || self == emptySet {
+            if let minSet = minSet, isEmpty || (emptySet?.isSuperset(of: self) ?? false) {
                 formUnion(minSet)
             }
         } else {
@@ -1072,8 +1078,6 @@ public extension OptionSet {
         }
     }
 }
-
-import Security
 
 public extension Bundle {
     var name: String? {
@@ -1083,32 +1087,7 @@ public extension Bundle {
     var isMenuBarApp: Bool {
         (object(forInfoDictionaryKey: "LSUIElement") as? Bool) ?? false
     }
-
-    var isTestFlight: Bool {
-        var status = noErr
-
-        var code: SecStaticCode?
-        status = SecStaticCodeCreateWithPath(bundleURL as CFURL, [], &code)
-        guard status == noErr, let code = code else {
-            return false
-        }
-
-        var requirement: SecRequirement?
-        status = SecRequirementCreateWithString(
-            "anchor apple generic and certificate leaf[field.1.2.840.113635.100.6.1.25.1]" as CFString,
-            [], &requirement
-        )
-        guard status == noErr, let requirement = requirement else {
-            return false
-        }
-
-        return SecStaticCodeCheckValidity(code, [], requirement) == errSecSuccess
-    }
 }
-
-import Regex
-
-public let BUNDLE_IDENTIFIER_PATTERN = #"([^:]+):(\d+)"#.r!
 
 import MemoZ
 
@@ -1293,5 +1272,18 @@ public extension Dictionary {
 
         m[key] = value
         return m
+    }
+}
+
+public extension Encodable {
+    var json: String? {
+        (try? JSONEncoder().encode(self))?.s
+    }
+}
+
+public extension Decodable {
+    func fromJSON(_ json: String) -> Self? {
+        guard let data = json.data(using: .utf8) else { return nil }
+        return try? JSONDecoder().decode(Self.self, from: data)
     }
 }

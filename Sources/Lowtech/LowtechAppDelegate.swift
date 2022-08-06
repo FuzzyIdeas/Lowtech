@@ -2,7 +2,6 @@ import Cocoa
 import Combine
 import Defaults
 import Foundation
-import Magnet
 import SwiftUI
 
 // MARK: - LowtechAppDelegate

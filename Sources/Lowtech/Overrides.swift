@@ -1,6 +1,6 @@
 import Path
 
-public typealias FilePath = Path
-public func p(_ string: String) -> FilePath? {
-    FilePath(string)
+public typealias CustomFilePath = Path
+public func p(_ string: String) -> CustomFilePath? {
+    CustomFilePath(string)
 }

@@ -6,12 +6,6 @@ import Foundation
 import SwiftUI
 import VisualEffects
 
-public let ALPHANUMERICS = (
-    CharacterSet.decimalDigits.characters().filter(\.isASCII) + CharacterSet.lowercaseLetters.characters()
-        .filter(\.isASCII)
-).map { String($0) }
-public let ALPHANUMERICS_SET = Set(ALPHANUMERICS)
-
 extension NSButton {
     override open var focusRingType: NSFocusRingType {
         get { .none }
@@ -399,7 +393,8 @@ public protocol Nameable {
             key: Binding<String>,
             keyCode: Binding<Int>,
             allowedKeys: Set<String>? = nil,
-            allowedKeyCodes: Set<Int>? = nil
+            allowedKeyCodes: Set<Int>? = nil,
+            onCancel: (() -> Void)? = nil
         ) {
             _recording = recording
             _key = key
@@ -407,6 +402,7 @@ public protocol Nameable {
 
             self.allowedKeys = allowedKeys
             self.allowedKeyCodes = allowedKeyCodes
+            self.onCancel = onCancel
         }
 
         // MARK: Open
@@ -439,6 +435,7 @@ public protocol Nameable {
                     #endif
 
                     context.coordinator.eventHandler.recording = false
+                    context.coordinator.eventHandler.onCancel?()
                     return
                 }
 
@@ -475,14 +472,27 @@ public protocol Nameable {
         public func makeNSView(context: Context) -> NSView {
             let view = KeyView()
             view.context = context
-            DispatchQueue.main.async { // wait till next event cycle
-                view.window?.makeFirstResponder(view)
+
+            if recording {
+                DispatchQueue.main.async {
+                    view.window?.makeFirstResponder(view)
+                }
             }
+
             return view
         }
 
         public func updateNSView(_ nsView: NSView, context: Context) {
-            (nsView as? KeyView)?.context = context
+            guard let view = nsView as? KeyView else { return }
+            view.context = context
+
+            DispatchQueue.main.async {
+                if recording {
+                    view.window?.makeFirstResponder(view)
+                } else {
+                    view.resignFirstResponder()
+                }
+            }
         }
 
         // MARK: Internal
@@ -507,6 +517,7 @@ public protocol Nameable {
 
         var allowedKeys: Set<String>?
         var allowedKeyCodes: Set<Int>?
+        var onCancel: (() -> Void)?
     }
 
     public struct MenuHotkeyView: View {

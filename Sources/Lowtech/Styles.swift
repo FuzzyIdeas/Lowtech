@@ -5,12 +5,13 @@
 //  Created by Alin Panaitiu on 16.12.2021.
 //
 
-import DynamicColor
+// import DynamicColor
 import Foundation
 import SwiftUI
-import SystemColors
 
 // MARK: - CheckboxToggleStyle
+
+// import SystemColors
 
 public struct CheckboxToggleStyle: ToggleStyle {
     // MARK: Lifecycle
@@ -236,8 +237,8 @@ public extension Text {
         font(.system(size: size, weight: .black, design: .default))
     }
 
-    func roundbg(size: CGFloat = 2.5, color: Color = .primary, shadowSize: CGFloat = 0) -> some View {
-        modifier(RoundBG(size: size, color: color, shadowSize: shadowSize))
+    func roundbg(size: CGFloat = 2.5, color: Color = .primary, shadowSize: CGFloat = 0, noFG: Bool = false) -> some View {
+        modifier(RoundBG(size: size, color: color, shadowSize: shadowSize, noFG: noFG))
     }
 }
 
@@ -254,7 +255,7 @@ public struct RoundBG: ViewModifier {
                 roundRect(size * 2, fill: color)
                     .shadow(color: .black.opacity(0.15), radius: shadowSize, x: 0, y: shadowSize / 2)
             )
-            .foregroundColor(color.textColor(colors: colors))
+            .if(!noFG) { $0.foregroundColor(color.textColor(colors: colors)) }
     }
 
     // MARK: Internal
@@ -265,11 +266,12 @@ public struct RoundBG: ViewModifier {
     @State var size: CGFloat
     @State var color: Color
     @State var shadowSize: CGFloat
+    @State var noFG: Bool
 }
 
 public extension View {
-    func roundbg(size: CGFloat = 2.5, color: Color = .primary, shadowSize: CGFloat = 0) -> some View {
-        modifier(RoundBG(size: size, color: color, shadowSize: shadowSize))
+    func roundbg(size: CGFloat = 2.5, color: Color = .primary, shadowSize: CGFloat = 0, noFG: Bool = false) -> some View {
+        modifier(RoundBG(size: size, color: color, shadowSize: shadowSize, noFG: noFG))
     }
 
     func hfill(_ alignment: Alignment = .center) -> some View {
@@ -616,8 +618,14 @@ public struct FlatButton: ButtonStyle {
 public struct PaddedTextFieldStyle: TextFieldStyle {
     // MARK: Lifecycle
 
-    public init(size: CGFloat = 13) {
+    public init(
+        size: CGFloat = 13,
+        verticalPadding: CGFloat = 4,
+        horizontalPadding: CGFloat = 8,
+        shake: Binding<Bool>? = nil
+    ) {
         _size = State(initialValue: size)
+        _shake = shake ?? .constant(false)
     }
 
     // MARK: Public
@@ -626,16 +634,45 @@ public struct PaddedTextFieldStyle: TextFieldStyle {
         configuration
             .textFieldStyle(.plain)
             .font(.system(size: size, weight: .medium))
-            .padding(6)
+            .padding(.vertical, verticalPadding)
+            .padding(.horizontal, horizontalPadding)
             .background(
                 RoundedRectangle(cornerRadius: 6, style: .continuous)
-                    .fill(.white.opacity(colorScheme == .dark ? 0.2 : 0.9))
+                    .fill(Color.primary.opacity(0.1))
                     .shadow(color: Colors.blackMauve.opacity(0.1), radius: 3, x: 0, y: 2)
             )
+            .modifier(ShakeEffect(shakes: shake ? 2 : 0))
+            .animation(Animation.default.repeatCount(2).speed(1.5), value: shake)
     }
 
     // MARK: Internal
 
     @Environment(\.colorScheme) var colorScheme
     @State var size: CGFloat = 13
+    @State var verticalPadding: CGFloat = 4
+    @State var horizontalPadding: CGFloat = 8
+    @Binding var shake: Bool
+}
+
+// MARK: - ShakeEffect
+
+public struct ShakeEffect: GeometryEffect {
+    // MARK: Lifecycle
+
+    public init(shakes: Int) {
+        position = CGFloat(shakes)
+    }
+
+    // MARK: Public
+
+    public var position: CGFloat
+
+    public var animatableData: CGFloat {
+        get { position }
+        set { position = newValue }
+    }
+
+    public func effectValue(size: CGSize) -> ProjectionTransform {
+        ProjectionTransform(CGAffineTransform(translationX: -5 * sin(position * 2 * .pi), y: 0))
+    }
 }
