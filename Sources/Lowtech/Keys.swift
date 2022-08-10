@@ -22,7 +22,8 @@ public class KeysManager: ObservableObject {
         }
 
         if !primaryKeyModifiers.isEmpty, !primaryKeyModifiers.sideIndependentModifiers.contains(.shift) {
-            shiftKeyModifiers = primaryKeyModifiers + [.rshift]
+            rightShiftKeyModifiers = primaryKeyModifiers + [.rshift]
+            leftShiftKeyModifiers = primaryKeyModifiers + [.lshift]
         }
 
         NSWorkspace.shared.notificationCenter
@@ -38,7 +39,8 @@ public class KeysManager: ObservableObject {
     @Published open var primaryHotkeysRegistered = false
     @Published open var secondaryHotkeysRegistered = false
     @Published open var altHotkeysRegistered = false
-    @Published open var shiftHotkeysRegistered = false
+    @Published open var rightShiftHotkeysRegistered = false
+    @Published open var leftShiftHotkeysRegistered = false
     @Published open var specialHotkeyRegistered = false
 
     open var initialized = false {
@@ -84,10 +86,15 @@ public class KeysManager: ObservableObject {
         } else {
             unregisterAltHotkeys()
         }
-        if shiftKeyModifiers.allPressed {
-            registerShiftHotkeys()
+        if rightShiftKeyModifiers.allPressed {
+            registerRightShiftHotkeys()
         } else {
-            unregisterShiftHotkeys()
+            unregisterRightShiftHotkeys()
+        }
+        if leftShiftKeyModifiers.allPressed {
+            registerLeftShiftHotkeys()
+        } else {
+            unregisterLeftShiftHotkeys()
         }
 
         guard !KM.flags.isEmpty else { return }
@@ -153,20 +160,36 @@ public class KeysManager: ObservableObject {
         secondaryHotkeysRegistered = false
     }
 
-    open func registerShiftHotkeys() {
-        onRegisterShiftHotkeys?()
+    open func registerRightShiftHotkeys() {
+        onRegisterRightShiftHotkeys?()
 
-        guard !shiftHotkeys.isEmpty, !shiftHotkeysRegistered, !shiftHotkeys.isEmpty, !SWIFTUI_PREVIEW else { return }
-        shiftHotkeys.forEach { $0.register() }
-        shiftHotkeysRegistered = true
+        guard !rightShiftHotkeys.isEmpty, !rightShiftHotkeysRegistered, !rightShiftHotkeys.isEmpty, !SWIFTUI_PREVIEW else { return }
+        rightShiftHotkeys.forEach { $0.register() }
+        rightShiftHotkeysRegistered = true
     }
 
-    open func unregisterShiftHotkeys() {
-        onUnregisterShiftHotkeys?()
+    open func unregisterRightShiftHotkeys() {
+        onUnregisterRightShiftHotkeys?()
 
-        guard !shiftHotkeys.isEmpty, shiftHotkeysRegistered else { return }
-        shiftHotkeys.forEach { $0.unregister() }
-        shiftHotkeysRegistered = false
+        guard !rightShiftHotkeys.isEmpty, rightShiftHotkeysRegistered else { return }
+        rightShiftHotkeys.forEach { $0.unregister() }
+        rightShiftHotkeysRegistered = false
+    }
+
+    open func registerLeftShiftHotkeys() {
+        onRegisterLeftShiftHotkeys?()
+
+        guard !leftShiftHotkeys.isEmpty, !leftShiftHotkeysRegistered, !leftShiftHotkeys.isEmpty, !SWIFTUI_PREVIEW else { return }
+        leftShiftHotkeys.forEach { $0.register() }
+        leftShiftHotkeysRegistered = true
+    }
+
+    open func unregisterLeftShiftHotkeys() {
+        onUnregisterLeftShiftHotkeys?()
+
+        guard !leftShiftHotkeys.isEmpty, leftShiftHotkeysRegistered else { return }
+        leftShiftHotkeys.forEach { $0.unregister() }
+        leftShiftHotkeysRegistered = false
     }
 
     open func registerAltHotkeys() {
@@ -192,7 +215,8 @@ public class KeysManager: ObservableObject {
     public var onPrimaryHotkey: ((String) -> Void)?
     public var onSecondaryHotkey: ((String) -> Void)?
     public var onAltHotkey: ((String) -> Void)?
-    public var onShiftHotkey: ((String) -> Void)?
+    public var onRightShiftHotkey: ((String) -> Void)?
+    public var onLeftShiftHotkey: ((String) -> Void)?
 
     public var onRegisterSpecialHotkey: (() -> Void)?
     public var onUnregisterSpecialHotkey: (() -> Void)?
@@ -200,8 +224,10 @@ public class KeysManager: ObservableObject {
     public var onUnregisterPrimaryHotkeys: (() -> Void)?
     public var onRegisterSecondaryHotkeys: (() -> Void)?
     public var onUnregisterSecondaryHotkeys: (() -> Void)?
-    public var onRegisterShiftHotkeys: (() -> Void)?
-    public var onUnregisterShiftHotkeys: (() -> Void)?
+    public var onRegisterRightShiftHotkeys: (() -> Void)?
+    public var onUnregisterRightShiftHotkeys: (() -> Void)?
+    public var onRegisterLeftShiftHotkeys: (() -> Void)?
+    public var onUnregisterLeftShiftHotkeys: (() -> Void)?
     public var onRegisterAltHotkeys: (() -> Void)?
     public var onUnregisterAltHotkeys: (() -> Void)?
 
@@ -231,7 +257,8 @@ public class KeysManager: ObservableObject {
     public var primaryKeys: [String] = []
     public var secondaryKeys: [String] = []
     public var altKeys: [String] = []
-    public var shiftKeys: [String] = []
+    public var rightShiftKeys: [String] = []
+    public var leftShiftKeys: [String] = []
 
     public var globalEventMonitor: GlobalEventMonitor!
     public var localEventMonitor: LocalEventMonitor!
@@ -256,9 +283,15 @@ public class KeysManager: ObservableObject {
         }
     }
 
-    @Published public var shiftKeyModifiers: [TriggerKey] = [] {
+    @Published public var rightShiftKeyModifiers: [TriggerKey] = [] {
         didSet {
-            disabledShiftKeys = shiftKeyModifiers.isEmpty
+            disabledShiftKeys = rightShiftKeyModifiers.isEmpty
+        }
+    }
+
+    @Published public var leftShiftKeyModifiers: [TriggerKey] = [] {
+        didSet {
+            disabledShiftKeys = leftShiftKeyModifiers.isEmpty
         }
     }
 
@@ -307,7 +340,14 @@ public class KeysManager: ObservableObject {
         }
     }
 
-    public var shiftHotkeys: [HotKey] = [] {
+    public var rightShiftHotkeys: [HotKey] = [] {
+        didSet {
+            guard initialized else { return }
+            oldValue.forEach { $0.unregister() }
+        }
+    }
+
+    public var leftShiftHotkeys: [HotKey] = [] {
         didSet {
             guard initialized else { return }
             oldValue.forEach { $0.unregister() }
@@ -326,7 +366,8 @@ public class KeysManager: ObservableObject {
         unregisterPrimaryHotkeys()
         unregisterSecondaryHotkeys()
         unregisterAltHotkeys()
-        unregisterShiftHotkeys()
+        unregisterRightShiftHotkeys()
+        unregisterLeftShiftHotkeys()
         unregisterSpecialHotkey()
         computeKeyModifiers()
         specialKeyIdentifier = "SPECIAL_KEY\(specialKey)"
@@ -341,9 +382,11 @@ public class KeysManager: ObservableObject {
         }
 
         if !primaryKeyModifiers.isEmpty, !primaryKeyModifiers.sideIndependentModifiers.contains(.shift) {
-            shiftKeyModifiers = primaryKeyModifiers + [.rshift]
+            rightShiftKeyModifiers = primaryKeyModifiers + [.rshift]
+            leftShiftKeyModifiers = primaryKeyModifiers + [.lshift]
         } else {
-            shiftKeyModifiers = []
+            rightShiftKeyModifiers = []
+            leftShiftKeyModifiers = []
         }
     }
 
@@ -352,7 +395,8 @@ public class KeysManager: ObservableObject {
         initPrimaryHotkeys()
         initSecondaryHotkeys()
         initAltHotkeys()
-        initShiftHotkeys()
+        initRightShiftHotkeys()
+        initLeftShiftHotkeys()
     }
 
     public func initSpecialHotkeys() {
@@ -413,17 +457,31 @@ public class KeysManager: ObservableObject {
         }
     }
 
-    public func initShiftHotkeys() {
-        if !shiftKeys.isEmpty, !primaryKeyModifiers.isEmpty, !primaryKeyModifiers.sideIndependentModifiers.contains(.shift) {
-            shiftHotkeys = buildHotkeys(
-                for: shiftKeys,
-                modifiers: shiftKeyModifiers.sideIndependentModifiers,
+    public func initRightShiftHotkeys() {
+        if !rightShiftKeys.isEmpty, !primaryKeyModifiers.isEmpty, !primaryKeyModifiers.sideIndependentModifiers.contains(.shift) {
+            rightShiftHotkeys = buildHotkeys(
+                for: rightShiftKeys,
+                modifiers: rightShiftKeyModifiers.sideIndependentModifiers,
                 identifier: "shift-",
                 detectKeyHold: false,
-                action: handleShiftHotkey
+                action: handleRightShiftHotkey
             )
         } else {
-            shiftHotkeys = []
+            rightShiftHotkeys = []
+        }
+    }
+
+    public func initLeftShiftHotkeys() {
+        if !leftShiftKeys.isEmpty, !primaryKeyModifiers.isEmpty, !primaryKeyModifiers.sideIndependentModifiers.contains(.shift) {
+            leftShiftHotkeys = buildHotkeys(
+                for: leftShiftKeys,
+                modifiers: leftShiftKeyModifiers.sideIndependentModifiers,
+                identifier: "shift-",
+                detectKeyHold: false,
+                action: handleLeftShiftHotkey
+            )
+        } else {
+            leftShiftHotkeys = []
         }
     }
 
@@ -532,17 +590,30 @@ public class KeysManager: ObservableObject {
         onAltHotkey?(hotkey.identifier.suffix(1).s)
     }
 
-    @objc public func handleShiftHotkey(_ hotkey: HotKey) {
+    @objc public func handleRightShiftHotkey(_ hotkey: HotKey) {
         #if DEBUG
             print(hotkey.identifier)
         #endif
-        guard shiftKeyModifiers.allPressed else {
+        guard rightShiftKeyModifiers.allPressed else {
             hotkey.forwardNextEvent = true
             return
         }
 
         guard !testKeyComboPressedShouldStop(hotkey: hotkey) else { return }
-        onShiftHotkey?(hotkey.identifier.suffix(1).s)
+        onRightShiftHotkey?(hotkey.identifier.suffix(1).s)
+    }
+
+    @objc public func handleLeftShiftHotkey(_ hotkey: HotKey) {
+        #if DEBUG
+            print(hotkey.identifier)
+        #endif
+        guard leftShiftKeyModifiers.allPressed else {
+            hotkey.forwardNextEvent = true
+            return
+        }
+
+        guard !testKeyComboPressedShouldStop(hotkey: hotkey) else { return }
+        onLeftShiftHotkey?(hotkey.identifier.suffix(1).s)
     }
 
     // MARK: Internal

@@ -303,10 +303,10 @@ public func promptForWorkingDirectoryPermission(
     openPanel.canChooseDirectories = true
     openPanel.directoryURL = initialPath
 
-    openPanel.runModal()
+    let result = openPanel.runModal()
     guard let url = openPanel.urls.first else { return nil }
 
-    switch openPanel.runModal() {
+    switch result {
     case .cancel, .abort:
         return nil
     case .OK:
@@ -333,10 +333,10 @@ public func promptForFilePermission(
     openPanel.canChooseDirectories = true
     openPanel.directoryURL = initialPath
 
-    openPanel.runModal()
+    let result = openPanel.runModal()
     guard let url = openPanel.urls.first else { return nil }
 
-    switch openPanel.runModal() {
+    switch result {
     case .cancel, .abort:
         return nil
     case .OK:
