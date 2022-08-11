@@ -266,7 +266,7 @@ public protocol Nameable {
         public init(
             key: Binding<String>,
             keyCode: Binding<Int>,
-            shouldStopRecording: Binding<Bool>? = nil,
+            recording: Binding<Bool>? = nil,
             darkHoverColor: Color = Colors.red,
             lightHoverColor: Color = Colors.lunarYellow,
             allowedKeys: Set<String>? = nil,
@@ -276,7 +276,7 @@ public protocol Nameable {
         ) {
             _key = key
             _keyCode = keyCode
-            _shouldStopRecording = shouldStopRecording ?? .constant(false)
+            _recording = recording ?? .constant(false)
 
             self.darkHoverColor = darkHoverColor
             self.lightHoverColor = lightHoverColor
@@ -332,7 +332,6 @@ public protocol Nameable {
                 }
             }
             .onChange(of: colorScheme) { hoverColor = $0 == .dark ? darkHoverColor : lightHoverColor }
-            .onChange(of: shouldStopRecording) { if $0 { recording = false } }
             .onChange(of: env.recording) { newRecording in
                 if recording, !newRecording {
                     recording = false
@@ -371,14 +370,13 @@ public protocol Nameable {
 
         @Binding var key: String
         @Binding var keyCode: Int
-        @Binding var shouldStopRecording: Bool
+        @Binding var recording: Bool
 
         @State var recordingColor = Color.white
         @State var color = Color.primary.opacity(0.1)
         @State var textColor = Color.primary
         @State var hoverColor = Color.primary
 
-        @State var recording = false
         @State var fontSize: CGFloat = 13
         @State var width: CGFloat? = nil
     }

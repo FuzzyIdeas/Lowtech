@@ -918,6 +918,14 @@ public extension View {
             self
         }
     }
+
+    @ViewBuilder func ifLet<Content: View, T>(_ condition: @autoclosure () -> T?, transform: (Self, T) -> Content) -> some View {
+        if let param = condition() {
+            transform(self, param)
+        } else {
+            self
+        }
+    }
 }
 
 public extension Sequence where Element: AdditiveArithmetic {

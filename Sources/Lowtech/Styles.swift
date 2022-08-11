@@ -238,7 +238,15 @@ public extension Text {
     }
 
     func roundbg(size: CGFloat = 2.5, color: Color = .primary, shadowSize: CGFloat = 0, noFG: Bool = false) -> some View {
-        modifier(RoundBG(size: size, color: color, shadowSize: shadowSize, noFG: noFG))
+        modifier(RoundBG(radius: size, color: color, shadowSize: shadowSize, noFG: noFG))
+    }
+
+    func roundbg(radius: CGFloat = 5, padding: CGFloat = 2.5, color: Color = .primary, shadowSize: CGFloat = 0, noFG: Bool = false) -> some View {
+        modifier(RoundBG(radius: radius, verticalPadding: padding, horizontalPadding: padding * 2.2, color: color, shadowSize: shadowSize, noFG: noFG))
+    }
+
+    func roundbg(radius: CGFloat = 5, verticalPadding: CGFloat = 2.5, horizontalPadding: CGFloat = 6, color: Color = .primary, shadowSize: CGFloat = 0, noFG: Bool = false) -> some View {
+        modifier(RoundBG(radius: radius, verticalPadding: verticalPadding, horizontalPadding: horizontalPadding, color: color, shadowSize: shadowSize, noFG: noFG))
     }
 }
 
@@ -248,11 +256,12 @@ public struct RoundBG: ViewModifier {
     // MARK: Public
 
     public func body(content: Content) -> some View {
+        let verticalPadding = verticalPadding ?? radius / 2
         content
-            .padding(.horizontal, size * 2.2)
-            .padding(.vertical, size)
+            .padding(.horizontal, horizontalPadding ?? verticalPadding * 2.2)
+            .padding(.vertical, verticalPadding)
             .background(
-                roundRect(size * 2, fill: color)
+                roundRect(radius, fill: color)
                     .shadow(color: .black.opacity(0.15), radius: shadowSize, x: 0, y: shadowSize / 2)
             )
             .if(!noFG) { $0.foregroundColor(color.textColor(colors: colors)) }
@@ -263,7 +272,9 @@ public struct RoundBG: ViewModifier {
     @Environment(\.colorScheme) var colorScheme
     @Environment(\.colors) var colors
 
-    @State var size: CGFloat
+    @State var radius: CGFloat
+    @State var verticalPadding: CGFloat?
+    @State var horizontalPadding: CGFloat?
     @State var color: Color
     @State var shadowSize: CGFloat
     @State var noFG: Bool
@@ -271,7 +282,15 @@ public struct RoundBG: ViewModifier {
 
 public extension View {
     func roundbg(size: CGFloat = 2.5, color: Color = .primary, shadowSize: CGFloat = 0, noFG: Bool = false) -> some View {
-        modifier(RoundBG(size: size, color: color, shadowSize: shadowSize, noFG: noFG))
+        modifier(RoundBG(radius: size, color: color, shadowSize: shadowSize, noFG: noFG))
+    }
+
+    func roundbg(radius: CGFloat = 5, padding: CGFloat = 2.5, color: Color = .primary, shadowSize: CGFloat = 0, noFG: Bool = false) -> some View {
+        modifier(RoundBG(radius: radius, verticalPadding: padding, horizontalPadding: padding * 2.2, color: color, shadowSize: shadowSize, noFG: noFG))
+    }
+
+    func roundbg(radius: CGFloat = 5, verticalPadding: CGFloat = 2.5, horizontalPadding: CGFloat = 6, color: Color = .primary, shadowSize: CGFloat = 0, noFG: Bool = false) -> some View {
+        modifier(RoundBG(radius: radius, verticalPadding: verticalPadding, horizontalPadding: horizontalPadding, color: color, shadowSize: shadowSize, noFG: noFG))
     }
 
     func hfill(_ alignment: Alignment = .center) -> some View {
