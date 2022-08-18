@@ -87,16 +87,14 @@ public struct NotificationView: View {
         }
         .frame(maxWidth: 500, alignment: .leading)
         .fixedSize(horizontal: true, vertical: false)
-        .padding(.horizontal, 40)
-        .padding(.bottom, 40)
-        .padding(.top, 20)
+        .padding(20)
         .background(
             VisualEffectBlur(material: .hudWindow, blendingMode: .withinWindow, state: .active)
                 .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
-                .padding(.horizontal, 20)
-                .padding(.bottom, 20)
                 .shadow(color: Colors.blackMauve.opacity(colorScheme == .dark ? 0.5 : 0.25), radius: 4, x: 0, y: 3)
-        ).focusable(false)
+        )
+        .focusable(false)
+        .padding(20)
     }
 
     // MARK: Internal

@@ -39,14 +39,14 @@ open class LowtechAppDelegate: NSObject, NSApplicationDelegate, ObservableObject
             guard showPopoverOnSpecialKey else {
                 return
             }
-            statusBar?.togglePopover(sender: self, at: .mouseLocation(centeredOn: statusBar?.window))
+            statusBar?.togglePopover(sender: self)
         }
         KM.initHotkeys()
         KM.initFlagsListener()
 
         if Defaults[.launchCount] == 1, showPopoverOnFirstLaunch {
             mainAsyncAfter(ms: 3000) {
-                guard let s = self.statusBar, !s.popover.isShown else { return }
+                guard let s = self.statusBar, !s.window.isVisible else { return }
                 s.showPopover(self)
             }
         }
@@ -92,22 +92,18 @@ open class LowtechAppDelegate: NSObject, NSApplicationDelegate, ObservableObject
 
     public var observers: Set<AnyCancellable> = []
 
-    public lazy var notificationPopover: LowtechPopover = {
-        let p = LowtechPopover(statusBar)
-        p.contentViewController = MainViewController()
-        p.animates = false
-        p.contentViewController?.view = HostingView(rootView: notificationView)
-
-        return p
-    }()
-
-    public var notificationView: AnyView?
     public var contentView: AnyView?
     public var accentColor: Color?
 
     public lazy var trialOSD = OSDWindow(swiftuiView: TrialOSDContainer().any)
 
     public var appStoreURL: URL?
+
+    public var notificationPopover: PanelWindow! {
+        didSet {
+            oldValue?.forceClose()
+        }
+    }
 
     public var notificationCloser: DispatchWorkItem? {
         didSet {
@@ -131,15 +127,19 @@ open class LowtechAppDelegate: NSObject, NSApplicationDelegate, ObservableObject
         menubarIconHidden: Bool? = nil,
         action: ((Bool) -> Void)? = nil
     ) {
-        notificationPopover.contentViewController?.view = HostingView(rootView: NotificationView(
+        guard let screen = NSScreen.main else { return }
+        let view = NotificationView(
             notificationLines: (title.isEmpty ? [] : ["# \(title)"]) + lines,
             yesButtonText: yesButtonText, noButtonText: noButtonText, buttonAction: action
-        ))
-        notificationPopover.show(menubarIconHidden: menubarIconHidden)
-        notificationPopover.contentViewController?.view.window?.makeKeyAndOrderFront(self)
+        ).any
+        notificationPopover = PanelWindow(swiftuiView: view)
+        notificationPopover.show(at: NSPoint(
+            x: screen.visibleFrame.maxX - notificationPopover!.contentView!.frame.width,
+            y: screen.visibleFrame.maxY - notificationPopover!.contentView!.frame.height
+        ), activate: false)
         notificationCloser = mainAsyncAfter(ms: closeMilliseconds) {
-            guard self.notificationPopover.isShown else { return }
-            self.notificationPopover.close()
+            guard let notif = self.notificationPopover, notif.isVisible else { return }
+            notif.forceClose()
         }
     }
 
@@ -149,7 +149,7 @@ open class LowtechAppDelegate: NSObject, NSApplicationDelegate, ObservableObject
         }
 
         statusBar = StatusBarController(
-            HostingView(
+            NSHostingView(
                 rootView: AnyView(LowtechView(accentColor: accentColor ?? Colors.yellow) { contentView })
             )
         )

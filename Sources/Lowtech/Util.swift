@@ -40,6 +40,57 @@ public struct Formatting: Hashable {
     let padding: Int
 }
 
+// MARK: - ObservableSettings
+
+public protocol ObservableSettings: AnyObject {
+    var observers: Set<AnyCancellable> { get set }
+    var apply: Bool { get set }
+}
+
+public extension ObservableSettings {
+    func withoutApply(_ action: () -> Void) {
+        apply = false
+        action()
+        apply = true
+    }
+
+    func bind<Value>(_ key: Defaults.Key<Value>, property: ReferenceWritableKeyPath<Self, Value>, publisher: KeyPath<Self, Published<Value>.Publisher>? = nil, debounce: RunLoop.SchedulerTimeType.Stride? = nil) {
+        let onSettingChange: (Defaults.KeyChange<Value>) -> Void = { [weak self] change in
+            guard let self = self else { return }
+            self.withoutApply {
+                self[keyPath: property] = change.newValue
+            }
+        }
+
+        if let debounce = debounce {
+            Defaults.publisher(key)
+                .debounce(for: debounce, scheduler: RunLoop.main)
+                .sink(receiveValue: onSettingChange).store(in: &observers)
+        } else {
+            Defaults.publisher(key)
+                .receive(on: RunLoop.main)
+                .sink(receiveValue: onSettingChange).store(in: &observers)
+        }
+
+        guard let publisher = publisher else { return }
+
+        let onChange: (Value) -> Void = { [weak self] val in
+            guard let self = self, self.apply else { return }
+            Defaults[key] = val
+        }
+
+        if let debounce = debounce {
+            self[keyPath: publisher]
+                .debounce(for: debounce, scheduler: RunLoop.main)
+                .sink(receiveValue: onChange).store(in: &observers)
+        } else {
+            self[keyPath: publisher]
+                .receive(on: RunLoop.main)
+                .sink(receiveValue: onChange).store(in: &observers)
+        }
+    }
+}
+
 // MARK: - Setting
 
 @available(macOS 10.15, iOS 13.0, tvOS 13.0, watchOS 6.0, *)
@@ -66,8 +117,8 @@ public class Setting<Value: Defaults.Serializable> {
     public var wrappedValue: Value {
         get { storage.value }
         set {
+            storage.oldValue = storage.value
             storage.value = newValue
-            storage.oldValue = wrappedValue
             Defaults.withoutPropagation {
                 Defaults[key] = newValue
             }
