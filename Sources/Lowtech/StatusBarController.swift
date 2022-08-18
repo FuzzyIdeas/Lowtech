@@ -23,9 +23,9 @@ class StatusBarDelegate: NSObject, NSWindowDelegate {
     var statusBarController: StatusBarController!
 
     func windowDidMove(_ notification: Notification) {
-        guard statusBarController.window.isVisible, let position = statusBarController.position else { return }
+        guard let window = statusBarController.window, window.isVisible, let position = statusBarController.position else { return }
 
-        statusBarController.window.show(at: position, animate: true)
+        window.show(at: position, animate: true)
     }
 }
 
@@ -34,7 +34,7 @@ class StatusBarDelegate: NSObject, NSWindowDelegate {
 open class StatusBarController: NSObject, NSWindowDelegate, ObservableObject {
     // MARK: Lifecycle
 
-    public init(_ view: NSHostingView<AnyView>, image: String = "MenubarIcon") {
+    public init(_ view: @autoclosure @escaping () -> AnyView, image: String = "MenubarIcon") {
         self.view = view
 
         statusBar = NSStatusBar.system
@@ -98,7 +98,7 @@ open class StatusBarController: NSObject, NSWindowDelegate, ObservableObject {
 
     // MARK: Public
 
-    public var view: NSHostingView<AnyView>
+    public var view: () -> AnyView
     public var observers: Set<AnyCancellable> = []
     public var statusItem: NSStatusItem
     @Atomic public var popoverShownAtLeastOnce = false
@@ -106,20 +106,18 @@ open class StatusBarController: NSObject, NSWindowDelegate, ObservableObject {
 
     @Published public var storedPosition: CGPoint = .zero
 
-    public lazy var window: PanelWindow = {
-        let w = PanelWindow(swiftuiView: view.rootView)
-        w.delegate = self
-        return w
-    }() {
+    public var window: PanelWindow? {
         didSet {
-            oldValue.forceClose()
+            window?.delegate = self
+
+            oldValue?.forceClose()
         }
     }
 
     public var position: CGPoint? {
         guard let button = statusItem.button, let screen = NSScreen.main,
               let menuBarIconPosition = button.window?.convertPoint(toScreen: button.frame.origin),
-              let viewSize = window.contentView?.frame.size
+              let window = window, let viewSize = window.contentView?.frame.size
         else { return nil }
 
         var middle = CGPoint(
@@ -140,7 +138,7 @@ open class StatusBarController: NSObject, NSWindowDelegate, ObservableObject {
     }
 
     @objc public func togglePopover(sender: AnyObject) {
-        if window.isVisible {
+        if let window = window, window.isVisible {
             hidePopover(sender)
         } else {
             showPopover(sender)
@@ -148,7 +146,7 @@ open class StatusBarController: NSObject, NSWindowDelegate, ObservableObject {
     }
 
     public func showPopoverIfNotVisible() {
-        guard !window.isVisible else { return }
+        guard window == nil || !window!.isVisible else { return }
         showPopover(self)
     }
 
@@ -174,21 +172,28 @@ open class StatusBarController: NSObject, NSWindowDelegate, ObservableObject {
     }
 
     public func showPopover(_: AnyObject) {
+        menuHideTask = nil
         Defaults[.popoverClosed] = false
         popoverShownAtLeastOnce = true
 
+        window = PanelWindow(swiftuiView: view())
         guard statusItem.isVisible else {
-            window.show(at: .mouseLocation(centeredOn: statusItem.button?.window))
+            window!.show(at: .mouseLocation(centeredOn: statusItem.button?.window))
             return
         }
 
-        window.show(at: position)
+        window!.show(at: position)
         eventMonitor?.start()
     }
 
     @objc public func hidePopover(_: AnyObject) {
+        guard let window = window else { return }
         window.close()
         eventMonitor?.stop()
+
+        menuHideTask = mainAsyncAfter(ms: 2000) {
+            self.window = nil
+        }
     }
 
     // MARK: Internal
@@ -196,6 +201,7 @@ open class StatusBarController: NSObject, NSWindowDelegate, ObservableObject {
     var delegate: StatusBarDelegate?
 
     func mouseEventHandler(_: NSEvent?) {
+        guard let window = window else { return }
         if window.isVisible, statusItem.isVisible, !shouldLeavePopoverOpen {
             hidePopover(LowtechAppDelegate.instance)
         }

@@ -46,7 +46,7 @@ open class LowtechAppDelegate: NSObject, NSApplicationDelegate, ObservableObject
 
         if Defaults[.launchCount] == 1, showPopoverOnFirstLaunch {
             mainAsyncAfter(ms: 3000) {
-                guard let s = self.statusBar, !s.window.isVisible else { return }
+                guard let s = self.statusBar, let w = s.window, !w.isVisible else { return }
                 s.showPopover(self)
             }
         }
@@ -149,9 +149,7 @@ open class LowtechAppDelegate: NSObject, NSApplicationDelegate, ObservableObject
         }
 
         statusBar = StatusBarController(
-            NSHostingView(
-                rootView: AnyView(LowtechView(accentColor: accentColor ?? Colors.yellow) { contentView })
-            )
+            LowtechView(accentColor: accentColor ?? Colors.yellow) { contentView }.any
         )
     }
 }

@@ -400,7 +400,7 @@ public class KeysManager: ObservableObject {
 
     @Published public var secondaryAltKeyModifiers: [TriggerKey] = [] {
         didSet {
-            disabledAltKeys = secondaryAltKeyModifiers.isEmpty
+            disabledSecondaryAltKeys = secondaryAltKeyModifiers.isEmpty
         }
     }
 
