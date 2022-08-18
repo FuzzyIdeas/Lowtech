@@ -148,8 +148,9 @@ open class LowtechAppDelegate: NSObject, NSApplicationDelegate, ObservableObject
             return
         }
 
+        let color = accentColor ?? Colors.yellow
         statusBar = StatusBarController(
-            LowtechView(accentColor: accentColor ?? Colors.yellow) { contentView }.any
+            LowtechView(accentColor: color) { contentView }.any
         )
     }
 }

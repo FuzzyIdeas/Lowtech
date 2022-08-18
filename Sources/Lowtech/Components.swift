@@ -32,6 +32,7 @@ public struct Semaphore: View {
         }
         .padding(.leading, -8)
         .padding(.top, -8)
+        .focusable(false)
     }
 }
 

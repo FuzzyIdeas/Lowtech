@@ -178,7 +178,7 @@ open class StatusBarController: NSObject, NSWindowDelegate, ObservableObject {
 
         window = PanelWindow(swiftuiView: view())
         guard statusItem.isVisible else {
-            window!.show(at: .mouseLocation(centeredOn: statusItem.button?.window))
+            window!.show(at: .mouseLocation(centeredOn: window))
             return
         }
 
