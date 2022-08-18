@@ -46,7 +46,7 @@ open class LowtechAppDelegate: NSObject, NSApplicationDelegate, ObservableObject
 
         if Defaults[.launchCount] == 1, showPopoverOnFirstLaunch {
             mainAsyncAfter(ms: 3000) {
-                guard let s = self.statusBar, let w = s.window, !w.isVisible else { return }
+                guard let s = self.statusBar, s.window == nil || !s.window!.isVisible else { return }
                 s.showPopover(self)
             }
         }
