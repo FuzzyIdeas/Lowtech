@@ -176,7 +176,9 @@ open class StatusBarController: NSObject, NSWindowDelegate, ObservableObject {
         Defaults[.popoverClosed] = false
         popoverShownAtLeastOnce = true
 
-        window = PanelWindow(swiftuiView: view())
+        if window == nil {
+            window = PanelWindow(swiftuiView: view())
+        }
         guard statusItem.isVisible else {
             window!.show(at: .mouseLocation(centeredOn: window))
             return
@@ -192,6 +194,8 @@ open class StatusBarController: NSObject, NSWindowDelegate, ObservableObject {
         eventMonitor?.stop()
 
         menuHideTask = mainAsyncAfter(ms: 2000) {
+            self.window?.contentView = nil
+            self.window?.forceClose()
             self.window = nil
         }
     }
