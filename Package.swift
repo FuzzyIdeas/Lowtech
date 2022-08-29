@@ -7,13 +7,24 @@ let package = Package(
     name: "Lowtech",
     platforms: [
         .macOS(.v11),
-        .iOS(.v14),
     ],
     products: [
         // Products define the executables and libraries a package produces, and make them visible to other packages.
         .library(
             name: "Lowtech",
-            targets: ["Lowtech", "LowtechAppStore", "LowtechIndie", "LowtechPro"]
+            targets: ["Lowtech"]
+        ),
+        .library(
+            name: "LowtechAppStore",
+            targets: ["LowtechAppStore"]
+        ),
+        .library(
+            name: "LowtechIndie",
+            targets: ["LowtechIndie"]
+        ),
+        .library(
+            name: "LowtechPro",
+            targets: ["LowtechPro"]
         ),
     ],
     dependencies: [
@@ -48,11 +59,11 @@ let package = Package(
                 .product(name: "Path", package: "Path.swift"),
                 .product(name: "Defaults", package: "Defaults"),
                 .product(name: "Regex", package: "RegexSwiftOld"),
-                .product(name: "LaunchAtLogin", package: "LaunchAtLogin", condition: .when(platforms: [.macOS])),
-                .product(name: "Magnet", package: "Magnet", condition: .when(platforms: [.macOS])),
-                .product(name: "Sauce", package: "Sauce", condition: .when(platforms: [.macOS])),
-                .product(name: "VisualEffects", package: "VisualEffects", condition: .when(platforms: [.macOS])),
-                .product(name: "EonilFSEvents", package: "FSEvents", condition: .when(platforms: [.macOS])),
+                .product(name: "LaunchAtLogin", package: "LaunchAtLogin"),
+                .product(name: "Magnet", package: "Magnet"),
+                .product(name: "Sauce", package: "Sauce"),
+                .product(name: "VisualEffects", package: "VisualEffects"),
+                .product(name: "EonilFSEvents", package: "FSEvents"),
                 .product(name: "DynamicColor", package: "DynamicColor"),
                 .product(name: "FuzzyFind", package: "FuzzyFind"),
                 .product(name: "SystemColors", package: "swiftui-system-colors"),
