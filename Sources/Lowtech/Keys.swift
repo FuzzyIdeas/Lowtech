@@ -428,7 +428,7 @@ public class KeysManager: ObservableObject {
         }
     }
 
-    @Published public var specialKeyModifiers: [TriggerKey] = [.ralt] {
+    @Published public var specialKeyModifiers: [TriggerKey] = [.ralt, .rshift] {
         didSet {
             reinitHotkeys()
         }
