@@ -743,42 +743,50 @@ public struct ErrorTextView: View {
     @State var error: String
 }
 
-// MARK: - TrialOSDContainer
+// MARK: - EdgeBorder
 
-public struct TrialOSDContainer: View {
-    // MARK: Lifecycle
+public struct EdgeBorder: Shape {
+    public var width: CGFloat
+    public var edges: [Edge]
 
-    public init() {}
-
-    // MARK: Public
-
-    public var body: some View {
-        HStack {
-            if let img = NSImage(named: NSImage.applicationIconName) {
-                Image(nsImage: img)
-                    .resizable()
-                    .frame(width: 90, height: 90)
-            }
-            VStack(alignment: .leading) {
-                Text("Trial period of") + Text(" \(Bundle.main.name ?? "the app") ").bold() + Text("expired for the current session.")
-                Text("Buy the full version from") + Text(" App Store ").bold() + Text("to remove this limitation.")
-
-                HStack {
-                    if let url = LowtechAppDelegate.instance.appStoreURL {
-                        Button("Go to App Store") { NSWorkspace.shared.open(url) }
-                            .buttonStyle(FlatButton(color: .blue, textColor: .white))
-                    }
-                    Button("Quit app") { NSApp.terminate(nil) }
-                        .buttonStyle(FlatButton(color: Colors.red, textColor: .white))
+    public func path(in rect: CGRect) -> Path {
+        var path = Path()
+        for edge in edges {
+            var x: CGFloat {
+                switch edge {
+                case .top, .bottom, .leading: return rect.minX - 0.5
+                case .trailing: return rect.maxX - width + 0.5
                 }
-            }.fixedSize()
+            }
+
+            var y: CGFloat {
+                switch edge {
+                case .top, .leading, .trailing: return rect.minY - 0.5
+                case .bottom: return rect.maxY - width + 0.5
+                }
+            }
+
+            var w: CGFloat {
+                switch edge {
+                case .top, .bottom: return rect.width
+                case .leading, .trailing: return width
+                }
+            }
+
+            var h: CGFloat {
+                switch edge {
+                case .top, .bottom: return self.width
+                case .leading, .trailing: return rect.height
+                }
+            }
+            path.addPath(Path(CGRect(x: x, y: y, width: w, height: h)))
         }
-        .padding()
-        .background(
-            VisualEffectBlur(material: .hudWindow, blendingMode: .withinWindow, state: .active)
-                .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
-                .shadow(radius: 6, x: 0, y: 3)
-        )
-        .padding()
+        return path
+    }
+}
+
+public extension View {
+    func border(width: CGFloat, edges: [Edge], color: Color) -> some View {
+        overlay(EdgeBorder(width: width, edges: edges).foregroundColor(color))
     }
 }

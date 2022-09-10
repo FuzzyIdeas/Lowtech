@@ -4,6 +4,12 @@ import Defaults
 import Foundation
 import SwiftUI
 
+let kAppleInterfaceThemeChangedNotification = "AppleInterfaceThemeChangedNotification"
+
+public extension Notification.Name {
+    static let mainScreenChanged = Notification.Name("MainScreenChanged")
+}
+
 // MARK: - LowtechAppDelegate
 
 open class LowtechAppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
@@ -12,18 +18,51 @@ open class LowtechAppDelegate: NSObject, NSApplicationDelegate, ObservableObject
     @Published open var showPopoverOnSpecialKey = true
 
     open var initialized = false
+    open var env = EnvState()
 
     open func isTrialMode() -> Bool {
         false
     }
 
+    @MainActor
+    open func applicationDidResignActive(_ notification: Notification) {
+        debug(notification)
+    }
+
+    @MainActor
     open func applicationDidBecomeActive(_ notification: Notification) {
-        #if DEBUG
-            print(notification)
-        #endif
+        debug(notification)
         if Defaults[.hideMenubarIcon] {
             statusBar?.showPopoverIfNotVisible()
         }
+    }
+
+    @MainActor
+    open func onAppearanceChanged(_ appearance: NSAppearance) {}
+
+    @MainActor
+    open func initObservers() {
+        DistributedNotificationCenter.default()
+            .publisher(for: NSNotification.Name(rawValue: kAppleInterfaceThemeChangedNotification), object: nil)
+            .debounce(for: .milliseconds(50), scheduler: RunLoop.main)
+            .sink { notification in
+                NSAppearance.current = NSApp.effectiveAppearance
+                self.onAppearanceChanged(NSAppearance.current)
+            }.store(in: &observers)
+
+        NotificationCenter.default
+            .publisher(for: NSApplication.didChangeScreenParametersNotification, object: nil)
+            .eraseToAnyPublisher().map { $0 as Any? }
+            .merge(with: NSWorkspace.shared.publisher(for: \.frontmostApplication).eraseToAnyPublisher().map { $0 as Any? })
+            .merge(
+                with:
+                NSWorkspace.shared.notificationCenter
+                    .publisher(for: NSWorkspace.activeSpaceDidChangeNotification, object: nil)
+                    .eraseToAnyPublisher().map { $0 as Any? }
+            )
+            .sink { notification in
+                NotificationCenter.default.post(name: .mainScreenChanged, object: nil)
+            }.store(in: &observers)
     }
 
     @MainActor open func applicationDidFinishLaunching(_ notification: Notification) {
@@ -35,6 +74,7 @@ open class LowtechAppDelegate: NSObject, NSApplicationDelegate, ObservableObject
         Defaults[.launchCount] += 1
 
         initMenubar()
+        initObservers()
         KM.onSpecialHotkey = { [self] in
             guard showPopoverOnSpecialKey else {
                 return
@@ -54,32 +94,6 @@ open class LowtechAppDelegate: NSObject, NSApplicationDelegate, ObservableObject
         KM.initialized = true
     }
 
-    @MainActor
-    @inline(__always)
-    open func trialExpired() -> Bool {
-        false
-    }
-
-    @MainActor
-    @inline(__always)
-    open func hideTrialOSD() {
-        guard trialMode, trialExpired() else {
-            return
-        }
-        trialOSD.ignoresMouseEvents = true
-        trialOSD.alphaValue = 0
-    }
-
-    @MainActor
-    @inline(__always)
-    open func showTrialOSD() {
-        guard trialMode, trialExpired() else {
-            return
-        }
-        trialOSD.ignoresMouseEvents = false
-        trialOSD.show(closeAfter: 0, fadeAfter: 0, offCenter: 0, centerWindow: false, corner: .bottomRight, screen: .main)
-    }
-
     // MARK: Public
 
     public private(set) static var instance: LowtechAppDelegate!
@@ -94,8 +108,6 @@ open class LowtechAppDelegate: NSObject, NSApplicationDelegate, ObservableObject
 
     public var contentView: AnyView?
     public var accentColor: Color?
-
-    public lazy var trialOSD = OSDWindow(swiftuiView: TrialOSDContainer().any)
 
     public var appStoreURL: URL?
 
@@ -114,10 +126,12 @@ open class LowtechAppDelegate: NSObject, NSApplicationDelegate, ObservableObject
         }
     }
 
+    @MainActor
     public func hidePopover() {
         statusBar?.hidePopover(self)
     }
 
+    @MainActor
     public func showNotification(
         title: String,
         lines: [String],
@@ -143,6 +157,7 @@ open class LowtechAppDelegate: NSObject, NSApplicationDelegate, ObservableObject
         }
     }
 
+    @MainActor
     public func initMenubar() {
         guard let contentView = contentView else {
             return

@@ -2,6 +2,7 @@ import Cocoa
 
 // MARK: - GlobalEventMonitor
 
+@MainActor
 open class GlobalEventMonitor {
     // MARK: Lifecycle
 
@@ -11,7 +12,7 @@ open class GlobalEventMonitor {
     }
 
     deinit {
-        stop()
+        Task.init { await MainActor.run { stop() } }
     }
 
     // MARK: Public
@@ -36,6 +37,7 @@ open class GlobalEventMonitor {
 
 // MARK: - LocalEventMonitor
 
+@MainActor
 open class LocalEventMonitor {
     // MARK: Lifecycle
 
@@ -45,7 +47,7 @@ open class LocalEventMonitor {
     }
 
     deinit {
-        stop()
+        Task.init { await MainActor.run { stop() } }
     }
 
     // MARK: Public

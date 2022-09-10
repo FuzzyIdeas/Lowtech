@@ -42,8 +42,6 @@ public func ?! <T: Collection>(_ seq: T?, _ seq2: T) -> T {
     return seq
 }
 
-infix operator %
-
 public func % (_ str: String, _ args: [CVarArg]) -> String {
     String(format: str, arguments: args.map { String(describing: $0) })
 }
@@ -77,6 +75,7 @@ public extension Animation {
         static let fastTransition = Animation.interactiveSpring(dampingFraction: 0.7)
     #endif
     static let fastSpring = Animation.interactiveSpring(dampingFraction: 0.7)
+    static let quickSpring = Animation.spring(response: 0.3, dampingFraction: 0.55)
     static let jumpySpring = Animation.spring(response: 0.4, dampingFraction: 0.45)
 }
 
@@ -220,6 +219,7 @@ extension Bool {
             set {
                 wantsLayer = true
                 layer?.cornerRadius = CGFloat(newValue?.floatValue ?? 0.0)
+                layer?.cornerCurve = .continuous
             }
         }
     }
@@ -1055,6 +1055,11 @@ public extension NSParagraphStyle {
         p.alignment = .center
         return p
     }
+}
+
+public extension Binding where Value == Bool {
+    static let `false`: Binding<Value> = .constant(false)
+    static let `true`: Binding<Value> = .constant(true)
 }
 
 public extension Binding {

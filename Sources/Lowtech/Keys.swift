@@ -10,6 +10,7 @@ import Defaults
 import Foundation
 import Magnet
 import Sauce
+import SwiftUI
 
 // MARK: - KeysManager
 
@@ -694,6 +695,7 @@ public class KeysManager: ObservableObject {
         }
     }
 
+    @MainActor
     public func initFlagsListener() {
         globalEventMonitor = GlobalEventMonitor(mask: .flagsChanged) { [self] event in
             guard let event = event else { return }
@@ -1115,4 +1117,95 @@ public let KM = KeysManager()
             return flags
         }
     }
+
+    struct DirectionalModifierView: View {
+        @Binding var triggerKeys: [TriggerKey]
+        @Binding var disabled: Bool
+        @State var spacing: CGFloat = 3
+
+        var body: some View {
+            let rcmdTrigger = Binding<Bool>(
+                get: { self.triggerKeys.contains(.rcmd) },
+                set: {
+                    triggerKeys = triggerKeys.toggling(key: TriggerKey.rcmd, on: $0)
+                }
+            )
+            let raltTrigger = Binding<Bool>(
+                get: { self.triggerKeys.contains(.ralt) },
+                set: {
+                    triggerKeys = triggerKeys.toggling(key: TriggerKey.ralt, on: $0)
+                }
+            )
+
+            let lcmdTrigger = Binding<Bool>(
+                get: { self.triggerKeys.contains(.lcmd) },
+                set: {
+                    triggerKeys = triggerKeys.toggling(key: TriggerKey.lcmd, on: $0)
+                }
+            )
+            let laltTrigger = Binding<Bool>(
+                get: { self.triggerKeys.contains(.lalt) },
+                set: {
+                    triggerKeys = triggerKeys.toggling(key: TriggerKey.lalt, on: $0)
+                }
+            )
+            let lctrlTrigger = Binding<Bool>(
+                get: { self.triggerKeys.contains(.lctrl) },
+                set: {
+                    triggerKeys = triggerKeys.toggling(key: TriggerKey.lctrl, on: $0)
+                }
+            )
+
+            let lshiftTrigger = Binding<Bool>(
+                get: { self.triggerKeys.contains(.lshift) },
+                set: {
+                    triggerKeys = triggerKeys.toggling(key: TriggerKey.lshift, on: $0)
+                }
+            )
+            let rshiftTrigger = Binding<Bool>(
+                get: { self.triggerKeys.contains(.rshift) },
+                set: {
+                    triggerKeys = triggerKeys.toggling(key: TriggerKey.rshift, on: $0)
+                }
+            )
+            let rctrlTrigger = Binding<Bool>(
+                get: { self.triggerKeys.contains(.rctrl) },
+                set: {
+                    triggerKeys = triggerKeys.toggling(key: TriggerKey.rctrl, on: $0)
+                }
+            )
+
+            HStack(spacing: spacing) {
+                Button("⇧") {
+                    triggerKeys = triggerKeys.toggling(key: .lshift)
+                }.buttonStyle(ToggleButton(isOn: lshiftTrigger))
+                Button("⌃") {
+                    triggerKeys = triggerKeys.toggling(key: .lctrl)
+                }.buttonStyle(ToggleButton(isOn: lctrlTrigger))
+                Button("⌥") {
+                    triggerKeys = triggerKeys.toggling(key: .lalt)
+                }.buttonStyle(ToggleButton(isOn: laltTrigger))
+                Button("⌘") {
+                    triggerKeys = triggerKeys.toggling(key: .lcmd)
+                }.buttonStyle(ToggleButton(isOn: lcmdTrigger))
+                Button("    ⎵    ") {}
+                    .buttonStyle(ToggleButton(isOn: .constant(false)))
+                    .opacity(0.9)
+                    .disabled(true)
+                Button("⌘") {
+                    triggerKeys = triggerKeys.toggling(key: .rcmd)
+                }.buttonStyle(ToggleButton(isOn: rcmdTrigger))
+                Button("⌥") {
+                    triggerKeys = triggerKeys.toggling(key: .ralt)
+                }.buttonStyle(ToggleButton(isOn: raltTrigger))
+                Button("⌃") {
+                    triggerKeys = triggerKeys.toggling(key: .rctrl)
+                }.buttonStyle(ToggleButton(isOn: rctrlTrigger))
+                Button("⇧") {
+                    triggerKeys = triggerKeys.toggling(key: .rshift)
+                }.buttonStyle(ToggleButton(isOn: rshiftTrigger))
+            }.disabled(disabled)
+        }
+    }
+
 #endif

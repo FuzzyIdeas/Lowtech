@@ -69,7 +69,7 @@
         "repositoryURL": "https://github.com/sindresorhus/LaunchAtLogin",
         "state": {
           "branch": "main",
-          "revision": "e8171b3e38a2816f579f58f3dac1522aa39efe41",
+          "revision": "05168c04c91fdf6c432852c2fe0737af6437195c",
           "version": null
         }
       },
@@ -132,8 +132,8 @@
         "repositoryURL": "https://github.com/sparkle-project/Sparkle",
         "state": {
           "branch": null,
-          "revision": "059ce9128775d5a636c7f4716f71a58919d3111e",
-          "version": "2.2.1"
+          "revision": "8e27997de02457a0c4690ffcfb8ac9c8e1066883",
+          "version": "2.2.2"
         }
       },
       {

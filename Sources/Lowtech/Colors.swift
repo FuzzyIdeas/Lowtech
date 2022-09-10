@@ -72,7 +72,7 @@ public struct Colors {
     public static let lunarYellow = Color(hue: 0.11, saturation: 0.47, brightness: 1.00)
     public static let sunYellow = Color(hue: 0.1, saturation: 0.57, brightness: 1.00)
     public static let peach = Color(hue: 0.08, saturation: 0.42, brightness: 1.00)
-    public static let blue = Color(hue: 214 / 360, saturation: 1.0, brightness: 0.54)
+    public static let blue = Color(hue: 214 / 360, saturation: 0.7, brightness: 0.84)
     public static let green = Color(hue: 0.36, saturation: 0.80, brightness: 0.78)
     public static let lightGreen = Color(hue: 141 / 360, saturation: 0.50, brightness: 0.83)
 

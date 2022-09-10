@@ -4,11 +4,14 @@ import SwiftUI
 
 // MARK: - PanelWindow
 
-open class PanelWindow: NSWindow {
+open class PanelWindow: LowtechWindow {
     // MARK: Lifecycle
 
-    public convenience init(swiftuiView: AnyView) {
+    public convenience init(swiftuiView: AnyView, screen: NSScreen? = nil, corner: ScreenCorner? = nil) {
         self.init(contentViewController: NSHostingController(rootView: swiftuiView))
+
+        screenPlacement = screen
+        screenCorner = corner
 
         level = .floating
         setAccessibilityRole(.popover)
@@ -27,20 +30,13 @@ open class PanelWindow: NSWindow {
 
     override open var canBecomeKey: Bool { true }
 
-    open func show(at point: NSPoint? = nil, animate: Bool = false, activate: Bool = true) {
-        if let point = point {
-            if animate {
-                NSAnimationContext.runAnimationGroup { ctx in
-                    ctx.duration = 0.15
-                    ctx.timingFunction = .easeOut
-                    ctx.allowsImplicitAnimation = true
-                    setFrame(NSRect(origin: point, size: frame.size), display: true, animate: true)
-                }
-            } else {
-                setFrameOrigin(point)
-            }
+    open func show(at point: NSPoint? = nil, animate: Bool = false, activate: Bool = true, corner: ScreenCorner? = nil, screen: NSScreen? = nil) {
+        if let corner = corner {
+            moveToScreen(screen, corner: corner, animate: animate)
+        } else if let point = point {
+            withAnim(animate: animate) { w in w.setFrameOrigin(point) }
         } else {
-            center()
+            withAnim(animate: animate) { w in w.center() }
         }
 
         wc.showWindow(nil)
@@ -50,16 +46,4 @@ open class PanelWindow: NSWindow {
             NSApp.activate(ignoringOtherApps: true)
         }
     }
-
-    // MARK: Public
-
-    public func forceClose() {
-        wc.close()
-        wc.window = nil
-        close()
-    }
-
-    // MARK: Private
-
-    private lazy var wc = NSWindowController(window: self)
 }

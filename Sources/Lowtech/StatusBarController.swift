@@ -22,6 +22,7 @@ class StatusBarDelegate: NSObject, NSWindowDelegate {
 
     var statusBarController: StatusBarController!
 
+    @MainActor
     func windowDidMove(_ notification: Notification) {
         guard let window = statusBarController.window, window.isVisible, let position = statusBarController.position else { return }
 
@@ -31,6 +32,7 @@ class StatusBarDelegate: NSObject, NSWindowDelegate {
 
 // MARK: - StatusBarController
 
+@MainActor
 open class StatusBarController: NSObject, NSWindowDelegate, ObservableObject {
     // MARK: Lifecycle
 
@@ -82,6 +84,22 @@ open class StatusBarController: NSObject, NSWindowDelegate, ObservableObject {
         }.store(in: &observers)
 
         eventMonitor = GlobalEventMonitor(mask: [.leftMouseDown, .rightMouseDown], handler: mouseEventHandler)
+        dragEventMonitor = LocalEventMonitor(mask: [.leftMouseDown, .leftMouseUp]) { ev in
+            switch ev.type {
+            case .leftMouseDown:
+                self.draggingWindow = true
+            case .leftMouseUp:
+                self.draggingWindow = false
+                if self.changedWindowScreen {
+                    self.changedWindowScreen = false
+                    NotificationCenter.default.post(name: .mainScreenChanged, object: nil)
+                }
+            default:
+                break
+            }
+            return ev
+        }
+        dragEventMonitor.start()
 
         NSApp.publisher(for: \.mainMenu).sink { _ in self.fixMenu() }
             .store(in: &observers)
@@ -99,23 +117,55 @@ open class StatusBarController: NSObject, NSWindowDelegate, ObservableObject {
     // MARK: Public
 
     public var view: () -> AnyView
+    public var screenObserver: Cancellable?
     public var observers: Set<AnyCancellable> = []
     public var statusItem: NSStatusItem
     @Atomic public var popoverShownAtLeastOnce = false
     @Atomic public var shouldLeavePopoverOpen = false
+    @Atomic public var shouldDestroyWindowOnClose = true
 
     @Published public var storedPosition: CGPoint = .zero
+    public var onWindowCreation: ((PanelWindow) -> Void)?
+    public var centerOnScreen = false
+    public var screenCorner: ScreenCorner?
+
+    @Atomic public var changedWindowScreen = false {
+        didSet {
+            debug("CHANGED WINDOW SCREEN: \(changedWindowScreen)")
+        }
+    }
+
+    @Atomic public var draggingWindow = false {
+        didSet {
+            debug("DRAGGING WINDOW: \(draggingWindow)")
+        }
+    }
 
     public var window: PanelWindow? {
         didSet {
             window?.delegate = self
 
             oldValue?.forceClose()
+
+            if let window = window {
+                screenObserver = NotificationCenter.default.publisher(for: NSWindow.didChangeScreenNotification, object: window)
+                    .sink { _ in
+                        guard !self.draggingWindow else {
+                            self.changedWindowScreen = true
+                            return
+                        }
+                        NotificationCenter.default.post(name: .mainScreenChanged, object: nil)
+                    }
+            } else {
+                screenObserver = nil
+            }
+            guard let onWindowCreation = onWindowCreation, let window = window else { return }
+            onWindowCreation(window)
         }
     }
 
     public var position: CGPoint? {
-        guard let button = statusItem.button, let screen = NSScreen.main,
+        guard !centerOnScreen, let button = statusItem.button, let screen = NSScreen.main,
               let menuBarIconPosition = button.window?.convertPoint(toScreen: button.frame.origin),
               let window = window, let viewSize = window.contentView?.frame.size
         else { return nil }
@@ -173,6 +223,7 @@ open class StatusBarController: NSObject, NSWindowDelegate, ObservableObject {
 
     public func showPopover(_: AnyObject) {
         menuHideTask = nil
+
         Defaults[.popoverClosed] = false
         popoverShownAtLeastOnce = true
 
@@ -180,19 +231,23 @@ open class StatusBarController: NSObject, NSWindowDelegate, ObservableObject {
             window = PanelWindow(swiftuiView: view())
         }
         guard statusItem.isVisible else {
-            window!.show(at: .mouseLocation(centeredOn: window))
+            window!.show(at: centerOnScreen ? nil : .mouseLocation(centeredOn: window), corner: screenCorner)
             return
         }
 
-        window!.show(at: position)
+        window!.show(at: position, corner: screenCorner)
         eventMonitor?.start()
     }
 
     @objc public func hidePopover(_: AnyObject) {
+        menuHideTask = nil
+
         guard let window = window else { return }
         window.close()
         eventMonitor?.stop()
+        NSApp.deactivate()
 
+        guard shouldDestroyWindowOnClose else { return }
         menuHideTask = mainAsyncAfter(ms: 2000) {
             self.window?.contentView = nil
             self.window?.forceClose()
@@ -202,10 +257,12 @@ open class StatusBarController: NSObject, NSWindowDelegate, ObservableObject {
 
     // MARK: Internal
 
+    var dragEventMonitor: LocalEventMonitor!
+
     var delegate: StatusBarDelegate?
 
-    func mouseEventHandler(_: NSEvent?) {
-        guard let window = window else { return }
+    func mouseEventHandler(_ event: NSEvent?) {
+        guard let window = window, event?.window == nil else { return }
         if window.isVisible, statusItem.isVisible, !shouldLeavePopoverOpen {
             hidePopover(LowtechAppDelegate.instance)
         }

@@ -42,6 +42,7 @@ public struct Formatting: Hashable {
 
 // MARK: - ObservableSettings
 
+@MainActor
 public protocol ObservableSettings: AnyObject {
     var observers: Set<AnyCancellable> { get set }
     var apply: Bool { get set }

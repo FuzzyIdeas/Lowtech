@@ -9,3 +9,4 @@ DerivedData/
 !*.secret
 enc.swift
 enc.fish
+Sources/LowtechAppStore/Numbers.swift

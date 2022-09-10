@@ -183,6 +183,22 @@ public extension Font {
         .system(size: size, weight: weight, design: .serif)
     }
 
+    static func ultraLight(_ size: CGFloat) -> Font {
+        .system(size: size, weight: .ultraLight, design: .default)
+    }
+
+    static func light(_ size: CGFloat) -> Font {
+        .system(size: size, weight: .light, design: .default)
+    }
+
+    static func thin(_ size: CGFloat) -> Font {
+        .system(size: size, weight: .thin, design: .default)
+    }
+
+    static func regular(_ size: CGFloat) -> Font {
+        .system(size: size, weight: .regular, design: .default)
+    }
+
     static func medium(_ size: CGFloat) -> Font {
         .system(size: size, weight: .medium, design: .default)
     }
@@ -215,6 +231,22 @@ public extension Text {
 
     func serif(_ size: CGFloat, weight: Font.Weight = .medium) -> Text {
         font(.system(size: size, weight: weight, design: .serif))
+    }
+
+    func ultraLight(_ size: CGFloat) -> Text {
+        font(.system(size: size, weight: .ultraLight, design: .default))
+    }
+
+    func light(_ size: CGFloat) -> Text {
+        font(.system(size: size, weight: .light, design: .default))
+    }
+
+    func thin(_ size: CGFloat) -> Text {
+        font(.system(size: size, weight: .thin, design: .default))
+    }
+
+    func regular(_ size: CGFloat) -> Text {
+        font(.system(size: size, weight: .regular, design: .default))
     }
 
     func medium(_ size: CGFloat) -> Text {
@@ -521,7 +553,9 @@ public struct FlatButton: ButtonStyle {
         pressedBinding: Binding<Bool>? = nil,
         horizontalPadding: CGFloat = 8,
         verticalPadding: CGFloat = 4,
-        stretch: Bool = false
+        stretch: Bool = false,
+        hoverColorEffects: Bool = true,
+        hoverScaleEffects: Bool = true
     ) {
         _color = colorBinding ?? .constant(color ?? Color.primary)
         _textColor = textColorBinding ?? .constant(textColor)
@@ -534,6 +568,8 @@ public struct FlatButton: ButtonStyle {
         _horizontalPadding = horizontalPadding.state
         _verticalPadding = verticalPadding.state
         _stretch = State(initialValue: stretch)
+        _hoverColorEffects = State(initialValue: hoverColorEffects)
+        _hoverScaleEffects = State(initialValue: hoverScaleEffects)
     }
 
     // MARK: Public
@@ -557,13 +593,17 @@ public struct FlatButton: ButtonStyle {
             .background(
                 bg.colorMultiply(configuration.isPressed || pressed ? pressedColor : .white)
             )
-            .brightness(hovering ? 0.05 : 0.0)
-            .contrast(hovering ? 1.01 : 1.0)
-            .scaleEffect(
-                configuration.isPressed || pressed
-                    ? 1.02
-                    : (hovering ? 1.05 : 1.00)
-            )
+            .if(hoverColorEffects) {
+                $0.brightness(hovering ? 0.05 : 0.0)
+                    .contrast(hovering ? 1.01 : 1.0)
+            }
+            .if(hoverScaleEffects) {
+                $0.scaleEffect(
+                    configuration.isPressed || pressed
+                        ? 1.02
+                        : (hovering ? 1.05 : 1.00)
+                )
+            }
             .onAppear {
                 pressedColor = hoverColor?.blended(withFraction: 0.5, of: .white) ?? color.blended(withFraction: 0.2, of: colors.accent)
             }
@@ -601,6 +641,8 @@ public struct FlatButton: ButtonStyle {
     @State var verticalPadding: CGFloat = 4
     @State var stretch = false
     @State var hovering = false
+    @State var hoverColorEffects = true
+    @State var hoverScaleEffects = true
 
     var bg: some View {
         circle
