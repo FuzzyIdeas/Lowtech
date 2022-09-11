@@ -485,9 +485,11 @@ public struct PickerButton<T: Equatable>: ButtonStyle {
             .foregroundColor(
                 hovering
                     ? hoverTextColor
-                    : enumValue == onValue
-                    ? (onTextColor ?? colors.inverted)
-                    : offTextColor
+                    : (
+                        enumValue == onValue
+                            ? (onTextColor ?? colors.inverted)
+                            : offTextColor
+                    )
             )
             .padding(.vertical, verticalPadding)
             .padding(.horizontal, horizontalPadding)
@@ -515,6 +517,11 @@ public struct PickerButton<T: Equatable>: ButtonStyle {
                     hovering = hover
                 }
             })
+            .onChange(of: enumValue) { v in
+                if hovering, v == onValue {
+                    hovering = false
+                }
+            }
     }
 
     // MARK: Internal
