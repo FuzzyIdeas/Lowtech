@@ -75,7 +75,7 @@ public extension Animation {
         static let fastTransition = Animation.interactiveSpring(dampingFraction: 0.7)
     #endif
     static let fastSpring = Animation.interactiveSpring(dampingFraction: 0.7)
-    static let quickSpring = Animation.spring(response: 0.3, dampingFraction: 0.55)
+    static let quickSpring = Animation.spring(response: 0.3, dampingFraction: 0.65)
     static let jumpySpring = Animation.spring(response: 0.4, dampingFraction: 0.45)
 }
 

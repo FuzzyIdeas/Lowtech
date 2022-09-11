@@ -1118,12 +1118,19 @@ public let KM = KeysManager()
         }
     }
 
-    struct DirectionalModifierView: View {
-        @Binding var triggerKeys: [TriggerKey]
-        @Binding var disabled: Bool
-        @State var spacing: CGFloat = 3
+    public struct DirectionalModifierView: View {
+        // MARK: Lifecycle
 
-        var body: some View {
+        public init(triggerKeys: Binding<[TriggerKey]>, disabled: Binding<Bool>, spacing: CGFloat = 3, noFG: Bool = false) {
+            _triggerKeys = triggerKeys
+            _disabled = disabled
+            _spacing = spacing.state
+            _noFG = State(initialValue: noFG)
+        }
+
+        // MARK: Public
+
+        public var body: some View {
             let rcmdTrigger = Binding<Bool>(
                 get: { self.triggerKeys.contains(.rcmd) },
                 set: {
@@ -1178,34 +1185,41 @@ public let KM = KeysManager()
             HStack(spacing: spacing) {
                 Button("⇧") {
                     triggerKeys = triggerKeys.toggling(key: .lshift)
-                }.buttonStyle(ToggleButton(isOn: lshiftTrigger))
+                }.buttonStyle(ToggleButton(isOn: lshiftTrigger, noFG: noFG))
                 Button("⌃") {
                     triggerKeys = triggerKeys.toggling(key: .lctrl)
-                }.buttonStyle(ToggleButton(isOn: lctrlTrigger))
+                }.buttonStyle(ToggleButton(isOn: lctrlTrigger, noFG: noFG))
                 Button("⌥") {
                     triggerKeys = triggerKeys.toggling(key: .lalt)
-                }.buttonStyle(ToggleButton(isOn: laltTrigger))
+                }.buttonStyle(ToggleButton(isOn: laltTrigger, noFG: noFG))
                 Button("⌘") {
                     triggerKeys = triggerKeys.toggling(key: .lcmd)
-                }.buttonStyle(ToggleButton(isOn: lcmdTrigger))
+                }.buttonStyle(ToggleButton(isOn: lcmdTrigger, noFG: noFG))
                 Button("    ⎵    ") {}
-                    .buttonStyle(ToggleButton(isOn: .constant(false)))
+                    .buttonStyle(ToggleButton(isOn: .constant(false), noFG: noFG))
                     .opacity(0.9)
                     .disabled(true)
                 Button("⌘") {
                     triggerKeys = triggerKeys.toggling(key: .rcmd)
-                }.buttonStyle(ToggleButton(isOn: rcmdTrigger))
+                }.buttonStyle(ToggleButton(isOn: rcmdTrigger, noFG: noFG))
                 Button("⌥") {
                     triggerKeys = triggerKeys.toggling(key: .ralt)
-                }.buttonStyle(ToggleButton(isOn: raltTrigger))
+                }.buttonStyle(ToggleButton(isOn: raltTrigger, noFG: noFG))
                 Button("⌃") {
                     triggerKeys = triggerKeys.toggling(key: .rctrl)
-                }.buttonStyle(ToggleButton(isOn: rctrlTrigger))
+                }.buttonStyle(ToggleButton(isOn: rctrlTrigger, noFG: noFG))
                 Button("⇧") {
                     triggerKeys = triggerKeys.toggling(key: .rshift)
-                }.buttonStyle(ToggleButton(isOn: rshiftTrigger))
+                }.buttonStyle(ToggleButton(isOn: rshiftTrigger, noFG: noFG))
             }.disabled(disabled)
         }
+
+        // MARK: Internal
+
+        @Binding var triggerKeys: [TriggerKey]
+        @Binding var disabled: Bool
+        @State var spacing: CGFloat = 3
+        @State var noFG = false
     }
 
 #endif

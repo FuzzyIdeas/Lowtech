@@ -356,12 +356,14 @@ public struct ToggleButton: ButtonStyle {
     public init(
         isOn: Binding<Bool>,
         color: Color = Color.primary,
+        textColor: Color = Color.primary,
         scale: CGFloat = 1,
         radius: CGFloat? = nil,
         width: CGFloat? = nil,
         height: CGFloat? = nil,
         horizontalPadding: CGFloat = 8.0,
-        verticalPadding: CGFloat = 4.0
+        verticalPadding: CGFloat = 4.0,
+        noFG: Bool
     ) {
         _color = State(initialValue: color)
         _scale = State(initialValue: scale)
@@ -371,6 +373,7 @@ public struct ToggleButton: ButtonStyle {
         _verticalPadding = State(initialValue: verticalPadding)
         _radius = radius?.state ?? (height != nil ? height! * 0.4 : 8).state
         _isOn = isOn
+        _noFG = State(initialValue: noFG)
     }
 
     // MARK: Public
@@ -380,7 +383,7 @@ public struct ToggleButton: ButtonStyle {
     public func makeBody(configuration: Configuration) -> some View {
         configuration
             .label
-            .foregroundColor(fgColor(configuration))
+            .if(!noFG) { $0.foregroundColor(fgColor(configuration)) }
             .padding(.vertical, verticalPadding)
             .padding(.horizontal, horizontalPadding)
             .background(
@@ -410,6 +413,7 @@ public struct ToggleButton: ButtonStyle {
     @Environment(\.colors) var colors
 
     @State var color: Color = .primary
+    @State var textColor: Color = .primary
     @State var scale: CGFloat = 1
     @State var width: CGFloat? = nil
     @State var height: CGFloat? = nil
@@ -417,16 +421,16 @@ public struct ToggleButton: ButtonStyle {
     @State var horizontalPadding: CGFloat = 8.0
     @State var verticalPadding: CGFloat = 4.0
     @State var hovering = false
+    @State var noFG = false
 
     @Binding var isOn: Bool
 
     func bgColor(_ configuration: Configuration) -> Color {
-        hovering ? (isOn ? color.opacity(0.9) : color.opacity(0.2)) : (isOn ? color : color.opacity(0.1))
+        hovering ? (isOn ? color.opacity(0.8) : color.opacity(0.2)) : (isOn ? color.opacity(0.75) : color.opacity(0.15))
     }
 
     func fgColor(_ configuration: Configuration) -> Color {
         let textColor = color.textColor(colors: colors)
-//        return hovering ? (isOn ? textColor : .primary) : (isOn ? textColor : .primary)
         return isOn ? textColor : .primary
     }
 }
