@@ -343,6 +343,7 @@ public struct BigSurSlider: View {
         knobColorBinding: Binding<Color?>? = nil,
         knobTextColor: Color? = nil,
         knobTextColorBinding: Binding<Color?>? = nil,
+        imgColor: Color? = nil,
         showValue: Binding<Bool>? = nil,
         acceptsMouseEvents: Binding<Bool>? = nil,
         disabled: Binding<Bool>? = nil,
@@ -363,9 +364,11 @@ public struct BigSurSlider: View {
         _disabled = disabled ?? .constant(false)
         _enableText = State(initialValue: enableText)
         _mark = mark ?? .constant(0)
+        _imgColor = .constant(.black)
 
         _knobColor = knobColorBinding ?? colorBinding ?? .constant(knobColor ?? colors.accent)
         _knobTextColor = knobTextColorBinding ?? .constant(knobTextColor ?? ((color ?? colors.accent).textColor(colors: colors)))
+        _imgColor = .constant(imgColor ?? color?.textColor(colors: colors) ?? Color.black)
     }
 
     // MARK: Public
@@ -383,7 +386,6 @@ public struct BigSurSlider: View {
                         .foregroundColor(color ?? colors.accent)
                         .frame(width: cgPercentage == 1 ? geometry.size.width : w * cgPercentage + sliderHeight / 2)
                     if let image = image {
-                        let imgColor = color?.textColor(colors: colors) ?? Color.black
                         Image(systemName: image)
                             .resizable()
                             .frame(width: 12, height: 12, alignment: .center)
@@ -499,6 +501,7 @@ public struct BigSurSlider: View {
     @Binding var backgroundColor: Color
     @Binding var knobColor: Color?
     @Binding var knobTextColor: Color?
+    @Binding var imgColor: Color
     @Binding var showValue: Bool
 
     @State var scrollWheelListener: Cancellable?
