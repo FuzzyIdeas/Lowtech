@@ -287,6 +287,8 @@ public protocol Nameable {
 
         // MARK: Public
 
+        @Environment(\.isEnabled) public var isEnabled
+
         public var body: some View {
             Button(key.uppercased() ?! DynamicKey.keyString(keyCode)) {
                 if env.recording, !recording {
@@ -313,7 +315,7 @@ public protocol Nameable {
             ) : nil)
             .cornerRadius(6)
             .onHover { hovering in
-                guard !recording else { return }
+                guard !recording, isEnabled else { return }
                 withAnimation(.fastTransition) {
                     textColor = hovering ? (colorScheme == .dark ? .white : .gray) : Color.primary
                     color = hovering ? .white.opacity(0.2) : Color.primary.opacity(0.1)
@@ -337,6 +339,7 @@ public protocol Nameable {
             }
             .onDisappear { recording = false }
             .onExitCommand { recording = false }
+            .opacity(isEnabled ? 1 : 0.6)
         }
 
         public static func keyString(_ keyCode: Int) -> String {
@@ -823,5 +826,55 @@ public struct EdgeBorder: Shape {
 public extension View {
     func border(width: CGFloat, edges: [Edge], color: Color) -> some View {
         overlay(EdgeBorder(width: width, edges: edges).foregroundColor(color))
+    }
+
+    func onAnimationCompleted<Value: VectorArithmetic>(for value: Value, completion: @escaping () -> Void) -> ModifiedContent<Self, AnimationCompletionObserverModifier<Value>> {
+        modifier(AnimationCompletionObserverModifier(observedValue: value, completion: completion))
+    }
+}
+
+// MARK: - AnimationCompletionObserverModifier
+
+// An animatable modifier that is used for observing animations for a given animatable value.
+public struct AnimationCompletionObserverModifier<Value>: AnimatableModifier where Value: VectorArithmetic {
+    // MARK: Lifecycle
+
+    public init(observedValue: Value, completion: @escaping () -> Void) {
+        self.completion = completion
+        animatableData = observedValue
+        targetValue = observedValue
+    }
+
+    // MARK: Public
+
+    /// While animating, SwiftUI changes the old input value to the new target value using this property. This value is set to the old value until the animation completes.
+    public var animatableData: Value {
+        didSet {
+            notifyCompletionIfFinished()
+        }
+    }
+
+    public func body(content: Content) -> some View {
+        /// We're not really modifying the view so we can directly return the original input value.
+        content
+    }
+
+    // MARK: Private
+
+    /// The target value for which we're observing. This value is directly set once the animation starts. During animation, `animatableData` will hold the oldValue and is only updated to the target value once the animation completes.
+    private var targetValue: Value
+
+    /// The completion callback which is called once the animation completes.
+    private var completion: () -> Void
+
+    /// Verifies whether the current animation is finished and calls the completion callback if true.
+    private func notifyCompletionIfFinished() {
+        guard animatableData == targetValue else { return }
+
+        /// Dispatching is needed to take the next runloop for the completion callback.
+        /// This prevents errors like "Modifying state during view update, this will cause undefined behavior."
+        DispatchQueue.main.async {
+            self.completion()
+        }
     }
 }

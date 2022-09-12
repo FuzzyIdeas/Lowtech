@@ -346,9 +346,9 @@ public struct BigSurSlider: View {
         imgColor: Color? = nil,
         showValue: Binding<Bool>? = nil,
         acceptsMouseEvents: Binding<Bool>? = nil,
-        disabled: Binding<Bool>? = nil,
         enableText: String? = nil,
-        mark: Binding<Float>? = nil
+        mark: Binding<Float>? = nil,
+        enable: (() -> Void)? = nil
     ) {
         _knobColor = .constant(knobColor)
         _knobTextColor = .constant(knobTextColor)
@@ -361,7 +361,6 @@ public struct BigSurSlider: View {
         _showValue = showValue ?? .constant(false)
         _backgroundColor = backgroundColorBinding ?? .constant(backgroundColor)
         _acceptsMouseEvents = acceptsMouseEvents ?? .constant(true)
-        _disabled = disabled ?? .constant(false)
         _enableText = State(initialValue: enableText)
         _mark = mark ?? .constant(0)
         _imgColor = .constant(.black)
@@ -369,9 +368,12 @@ public struct BigSurSlider: View {
         _knobColor = knobColorBinding ?? colorBinding ?? .constant(knobColor ?? colors.accent)
         _knobTextColor = knobTextColorBinding ?? .constant(knobTextColor ?? ((color ?? colors.accent).textColor(colors: colors)))
         _imgColor = .constant(imgColor ?? color?.textColor(colors: colors) ?? Color.black)
+        self.enable = enable
     }
 
     // MARK: Public
+
+    @Environment(\.isEnabled) public var isEnabled
 
     public var body: some View {
         GeometryReader { geometry in
@@ -420,13 +422,12 @@ public struct BigSurSlider: View {
                             ).animation(.jumpySpring, value: mark)
                     }
                 }
-                .disabled(disabled)
-                .contrast(disabled ? 0.4 : 1.0)
-                .saturation(disabled ? 0.4 : 1.0)
+                .contrast(!isEnabled ? 0.4 : 1.0)
+                .saturation(!isEnabled ? 0.4 : 1.0)
 
-                if disabled, hovering, let enableText = enableText {
+                if !isEnabled, hovering, let enableText = enableText, let enable = enable {
                     SwiftUI.Button(enableText) {
-                        disabled = false
+                        enable()
                     }
                     .buttonStyle(FlatButton(
                         color: Colors.red.opacity(0.7),
@@ -444,7 +445,7 @@ public struct BigSurSlider: View {
             .gesture(
                 DragGesture(minimumDistance: 0)
                     .onChanged { value in
-                        guard acceptsMouseEvents, !disabled else { return }
+                        guard acceptsMouseEvents, isEnabled else { return }
                         if !env.draggingSlider {
                             if draggingSliderSetter == nil {
                                 draggingSliderSetter = mainAsyncAfter(ms: 200) {
@@ -459,7 +460,7 @@ public struct BigSurSlider: View {
                         self.percentage = cap(Float(value.location.x / geometry.size.width), minVal: 0, maxVal: 1)
                     }
                     .onEnded { value in
-                        guard acceptsMouseEvents, !disabled else { return }
+                        guard acceptsMouseEvents, isEnabled else { return }
                         draggingSliderSetter = nil
                         self.percentage = cap(Float(value.location.x / geometry.size.width), minVal: 0, maxVal: 1)
                         env.draggingSlider = false
@@ -468,7 +469,7 @@ public struct BigSurSlider: View {
             #if os(macOS)
             .onHover { hov in
                 hovering = hov
-                guard acceptsMouseEvents, !disabled else { return }
+                guard acceptsMouseEvents, isEnabled else { return }
 
                 if hovering {
                     lastCursorPosition = NSEvent.mouseLocation
@@ -510,8 +511,9 @@ public struct BigSurSlider: View {
     @State var enableText: String? = nil
     @State var lastCursorPosition = NSEvent.mouseLocation
     @Binding var acceptsMouseEvents: Bool
-    @Binding var disabled: Bool
     @Binding var mark: Float
+
+    var enable: (() -> Void)?
 
     #if os(macOS)
         func trackScrollWheel() {

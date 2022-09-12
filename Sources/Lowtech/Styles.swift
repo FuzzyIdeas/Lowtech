@@ -269,16 +269,16 @@ public extension Text {
         font(.system(size: size, weight: .black, design: .default))
     }
 
-    func roundbg(size: CGFloat = 2.5, color: Color = .primary, shadowSize: CGFloat = 0, noFG: Bool = false) -> some View {
-        modifier(RoundBG(radius: size, color: color, shadowSize: shadowSize, noFG: noFG))
+    func roundbg(size: CGFloat = 2.5, color: Color = .primary, colorBinding: Binding<Color>? = nil, shadowSize: CGFloat = 0, noFG: Bool = false) -> some View {
+        modifier(RoundBG(radius: size, color: colorBinding ?? .constant(color), shadowSize: shadowSize, noFG: noFG))
     }
 
-    func roundbg(radius: CGFloat = 5, padding: CGFloat = 2.5, color: Color = .primary, shadowSize: CGFloat = 0, noFG: Bool = false) -> some View {
-        modifier(RoundBG(radius: radius, verticalPadding: padding, horizontalPadding: padding * 2.2, color: color, shadowSize: shadowSize, noFG: noFG))
+    func roundbg(radius: CGFloat = 5, padding: CGFloat = 2.5, color: Color = .primary, colorBinding: Binding<Color>? = nil, shadowSize: CGFloat = 0, noFG: Bool = false) -> some View {
+        modifier(RoundBG(radius: radius, verticalPadding: padding, horizontalPadding: padding * 2.2, color: colorBinding ?? .constant(color), shadowSize: shadowSize, noFG: noFG))
     }
 
-    func roundbg(radius: CGFloat = 5, verticalPadding: CGFloat = 2.5, horizontalPadding: CGFloat = 6, color: Color = .primary, shadowSize: CGFloat = 0, noFG: Bool = false) -> some View {
-        modifier(RoundBG(radius: radius, verticalPadding: verticalPadding, horizontalPadding: horizontalPadding, color: color, shadowSize: shadowSize, noFG: noFG))
+    func roundbg(radius: CGFloat = 5, verticalPadding: CGFloat = 2.5, horizontalPadding: CGFloat = 6, color: Color = .primary, colorBinding: Binding<Color>? = nil, shadowSize: CGFloat = 0, noFG: Bool = false) -> some View {
+        modifier(RoundBG(radius: radius, verticalPadding: verticalPadding, horizontalPadding: horizontalPadding, color: colorBinding ?? .constant(color), shadowSize: shadowSize, noFG: noFG))
     }
 }
 
@@ -294,7 +294,7 @@ public struct RoundBG: ViewModifier {
             .padding(.vertical, verticalPadding)
             .background(
                 roundRect(radius, fill: color)
-                    .shadow(color: .black.opacity(0.15), radius: shadowSize, x: 0, y: shadowSize / 2)
+                    .shadow(color: .black.opacity(colorScheme == .dark ? 0.75 : 0.25), radius: shadowSize, x: 0, y: shadowSize / 2)
             )
             .if(!noFG) { $0.foregroundColor(color.textColor(colors: colors)) }
     }
@@ -307,22 +307,22 @@ public struct RoundBG: ViewModifier {
     @State var radius: CGFloat
     @State var verticalPadding: CGFloat?
     @State var horizontalPadding: CGFloat?
-    @State var color: Color
+    @Binding var color: Color
     @State var shadowSize: CGFloat
     @State var noFG: Bool
 }
 
 public extension View {
-    func roundbg(size: CGFloat = 2.5, color: Color = .primary, shadowSize: CGFloat = 0, noFG: Bool = false) -> some View {
-        modifier(RoundBG(radius: size, color: color, shadowSize: shadowSize, noFG: noFG))
+    func roundbg(size: CGFloat = 2.5, color: Color = .primary, colorBinding: Binding<Color>? = nil, shadowSize: CGFloat = 0, noFG: Bool = false) -> some View {
+        modifier(RoundBG(radius: size, color: colorBinding ?? .constant(color), shadowSize: shadowSize, noFG: noFG))
     }
 
-    func roundbg(radius: CGFloat = 5, padding: CGFloat = 2.5, color: Color = .primary, shadowSize: CGFloat = 0, noFG: Bool = false) -> some View {
-        modifier(RoundBG(radius: radius, verticalPadding: padding, horizontalPadding: padding * 2.2, color: color, shadowSize: shadowSize, noFG: noFG))
+    func roundbg(radius: CGFloat = 5, padding: CGFloat = 2.5, color: Color = .primary, colorBinding: Binding<Color>? = nil, shadowSize: CGFloat = 0, noFG: Bool = false) -> some View {
+        modifier(RoundBG(radius: radius, verticalPadding: padding, horizontalPadding: padding * 2.2, color: colorBinding ?? .constant(color), shadowSize: shadowSize, noFG: noFG))
     }
 
-    func roundbg(radius: CGFloat = 5, verticalPadding: CGFloat = 2.5, horizontalPadding: CGFloat = 6, color: Color = .primary, shadowSize: CGFloat = 0, noFG: Bool = false) -> some View {
-        modifier(RoundBG(radius: radius, verticalPadding: verticalPadding, horizontalPadding: horizontalPadding, color: color, shadowSize: shadowSize, noFG: noFG))
+    func roundbg(radius: CGFloat = 5, verticalPadding: CGFloat = 2.5, horizontalPadding: CGFloat = 6, color: Color = .primary, colorBinding: Binding<Color>? = nil, shadowSize: CGFloat = 0, noFG: Bool = false) -> some View {
+        modifier(RoundBG(radius: radius, verticalPadding: verticalPadding, horizontalPadding: horizontalPadding, color: colorBinding ?? .constant(color), shadowSize: shadowSize, noFG: noFG))
     }
 
     func hfill(_ alignment: Alignment = .center) -> some View {
@@ -406,6 +406,7 @@ public struct ToggleButton: ButtonStyle {
                     }
                 }
             }
+            .opacity(isEnabled ? 1 : 0.6)
     }
 
     // MARK: Internal
@@ -479,6 +480,8 @@ public struct PickerButton<T: Equatable>: ButtonStyle {
 
     // MARK: Public
 
+    @Environment(\.isEnabled) public var isEnabled
+
     public func makeBody(configuration: Configuration) -> some View {
         configuration
             .label
@@ -509,6 +512,7 @@ public struct PickerButton<T: Equatable>: ButtonStyle {
             .scaleEffect(hovering ? 1.05 : 1.00)
             .contentShape(Rectangle())
             .onHover(perform: { hover in
+                guard isEnabled else { return }
                 guard enumValue != onValue else {
                     hovering = false
                     return
@@ -522,6 +526,14 @@ public struct PickerButton<T: Equatable>: ButtonStyle {
                     hovering = false
                 }
             }
+            .onChange(of: isEnabled) { e in
+                if !e {
+                    withAnimation(.fastTransition) {
+                        hovering = false
+                    }
+                }
+            }
+            .opacity(isEnabled ? 1 : 0.6)
     }
 
     // MARK: Internal
@@ -564,6 +576,7 @@ public struct FlatButton: ButtonStyle {
         pressedBinding: Binding<Bool>? = nil,
         horizontalPadding: CGFloat = 8,
         verticalPadding: CGFloat = 4,
+        shadowSize: CGFloat = 0,
         stretch: Bool = false,
         hoverColorEffects: Bool = true,
         hoverScaleEffects: Bool = true
@@ -578,6 +591,7 @@ public struct FlatButton: ButtonStyle {
         _pressed = pressedBinding ?? .constant(false)
         _horizontalPadding = horizontalPadding.state
         _verticalPadding = verticalPadding.state
+        _shadowSize = shadowSize.state
         _stretch = State(initialValue: stretch)
         _hoverColorEffects = State(initialValue: hoverColorEffects)
         _hoverScaleEffects = State(initialValue: hoverScaleEffects)
@@ -603,6 +617,7 @@ public struct FlatButton: ButtonStyle {
             )
             .background(
                 bg.colorMultiply(configuration.isPressed || pressed ? pressedColor : .white)
+                    .shadow(radius: shadowSize, y: shadowSize * 0.66)
             )
             .if(hoverColorEffects) {
                 $0.brightness(hovering ? 0.05 : 0.0)
@@ -631,6 +646,7 @@ public struct FlatButton: ButtonStyle {
                     }
                 }
             }
+            .opacity(isEnabled ? 1 : 0.6)
     }
 
     // MARK: Internal
@@ -650,6 +666,7 @@ public struct FlatButton: ButtonStyle {
     @Binding var pressed: Bool
     @State var horizontalPadding: CGFloat = 8
     @State var verticalPadding: CGFloat = 4
+    @State var shadowSize: CGFloat = 0
     @State var stretch = false
     @State var hovering = false
     @State var hoverColorEffects = true

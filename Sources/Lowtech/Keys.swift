@@ -1130,6 +1130,8 @@ public let KM = KeysManager()
 
         // MARK: Public
 
+        @Environment(\.isEnabled) public var isEnabled
+
         public var body: some View {
             let rcmdTrigger = Binding<Bool>(
                 get: { self.triggerKeys.contains(.rcmd) },
@@ -1211,7 +1213,7 @@ public let KM = KeysManager()
                 Button("⇧") {
                     triggerKeys = triggerKeys.toggling(key: .rshift)
                 }.buttonStyle(ToggleButton(isOn: rshiftTrigger, noFG: noFG))
-            }.disabled(disabled)
+            }.disabled(disabled).opacity(isEnabled ? 1 : 0.6)
         }
 
         // MARK: Internal

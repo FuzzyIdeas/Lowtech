@@ -48,6 +48,35 @@ public protocol ObservableSettings: AnyObject {
     var apply: Bool { get set }
 }
 
+// MARK: - SettingTransformer
+
+public struct SettingTransformer<Value, Transformed> {
+    // MARK: Lifecycle
+
+    public init(to: @escaping (Value) -> Transformed, from: ((Transformed) -> Value)? = nil) {
+        self.to = to
+        self.from = from
+    }
+
+    public init(to: KeyPath<Value, Transformed>, from: KeyPath<Transformed, Value>? = nil) {
+        self.to = { v in v[keyPath: to] }
+        if let from = from {
+            self.from = { v in v[keyPath: from] }
+        } else {
+            self.from = nil
+        }
+    }
+
+    // MARK: Public
+
+    public let to: (Value) -> Transformed
+    public let from: ((Transformed) -> Value)?
+
+    public static func to(_ k: KeyPath<Value, Transformed>) -> Self {
+        Self(to: k)
+    }
+}
+
 public extension ObservableSettings {
     func withoutApply(_ action: () -> Void) {
         apply = false
@@ -78,6 +107,48 @@ public extension ObservableSettings {
         let onChange: (Value) -> Void = { [weak self] val in
             guard let self = self, self.apply else { return }
             Defaults[key] = val
+        }
+
+        if let debounce = debounce {
+            self[keyPath: publisher]
+                .debounce(for: debounce, scheduler: RunLoop.main)
+                .sink(receiveValue: onChange).store(in: &observers)
+        } else {
+            self[keyPath: publisher]
+                .receive(on: RunLoop.main)
+                .sink(receiveValue: onChange).store(in: &observers)
+        }
+    }
+
+    func bind<Value, Transformed>(
+        _ key: Defaults.Key<Value>,
+        property: ReferenceWritableKeyPath<Self, Transformed>,
+        publisher: KeyPath<Self, Published<Transformed>.Publisher>? = nil,
+        debounce: RunLoop.SchedulerTimeType.Stride? = nil,
+        transformer: SettingTransformer<Value, Transformed>
+    ) {
+        let onSettingChange: (Defaults.KeyChange<Value>) -> Void = { [weak self] change in
+            guard let self = self else { return }
+            self.withoutApply {
+                self[keyPath: property] = transformer.to(change.newValue)
+            }
+        }
+
+        if let debounce = debounce {
+            Defaults.publisher(key)
+                .debounce(for: debounce, scheduler: RunLoop.main)
+                .sink(receiveValue: onSettingChange).store(in: &observers)
+        } else {
+            Defaults.publisher(key)
+                .receive(on: RunLoop.main)
+                .sink(receiveValue: onSettingChange).store(in: &observers)
+        }
+
+        guard let publisher = publisher else { return }
+
+        let onChange: (Transformed) -> Void = { [weak self] val in
+            guard let self = self, self.apply, let transform = transformer.from else { return }
+            Defaults[key] = transform(val)
         }
 
         if let debounce = debounce {

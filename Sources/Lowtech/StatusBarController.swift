@@ -128,6 +128,7 @@ open class StatusBarController: NSObject, NSWindowDelegate, ObservableObject {
     public var onWindowCreation: ((PanelWindow) -> Void)?
     public var centerOnScreen = false
     public var screenCorner: ScreenCorner?
+    public var margin: CGFloat?
 
     @Atomic public var changedWindowScreen = false {
         didSet {
@@ -231,11 +232,11 @@ open class StatusBarController: NSObject, NSWindowDelegate, ObservableObject {
             window = PanelWindow(swiftuiView: view())
         }
         guard statusItem.isVisible else {
-            window!.show(at: centerOnScreen ? nil : .mouseLocation(centeredOn: window), corner: screenCorner)
+            window!.show(at: centerOnScreen ? nil : .mouseLocation(centeredOn: window), corner: screenCorner, margin: margin)
             return
         }
 
-        window!.show(at: position, corner: screenCorner)
+        window!.show(at: position, corner: screenCorner, margin: margin)
         eventMonitor?.start()
     }
 
