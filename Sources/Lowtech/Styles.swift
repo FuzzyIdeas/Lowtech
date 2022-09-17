@@ -363,7 +363,7 @@ public struct ToggleButton: ButtonStyle {
         height: CGFloat? = nil,
         horizontalPadding: CGFloat = 8.0,
         verticalPadding: CGFloat = 4.0,
-        noFG: Bool
+        noFG: Bool = false
     ) {
         _color = State(initialValue: color)
         _scale = State(initialValue: scale)

@@ -497,4 +497,16 @@ public func restoreFileAccess(for workDir: URL? = nil, defaultsKey: Defaults.Key
     }
 }
 
+public extension URL {
+    @discardableResult
+    func withScopedAccess<T>(fileChoiceMessage: String = "Choose a file", _ action: (URL) -> T) -> T? {
+        guard let url = restoreFileAccess(for: self) ?? promptForFilePermission(message: fileChoiceMessage, initialPath: self), url.startAccessingSecurityScopedResource()
+        else { return nil }
+
+        let result = action(url)
+        url.stopAccessingSecurityScopedResource()
+        return result
+    }
+}
+
 public let SWIFTUI_PREVIEW = ProcessInfo.processInfo.environment["XCODE_RUNNING_FOR_PREVIEWS"] == "1"

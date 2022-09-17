@@ -50,7 +50,6 @@ public struct NotificationView: View {
                         .padding(.bottom, notificationLines.count > 1 ? 4 : 0)
                         .lineLimit(1)
                         .scaledToFit()
-                        .minimumScaleFactor(.leastNonzeroMagnitude)
                 } else if #available(macOS 12.0, *), let str = try? AttributedString(markdown: line) {
                     Text(str)
                         .font(.system(size: fontSize))
@@ -635,9 +634,9 @@ public struct PopoverView<Content: View>: View {
     public var body: some View {
         VStack {
             if !env.closed {
-                content().focusable(false)
+                content().focusable(false).size(size: $size)
             } else {
-                EmptyView()
+                Color.clear.frame(width: size.width, height: size.height, alignment: .center)
             }
         }.onChange(of: popoverClosed) { setup($0) }
     }
@@ -648,6 +647,7 @@ public struct PopoverView<Content: View>: View {
 
     @Default(.popoverClosed) var popoverClosed
     @EnvironmentObject var env: EnvState
+    @State var size: CGSize = .zero
 
     func setup(_ closed: Bool? = nil) {
         guard !(closed ?? popoverClosed) else {

@@ -1300,3 +1300,7 @@ public extension Decodable {
         return try? JSONDecoder().decode(Self.self, from: data)
     }
 }
+
+public extension FlattenSequence {
+    var arr: [Element] { Array(self) }
+}

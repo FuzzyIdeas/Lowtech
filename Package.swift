@@ -75,7 +75,7 @@ let package = Package(
             dependencies: [
                 "Lowtech",
                 .product(name: "SwiftDate", package: "SwiftDate"),
-                // .product(name: "AppReceiptValidator", package: "AppReceiptValidator"),
+                .product(name: "AppReceiptValidator", package: "AppReceiptValidator"),
                 .product(name: "CryptorECC", package: "BlueECC"),
             ]
         ),

@@ -128,6 +128,7 @@ open class LowtechWindow: NSWindow, NSWindowDelegate {
     // MARK: Public
 
     public var closed = true
+    public var animateOnResize = false
     @Published public var screenPlacement: NSScreen?
 
     public func windowDidBecomeKey(_ notification: Notification) {
@@ -144,7 +145,7 @@ open class LowtechWindow: NSWindow, NSWindowDelegate {
 
     public func windowDidResize(_ notification: Notification) {
         guard let screenCorner = screenCorner, let screenPlacement = screenPlacement else { return }
-        moveToScreen(screenPlacement, corner: screenCorner, animate: true)
+        moveToScreen(screenPlacement, corner: screenCorner, animate: animateOnResize)
     }
 
     public func resizeToScreenHeight(_ screen: NSScreen? = nil, animate: Bool = false) {
@@ -214,7 +215,7 @@ open class LowtechWindow: NSWindow, NSWindowDelegate {
         close()
     }
 
-    public func withAnim(_ easing: CAMediaTimingFunction = .easeOutExpo, duration: Double = 0.19, animate: Bool = true, onEnd: (() -> Void)? = nil, _ action: (LowtechWindow) -> Void) {
+    public func withAnim(_ easing: CAMediaTimingFunction = .easeOutExpo, duration: Double = 0.3, animate: Bool = true, onEnd: (() -> Void)? = nil, _ action: (LowtechWindow) -> Void) {
         guard animate else {
             action(self)
             return
