@@ -66,9 +66,14 @@ public class AnimationManager: ObservableObject, ObservableSettings {
     public var observers: Set<AnyCancellable> = []
     public var apply = true
 
-    @Setting(.allowAnimationsInLPM) public var allowAnimationsInLPM
-
+    @Setting(.animationSpeed) public var animationSpeed
     @Published public var animation = Defaults[.allowAnimations] && !shouldReduceMotion() ? Defaults[.animationSpeed].animation : .linear(duration: 0)
+
+    @Published public var allowAnimationsInLPM = Defaults[.allowAnimationsInLPM] {
+        didSet {
+            reduceMotion = Self.shouldReduceMotion()
+        }
+    }
 
     @Published public var reduceMotion = NSWorkspace.shared.accessibilityDisplayShouldReduceMotion || isLowPowerModeEnabled {
         didSet {
@@ -83,15 +88,7 @@ public class AnimationManager: ObservableObject, ObservableSettings {
     }
 
     public static func shouldReduceMotion() -> Bool {
-        let lowPowerMode: Bool
-        if #available(macOS 12.0, *) {
-            lowPowerMode = ProcessInfo.processInfo.isLowPowerModeEnabled
-        } else {
-            lowPowerMode = false
-        }
-        let allowAnimationsInLPM = Defaults[.allowAnimationsInLPM]
-
-        if !allowAnimationsInLPM, lowPowerMode {
+        if !Defaults[.allowAnimationsInLPM], isLowPowerModeEnabled {
             return true
         }
         return NSWorkspace.shared.accessibilityDisplayShouldReduceMotion
@@ -108,6 +105,7 @@ public class AnimationManager: ObservableObject, ObservableSettings {
             property: \.animation,
             transformer: .init(to: { $0 && !self.reduceMotion ? Defaults[.animationSpeed].animation : .linear(duration: 0) })
         )
+        bind(.allowAnimationsInLPM, property: \.allowAnimationsInLPM)
 
         NotificationCenter.default.publisher(for: NSWorkspace.accessibilityDisplayOptionsDidChangeNotification)
             .debounce(for: .milliseconds(100), scheduler: RunLoop.main)
