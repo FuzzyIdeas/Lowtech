@@ -130,17 +130,8 @@ open class StatusBarController: NSObject, NSWindowDelegate, ObservableObject {
     public var screenCorner: ScreenCorner?
     public var margin: CGFloat?
 
-    @Atomic public var changedWindowScreen = false {
-        didSet {
-            debug("CHANGED WINDOW SCREEN: \(changedWindowScreen)")
-        }
-    }
-
-    @Atomic public var draggingWindow = false {
-        didSet {
-            debug("DRAGGING WINDOW: \(draggingWindow)")
-        }
-    }
+    @Atomic public var changedWindowScreen = false
+    @Atomic public var draggingWindow = false
 
     public var window: PanelWindow? {
         didSet {

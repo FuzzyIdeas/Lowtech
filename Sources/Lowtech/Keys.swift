@@ -1121,11 +1121,12 @@ public let KM = KeysManager()
     public struct DirectionalModifierView: View {
         // MARK: Lifecycle
 
-        public init(triggerKeys: Binding<[TriggerKey]>, disabled: Binding<Bool>, spacing: CGFloat = 3, noFG: Bool = false) {
+        public init(triggerKeys: Binding<[TriggerKey]>, disabled: Binding<Bool>, spacing: CGFloat = 3, noFG: Bool = false, disabledOpacity: CGFloat = 0.6) {
             _triggerKeys = triggerKeys
             _disabled = disabled
             _spacing = spacing.state
             _noFG = State(initialValue: noFG)
+            _disabledOpacity = State(initialValue: disabledOpacity)
         }
 
         // MARK: Public
@@ -1213,7 +1214,7 @@ public let KM = KeysManager()
                 Button("⇧") {
                     triggerKeys = triggerKeys.toggling(key: .rshift)
                 }.buttonStyle(ToggleButton(isOn: rshiftTrigger, noFG: noFG))
-            }.disabled(disabled).opacity(isEnabled ? 1 : 0.6)
+            }.disabled(disabled).opacity(isEnabled ? 1 : disabledOpacity)
         }
 
         // MARK: Internal
@@ -1222,6 +1223,7 @@ public let KM = KeysManager()
         @Binding var disabled: Bool
         @State var spacing: CGFloat = 3
         @State var noFG = false
+        @State var disabledOpacity: CGFloat = 0.6
     }
 
 #endif

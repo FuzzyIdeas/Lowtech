@@ -16,9 +16,10 @@ import SwiftUI
 public struct CheckboxToggleStyle: ToggleStyle {
     // MARK: Lifecycle
 
-    public init(style: Style = .circle, scale: Image.Scale = .large) {
+    public init(style: Style = .circle, scale: Image.Scale = .large, color: Color? = nil) {
         self.style = style
         self.scale = scale
+        self.color = color
     }
 
     // MARK: Public
@@ -41,6 +42,7 @@ public struct CheckboxToggleStyle: ToggleStyle {
     @Environment(\.isEnabled) public var isEnabled
     public let style: Style
     public let scale: Image.Scale
+    public let color: Color?
 
     public func makeBody(configuration: Configuration) -> some View {
         Button(action: {
@@ -49,6 +51,7 @@ public struct CheckboxToggleStyle: ToggleStyle {
             HStack {
                 Image(systemName: configuration.isOn ? "checkmark.\(style.sfSymbolName).fill" : style.sfSymbolName)
                     .imageScale(scale)
+                    .foregroundColor(color)
                 configuration.label
             }
         })
@@ -503,8 +506,11 @@ public struct PickerButton<T: Equatable>: ButtonStyle {
                 ).fill(
                     enumValue == onValue
                         ? onColor
-                        :
-                        (hovering ? hoverColor : (offColor ?? color.opacity(colorScheme == .dark ? 0.5 : 0.8)))
+                        : (
+                            hovering
+                                ? hoverColor :
+                                (offColor ?? color.opacity(colorScheme == .dark ? 0.5 : 0.8))
+                        )
                 )
             )
             .brightness(hovering ? 0.05 : 0.0)

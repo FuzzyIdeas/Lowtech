@@ -46,6 +46,8 @@ public struct Formatting: Hashable {
 public protocol ObservableSettings: AnyObject {
     var observers: Set<AnyCancellable> { get set }
     var apply: Bool { get set }
+
+    func initObservers()
 }
 
 // MARK: - SettingTransformer

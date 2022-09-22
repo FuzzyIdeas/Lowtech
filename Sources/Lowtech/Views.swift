@@ -633,7 +633,7 @@ public struct PopoverView<Content: View>: View {
 
     public var body: some View {
         VStack {
-            if !env.closed {
+            if SWIFTUI_PREVIEW || !env.closed {
                 content().focusable(false).size(size: $size)
             } else {
                 Color.clear.frame(width: size.width, height: size.height, alignment: .center)
