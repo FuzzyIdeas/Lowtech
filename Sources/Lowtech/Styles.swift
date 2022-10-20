@@ -460,6 +460,7 @@ public struct PickerButton<T: Equatable>: ButtonStyle {
         verticalPadding: CGFloat = 4,
         brightness: Double = 0.0,
         scale: CGFloat = 1,
+        radius: CGFloat = 8,
         hoverColor: Color = .white.opacity(0.15),
         enumValue: Binding<T>,
         onValue: T
@@ -472,6 +473,7 @@ public struct PickerButton<T: Equatable>: ButtonStyle {
         _verticalPadding = verticalPadding.state
         _brightness = brightness.state
         _scale = scale.state
+        _radius = radius.state
         _enumValue = enumValue
         _onValue = st(onValue)
 
@@ -501,7 +503,7 @@ public struct PickerButton<T: Equatable>: ButtonStyle {
             .padding(.horizontal, horizontalPadding)
             .background(
                 RoundedRectangle(
-                    cornerRadius: 8,
+                    cornerRadius: radius,
                     style: .continuous
                 ).fill(
                     enumValue == onValue
@@ -557,6 +559,7 @@ public struct PickerButton<T: Equatable>: ButtonStyle {
     @State var verticalPadding: CGFloat = 4
     @State var brightness = 0.0
     @State var scale: CGFloat = 1
+    @State var radius: CGFloat
     @State var hoverColor: Color
     @State var hoverTextColor: Color
     @Binding var enumValue: T
