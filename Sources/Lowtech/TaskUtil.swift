@@ -31,7 +31,7 @@ public class Repeater {
                 }
 
                 counter += 1
-                if let maxDuration = maxDuration, startTime.distance(to: d) > maxDuration {
+                if let maxDuration, startTime.distance(to: d) > maxDuration {
                     debug("Repeater finished on maxDuration '\(name)'")
                     self?.stop()
                     onFinish?()

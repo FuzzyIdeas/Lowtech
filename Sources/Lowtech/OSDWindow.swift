@@ -51,9 +51,9 @@ open class OSDWindow: LowtechWindow {
         screen: NSScreen? = nil,
         animate: Bool = false
     ) {
-        if let corner = corner {
+        if let corner {
             moveToScreen(screen, corner: corner, margin: margin, animate: animate)
-        } else if let point = point {
+        } else if let point {
             withAnim(animate: animate) { w in w.setFrameOrigin(point) }
         } else if let screenFrame = (screen ?? NSScreen.withMouse ?? NSScreen.main)?.visibleFrame {
             withAnim(animate: animate) { w in
@@ -74,7 +74,7 @@ open class OSDWindow: LowtechWindow {
         closer?.cancel()
         guard closeMilliseconds > 0 else { return }
         fader = mainAsyncAfter(ms: fadeMilliseconds) { [weak self] in
-            guard let self = self, self.isVisible else { return }
+            guard let self, self.isVisible else { return }
             NSAnimationContext.runAnimationGroup { ctx in
                 ctx.duration = 1
                 self.animator().alphaValue = 0.01
@@ -111,17 +111,17 @@ open class LowtechWindow: NSWindow, NSWindowDelegate {
     open var onMouseDrag: ((NSEvent) -> Void)?
 
     override open func mouseDragged(with event: NSEvent) {
-        guard !ignoresMouseEvents, let onMouseDrag = onMouseDrag else { return }
+        guard !ignoresMouseEvents, let onMouseDrag else { return }
         onMouseDrag(event)
     }
 
     override open func mouseDown(with event: NSEvent) {
-        guard !ignoresMouseEvents, let onMouseDown = onMouseDown else { return }
+        guard !ignoresMouseEvents, let onMouseDown else { return }
         onMouseDown(event)
     }
 
     override open func mouseUp(with event: NSEvent) {
-        guard !ignoresMouseEvents, let onMouseUp = onMouseUp else { return }
+        guard !ignoresMouseEvents, let onMouseUp else { return }
         onMouseUp(event)
     }
 
@@ -144,7 +144,7 @@ open class LowtechWindow: NSWindow, NSWindowDelegate {
     }
 
     public func windowDidResize(_ notification: Notification) {
-        guard let screenCorner = screenCorner, let screenPlacement = screenPlacement else { return }
+        guard let screenCorner, let screenPlacement else { return }
         moveToScreen(screenPlacement, corner: screenCorner, animate: animateOnResize)
     }
 
@@ -171,15 +171,15 @@ open class LowtechWindow: NSWindow, NSWindowDelegate {
             return
         }
 
-        if let margin = margin {
+        if let margin {
             self.margin = margin
         }
-        if let screen = screen {
+        if let screen {
             screenPlacement = screen
         }
 
         withAnim(animate: animate) { w in
-            guard let corner = corner else {
+            guard let corner else {
                 w.setFrameOrigin(screenFrame.origin)
                 return
             }

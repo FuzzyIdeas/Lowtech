@@ -59,11 +59,11 @@ open class LowtechPopover: NSPopover {
     }
 
     open func showAt(point: NSPoint? = nil, preferredEdge: NSRectEdge = .maxY) {
-        guard let mockWindow = mockWindow, let mockWindowController = mockWindowController, let view = mockWindow.contentView else {
+        guard let mockWindow, let mockWindowController, let view = mockWindow.contentView else {
             return
         }
 
-        if let point = point {
+        if let point {
             mockWindow.setFrameOrigin(point)
         } else {
             mockWindow.center()
@@ -88,7 +88,7 @@ open class LowtechPopover: NSPopover {
 public extension NSPoint {
     static func mouseLocation(centeredOn window: NSWindow? = nil) -> NSPoint {
         let loc = NSEvent.mouseLocation
-        if let window = window {
+        if let window {
             return loc.applying(.init(translationX: window.frame.width / -2, y: window.frame.height / -2))
         }
         return loc

@@ -145,7 +145,7 @@ public class KeysManager: ObservableObject {
     open func registerSpecialHotkey() {
         onRegisterSpecialHotkey?()
 
-        guard let specialHotkey = specialHotkey, !specialHotkeyRegistered, !SWIFTUI_PREVIEW else { return }
+        guard let specialHotkey, !specialHotkeyRegistered, !SWIFTUI_PREVIEW else { return }
         specialHotkey.register()
         specialHotkeyRegistered = true
     }
@@ -153,7 +153,7 @@ public class KeysManager: ObservableObject {
     open func unregisterSpecialHotkey() {
         onUnregisterSpecialHotkey?()
 
-        guard let specialHotkey = specialHotkey, specialHotkeyRegistered else { return }
+        guard let specialHotkey, specialHotkeyRegistered else { return }
         specialHotkey.unregister()
         specialHotkeyRegistered = false
     }
@@ -372,10 +372,10 @@ public class KeysManager: ObservableObject {
 
     @Published public var testHotkey: HotKey? = nil {
         didSet {
-            if let testHotkey = testHotkey, oldValue == nil {
+            if let testHotkey, oldValue == nil {
                 testHotkey.register()
             }
-            if let oldValue = oldValue, testHotkey == nil {
+            if let oldValue, testHotkey == nil {
                 oldValue.unregister()
             }
         }
@@ -698,7 +698,7 @@ public class KeysManager: ObservableObject {
     @MainActor
     public func initFlagsListener() {
         globalEventMonitor = GlobalEventMonitor(mask: .flagsChanged) { [self] event in
-            guard let event = event else { return }
+            guard let event else { return }
             flagsChanged(modifierFlags: event.modifierFlags.filterUnsupportModifiers())
         }
         globalEventMonitor.start()
@@ -721,7 +721,7 @@ public class KeysManager: ObservableObject {
         guard modifiers.isNotEmpty else { return [] }
 
         var keys = Set(keys)
-        if let ignoredKeys = ignoredKeys { keys.subtract(ignoredKeys) }
+        if let ignoredKeys { keys.subtract(ignoredKeys) }
 
         return keys.compactMap { ch in
             guard let key = Key(character: ch, virtualKeyCode: nil), let combo = KeyCombo(key: key, cocoaModifiers: modifiers)
@@ -1050,7 +1050,7 @@ public let KM = KeysManager()
         }
     }
 
-    public extension Array where Element == TriggerKey {
+    public extension [TriggerKey] {
         static func == (lhs: Self, rhs: Self) -> Bool {
             Set(lhs) == Set(rhs)
         }

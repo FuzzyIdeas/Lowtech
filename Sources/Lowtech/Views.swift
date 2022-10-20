@@ -64,7 +64,7 @@ public struct NotificationView: View {
             }
             if hasButtons {
                 HStack {
-                    if let noButtonText = noButtonText {
+                    if let noButtonText {
                         Button(noButtonText) {
                             buttonAction?(false)
                         }
@@ -73,7 +73,7 @@ public struct NotificationView: View {
                         .keyboardShortcut(KeyboardShortcut(.space))
                     }
                     Spacer()
-                    if let yesButtonText = yesButtonText {
+                    if let yesButtonText {
                         Button(yesButtonText) {
                             buttonAction?(true)
                         }
@@ -158,7 +158,7 @@ public protocol Nameable {
         // MARK: Public
 
         override public var intrinsicContentSize: NSSize {
-            guard let width = width, let height = height else {
+            guard let width, let height else {
                 return super.intrinsicContentSize
             }
 
@@ -228,7 +228,7 @@ public protocol Nameable {
             button.menu = menu
             button.select(menu.items.first(where: { $0.title == selection.name }) ?? context.coordinator.defaultMenuItem)
             context.coordinator.observer = button.selectionPublisher.sink { inputName in
-                guard let inputName = inputName else { return }
+                guard let inputName else { return }
                 selection = content.first(where: { $0.name == inputName }) ?? selection
             }
             return button
@@ -239,7 +239,7 @@ public protocol Nameable {
             menu.items = makeMenuItems(context: context)
             button.select(menu.items.first(where: { $0.title == selection.name }) ?? context.coordinator.defaultMenuItem)
             context.coordinator.observer = button.selectionPublisher.sink { inputName in
-                guard let inputName = inputName else { return }
+                guard let inputName else { return }
                 selection = content.first(where: { $0.name == inputName }) ?? selection
             }
 
@@ -435,7 +435,7 @@ public protocol Nameable {
             override public var acceptsFirstResponder: Bool { true }
 
             override public func keyDown(with event: NSEvent) {
-                guard let context = context else {
+                guard let context else {
                     return
                 }
 
@@ -516,7 +516,7 @@ public protocol Nameable {
         var onCancel: (() -> Void)?
     }
 
-    public extension Set where Element == Int {
+    public extension Set<Int> {
         static let NUMBER_KEYS: Set<Int> = [
             kVK_ANSI_0, kVK_ANSI_1, kVK_ANSI_2, kVK_ANSI_3, kVK_ANSI_4, kVK_ANSI_5, kVK_ANSI_6, kVK_ANSI_7, kVK_ANSI_8, kVK_ANSI_9,
         ]
@@ -610,14 +610,14 @@ open class EnvState: ObservableObject {
     @Published public var recording = false
     @Published public var closed = true
 
+    public var menuHideTask: DispatchWorkItem? {
+        didSet { oldValue?.cancel() }
+    }
+
     // MARK: Internal
 
     @Published var hoveringSlider = false
     @Published var draggingSlider = false
-}
-
-var menuHideTask: DispatchWorkItem? {
-    didSet { oldValue?.cancel() }
 }
 
 // MARK: - PopoverView
@@ -625,7 +625,9 @@ var menuHideTask: DispatchWorkItem? {
 public struct PopoverView<Content: View>: View {
     // MARK: Lifecycle
 
-    public init(@ViewBuilder content: @escaping () -> Content) {
+    public init(name: String, visible: Binding<Bool>, @ViewBuilder content: @escaping () -> Content) {
+        _name = name.state
+        _visible = visible
         self.content = content
     }
 
@@ -638,28 +640,31 @@ public struct PopoverView<Content: View>: View {
             } else {
                 Color.clear.frame(width: size.width, height: size.height, alignment: .center)
             }
-        }.onChange(of: popoverClosed) { setup($0) }
+        }
+        .onAppear { setup(visible) }
+        .onChange(of: visible) { setup($0) }
     }
 
     // MARK: Internal
 
     let content: () -> Content
 
-    @Default(.popoverClosed) var popoverClosed
+    @State var name: String
+    @Binding var visible: Bool
     @EnvironmentObject var env: EnvState
     @State var size: CGSize = .zero
 
-    func setup(_ closed: Bool? = nil) {
-        guard !(closed ?? popoverClosed) else {
-            debug("Deallocating menu")
-            menuHideTask = mainAsyncAfter(ms: 2000) {
-                debug("Deallocated menu")
+    func setup(_ visible: Bool? = nil) {
+        guard visible ?? self.visible else {
+            debug("Deallocating \(name) in 2 seconds...")
+            env.menuHideTask = mainAsyncAfter(ms: 2000) {
+                debug("Deallocated \(name)")
                 env.closed = true
             }
             return
         }
-        debug("Reallocating menu")
-        menuHideTask = nil
+        debug("Reallocating \(name)")
+        env.menuHideTask = nil
         env.closed = false
     }
 }

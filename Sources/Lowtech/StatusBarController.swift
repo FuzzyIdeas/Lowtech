@@ -139,7 +139,7 @@ open class StatusBarController: NSObject, NSWindowDelegate, ObservableObject {
 
             oldValue?.forceClose()
 
-            if let window = window {
+            if let window {
                 screenObserver = NotificationCenter.default.publisher(for: NSWindow.didChangeScreenNotification, object: window)
                     .sink { _ in
                         guard !self.draggingWindow else {
@@ -151,7 +151,7 @@ open class StatusBarController: NSObject, NSWindowDelegate, ObservableObject {
             } else {
                 screenObserver = nil
             }
-            guard let onWindowCreation = onWindowCreation, let window = window else { return }
+            guard let onWindowCreation, let window else { return }
             onWindowCreation(window)
         }
     }
@@ -159,7 +159,7 @@ open class StatusBarController: NSObject, NSWindowDelegate, ObservableObject {
     public var position: CGPoint? {
         guard !centerOnScreen, let button = statusItem.button, let screen = NSScreen.main,
               let menuBarIconPosition = button.window?.convertPoint(toScreen: button.frame.origin),
-              let window = window, let viewSize = window.contentView?.frame.size
+              let window, let viewSize = window.contentView?.frame.size
         else { return nil }
 
         var middle = CGPoint(
@@ -180,7 +180,7 @@ open class StatusBarController: NSObject, NSWindowDelegate, ObservableObject {
     }
 
     @objc public func togglePopover(sender: AnyObject) {
-        if let window = window, window.isVisible {
+        if let window, window.isVisible {
             hidePopover(sender)
         } else {
             showPopover(sender)
@@ -214,7 +214,7 @@ open class StatusBarController: NSObject, NSWindowDelegate, ObservableObject {
     }
 
     public func showPopover(_: AnyObject) {
-        menuHideTask = nil
+        LowtechAppDelegate.instance.env.menuHideTask = nil
 
         Defaults[.popoverClosed] = false
         popoverShownAtLeastOnce = true
@@ -232,15 +232,15 @@ open class StatusBarController: NSObject, NSWindowDelegate, ObservableObject {
     }
 
     @objc public func hidePopover(_: AnyObject) {
-        menuHideTask = nil
+        LowtechAppDelegate.instance.env.menuHideTask = nil
 
-        guard let window = window else { return }
+        guard let window else { return }
         window.close()
         eventMonitor?.stop()
         NSApp.deactivate()
 
         guard shouldDestroyWindowOnClose else { return }
-        menuHideTask = mainAsyncAfter(ms: 2000) {
+        LowtechAppDelegate.instance.env.menuHideTask = mainAsyncAfter(ms: 2000) {
             self.window?.contentView = nil
             self.window?.forceClose()
             self.window = nil
@@ -254,7 +254,7 @@ open class StatusBarController: NSObject, NSWindowDelegate, ObservableObject {
     var delegate: StatusBarDelegate?
 
     func mouseEventHandler(_ event: NSEvent?) {
-        guard let window = window, event?.window == nil else { return }
+        guard let window, event?.window == nil else { return }
         if window.isVisible, statusItem.isVisible, !shouldLeavePopoverOpen {
             hidePopover(LowtechAppDelegate.instance)
         }

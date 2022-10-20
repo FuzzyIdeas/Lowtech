@@ -24,7 +24,7 @@
         "repositoryURL": "https://github.com/Kitura/BlueECC",
         "state": {
           "branch": "master",
-          "revision": "baf6ed3fc1a622675f0041b4aff7c02dd1a93818",
+          "revision": "1485268a54f8135435a825a855e733f026fa6cc8",
           "version": null
         }
       },
@@ -69,7 +69,7 @@
         "repositoryURL": "https://github.com/sindresorhus/LaunchAtLogin",
         "state": {
           "branch": "main",
-          "revision": "05168c04c91fdf6c432852c2fe0737af6437195c",
+          "revision": "d473e169537169cc0442d6d88a0f9a9daf9d4f6f",
           "version": null
         }
       },
@@ -132,8 +132,8 @@
         "repositoryURL": "https://github.com/sparkle-project/Sparkle",
         "state": {
           "branch": null,
-          "revision": "8e27997de02457a0c4690ffcfb8ac9c8e1066883",
-          "version": "2.2.2"
+          "revision": "2a98381dfe72e24bf593c5c06d2c4fc1763c3f19",
+          "version": "2.3.0"
         }
       },
       {

@@ -58,7 +58,7 @@ open class LowtechProAppDelegate: LowtechIndieAppDelegate, PADProductDelegate, P
 
     #if DEBUG
         @objc public func resetTrial() {
-            guard let product = product else {
+            guard let product else {
                 return
             }
             product.resetTrial()
@@ -66,7 +66,7 @@ open class LowtechProAppDelegate: LowtechIndieAppDelegate, PADProductDelegate, P
         }
 
         @objc public func expireTrial() {
-            guard let product = product else {
+            guard let product else {
                 return
             }
             product.expireTrial()
@@ -76,17 +76,17 @@ open class LowtechProAppDelegate: LowtechIndieAppDelegate, PADProductDelegate, P
 
     @IBAction public func activateLicense(_: Any) {
         pro.showLicenseActivation()
-        if let statusBar = statusBar, let w = statusBar.window, w.isVisible {
+        if let statusBar, let w = statusBar.window, w.isVisible {
             w.makeKeyAndOrderFront(self)
         }
     }
 
     @IBAction public func recoverLicense(_: Any) {
-        guard let paddle = paddle, let product = product else {
+        guard let paddle, let product else {
             return
         }
         paddle.showLicenseRecovery(for: product) { _, error in
-            if let error = error {
+            if let error {
                 printerr("Error on recovering license from Paddle: \(error)")
             }
         }
@@ -151,7 +151,7 @@ public class LowtechPro: ObservableObject {
             configuration: productConfig
         )
 
-        guard let product = product else {
+        guard let product else {
             return
         }
 
@@ -173,14 +173,14 @@ public class LowtechPro: ObservableObject {
     public var active: Bool { productActivated || onTrial }
 
     public func manageLicence() {
-        guard let paddle = paddle, let product = product else {
+        guard let paddle, let product else {
             return
         }
         paddle.showProductAccessDialog(with: product)
     }
 
     public func showCheckout() {
-        guard let paddle = paddle, let product = product else {
+        guard let paddle, let product else {
             return
         }
 
@@ -207,7 +207,7 @@ public class LowtechPro: ObservableObject {
     }
 
     public func showLicenseActivation() {
-        guard let paddle = paddle, let product = product else {
+        guard let paddle, let product else {
             return
         }
         paddle.showLicenseActivationDialog(for: product, email: nil, licenseCode: nil, activationStatusCompletion: { activationStatus in
@@ -233,16 +233,16 @@ public class LowtechPro: ObservableObject {
     }
 
     public func checkProLicense() {
-        guard let product = product else {
+        guard let product else {
             return
         }
         product.refresh { [self]
             (delta: [AnyHashable: Any]?, error: Error?) in
                 mainAsync { [self] in
-                    if let delta = delta, !delta.isEmpty {
+                    if let delta, !delta.isEmpty {
                         print("Differences in \(product.productName ?? "product") after refresh")
                     }
-                    if let error = error {
+                    if let error {
                         printerr("Error on refreshing \(product.productName ?? "product") from Paddle: \(error)")
                     }
 
@@ -256,7 +256,7 @@ public class LowtechPro: ObservableObject {
     }
 
     public func verifyLicense(force: Bool = false) {
-        guard let paddle = paddle, let product = product else {
+        guard let paddle, let product else {
             return
         }
         guard force || enoughTimeHasPassedSinceLastVerification(product: product) else { return }
@@ -312,7 +312,7 @@ public class LowtechPro: ObservableObject {
     }
 
     public func enablePro() {
-        guard let product = product else {
+        guard let product else {
             return
         }
         productActivated = true
@@ -320,7 +320,7 @@ public class LowtechPro: ObservableObject {
     }
 
     public func disablePro() {
-        guard let product = product else {
+        guard let product else {
             return
         }
         productActivated = false

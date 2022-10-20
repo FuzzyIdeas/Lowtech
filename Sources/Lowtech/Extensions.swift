@@ -14,7 +14,7 @@ public prefix func ! <T>(keyPath: KeyPath<T, Bool>) -> (T) -> Bool {
 }
 
 prefix operator !?
-public prefix func !? <T, V>(keyPath: KeyPath<T, V?>) -> (T) -> Bool {
+public prefix func !? <T>(keyPath: KeyPath<T, (some Any)?>) -> (T) -> Bool {
     { $0[keyPath: keyPath] != nil }
 }
 
@@ -29,14 +29,14 @@ public func != <T, V: Equatable>(lhs: KeyPath<T, V>, rhs: V) -> (T) -> Bool {
 infix operator ?!
 
 public func ?! (_ str: String?, _ str2: String) -> String {
-    guard let str = str, !str.isEmpty else {
+    guard let str, !str.isEmpty else {
         return str2
     }
     return str
 }
 
 public func ?! <T: Collection>(_ seq: T?, _ seq2: T) -> T {
-    guard let seq = seq, !seq.isEmpty else {
+    guard let seq, !seq.isEmpty else {
         return seq2
     }
     return seq
@@ -106,7 +106,7 @@ extension NumberFormatter {
             f.alwaysShowsDecimalSeparator = true
             f.maximumFractionDigits = decimals
             f.minimumFractionDigits = decimals
-            if let decimalSeparator = decimalSeparator {
+            if let decimalSeparator {
                 f.decimalSeparator = decimalSeparator
             }
         }
@@ -114,7 +114,7 @@ extension NumberFormatter {
             f.minimumIntegerDigits = padding
         }
 
-        if let format = format {
+        if let format {
             f.positiveFormat = format
             f.negativeFormat = format
         }
@@ -201,7 +201,7 @@ extension Bool {
 
         @objc dynamic var bg: NSColor? {
             get {
-                guard let layer = layer, let backgroundColor = layer.backgroundColor else { return nil }
+                guard let layer, let backgroundColor = layer.backgroundColor else { return nil }
                 return NSColor(cgColor: backgroundColor)
             }
             set {
@@ -214,7 +214,7 @@ extension Bool {
 
         @objc dynamic var radius: NSNumber? {
             get {
-                guard let layer = layer else { return nil }
+                guard let layer else { return nil }
                 return NSNumber(value: Float(layer.cornerRadius))
             }
             set {
@@ -754,6 +754,20 @@ public extension Sequence {
 
         return grouped
     }
+
+    func first(_ count: Int, where condition: (Element) -> Bool) -> [Element] {
+        var results = [Element]()
+        results.reserveCapacity(count)
+
+        for elem in self {
+            if results.count == count { return results }
+            if condition(elem) {
+                results.append(elem)
+            }
+        }
+
+        return results
+    }
 }
 
 public extension CAMediaTimingFunction {
@@ -851,7 +865,7 @@ public extension String {
         range searchRange: Range<String.Index>? = nil,
         locale: Locale? = nil
     ) -> Int {
-        guard let substring = substring, !substring.isEmpty else { return 0 }
+        guard let substring, !substring.isEmpty else { return 0 }
 
         var count = 0
 
@@ -912,7 +926,7 @@ public extension View {
     ///   - condition: The condition to evaluate.
     ///   - transform: The transform to apply to the source `View`.
     /// - Returns: Either the original `View` or the modified `View` if the condition is `true`.
-    @ViewBuilder func `if`<Content: View>(_ condition: @autoclosure () -> Bool, transform: (Self) -> Content) -> some View {
+    @ViewBuilder func `if`(_ condition: @autoclosure () -> Bool, transform: (Self) -> some View) -> some View {
         if condition() {
             transform(self)
         } else {
@@ -920,7 +934,7 @@ public extension View {
         }
     }
 
-    @ViewBuilder func ifLet<Content: View, T>(_ condition: @autoclosure () -> T?, transform: (Self, T) -> Content) -> some View {
+    @ViewBuilder func ifLet<T>(_ condition: @autoclosure () -> T?, transform: (Self, T) -> some View) -> some View {
         if let param = condition() {
             transform(self, param)
         } else {
@@ -997,14 +1011,14 @@ public extension Collection where Element: Equatable & Hashable, Index: BinaryIn
     }
 
     func after(_ element: Element?) -> Element? {
-        guard let element = element, let idx = firstIndex(of: element) else { return nil }
+        guard let element, let idx = firstIndex(of: element) else { return nil }
         return self[safe: index(after: idx)]
     }
 }
 
 public extension StringProtocol {
     func distance(of element: Element) -> Int? { firstIndex(of: element)?.distance(in: self) }
-    func distance<S: StringProtocol>(of string: S) -> Int? { range(of: string)?.lowerBound.distance(in: self) }
+    func distance(of string: some StringProtocol) -> Int? { range(of: string)?.lowerBound.distance(in: self) }
 }
 
 // MARK: - BackportSortOrder
@@ -1022,7 +1036,7 @@ public extension Collection {
 //        return sorted(using: KeyPathComparator(keyPath, order: order))
 //    }
 
-    func sorted<Value: Comparable>(by keyPath: KeyPath<Element, Value>, order: BackportSortOrder = .forward) -> [Element] {
+    func sorted(by keyPath: KeyPath<Element, some Comparable>, order: BackportSortOrder = .forward) -> [Element] {
         sorted(by: { e1, e2 in
             switch order {
             case .forward:
@@ -1033,13 +1047,13 @@ public extension Collection {
         })
     }
 
-    func max<Value: Comparable>(by keyPath: KeyPath<Element, Value>) -> Element? {
+    func max(by keyPath: KeyPath<Element, some Comparable>) -> Element? {
         self.max(by: { e1, e2 in
             e1[keyPath: keyPath] < e2[keyPath: keyPath]
         })
     }
 
-    func min<Value: Comparable>(by keyPath: KeyPath<Element, Value>) -> Element? {
+    func min(by keyPath: KeyPath<Element, some Comparable>) -> Element? {
         self.min(by: { e1, e2 in
             e1[keyPath: keyPath] < e2[keyPath: keyPath]
         })
@@ -1047,7 +1061,7 @@ public extension Collection {
 }
 
 public extension String.Index {
-    func distance<S: StringProtocol>(in string: S) -> Int { string.distance(to: self) }
+    func distance(in string: some StringProtocol) -> Int { string.distance(to: self) }
 }
 
 public extension NSParagraphStyle {
@@ -1073,7 +1087,7 @@ public extension Binding {
     }
 }
 
-public extension Sequence where Self.Element == UInt8 {
+public extension Sequence<UInt8> {
     func hexEncodedString(upperCased: Bool = false) -> String {
         let format = upperCased ? "%02hhX" : "%02hhx"
         return map { String(format: format, $0) }.joined()
@@ -1084,7 +1098,7 @@ public extension OptionSet {
     mutating func toggle(_ element: Element, minSet: Self? = nil, emptySet: Self? = nil) {
         if contains(element) {
             remove(element)
-            if let minSet = minSet, isEmpty || (emptySet?.isSuperset(of: self) ?? false) {
+            if let minSet, isEmpty || (emptySet?.isSuperset(of: self) ?? false) {
                 formUnion(minSet)
             }
         } else {
@@ -1119,7 +1133,7 @@ public extension NSRunningApplication {
     }
 
     var identifier: String {
-        guard let bundleIdentifier = bundleIdentifier else { return processIdentifier.s }
+        guard let bundleIdentifier else { return processIdentifier.s }
         return "\(bundleIdentifier):\(processIdentifier)"
     }
 
@@ -1134,7 +1148,7 @@ public extension NSRunningApplication {
     var name: String? { localizedName ?? bundleName }
 
     var bundle: Bundle? {
-        guard let bundleURL = bundleURL else {
+        guard let bundleURL else {
             return nil
         }
 
@@ -1143,7 +1157,7 @@ public extension NSRunningApplication {
 
     func binaryMatchesLaunchDate(path: String) -> Bool {
         let binaryModifiedDate = (try? FileManager.default.attributesOfItem(atPath: path))?[.modificationDate] as? Date
-        guard let launchDate = launchDate, let binaryModifiedDate = binaryModifiedDate else { return true }
+        guard let launchDate, let binaryModifiedDate else { return true }
 
         #if DEBUG
             print("Launch date: \(launchDate)")

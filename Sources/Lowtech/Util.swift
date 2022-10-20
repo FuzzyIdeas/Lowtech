@@ -62,7 +62,7 @@ public struct SettingTransformer<Value, Transformed> {
 
     public init(to: KeyPath<Value, Transformed>, from: KeyPath<Transformed, Value>? = nil) {
         self.to = { v in v[keyPath: to] }
-        if let from = from {
+        if let from {
             self.from = { v in v[keyPath: from] }
         } else {
             self.from = nil
@@ -88,13 +88,13 @@ public extension ObservableSettings {
 
     func bind<Value>(_ key: Defaults.Key<Value>, property: ReferenceWritableKeyPath<Self, Value>, publisher: KeyPath<Self, Published<Value>.Publisher>? = nil, debounce: RunLoop.SchedulerTimeType.Stride? = nil) {
         let onSettingChange: (Defaults.KeyChange<Value>) -> Void = { [weak self] change in
-            guard let self = self else { return }
+            guard let self else { return }
             self.withoutApply {
                 self[keyPath: property] = change.newValue
             }
         }
 
-        if let debounce = debounce {
+        if let debounce {
             Defaults.publisher(key)
                 .debounce(for: debounce, scheduler: RunLoop.main)
                 .sink(receiveValue: onSettingChange).store(in: &observers)
@@ -104,14 +104,14 @@ public extension ObservableSettings {
                 .sink(receiveValue: onSettingChange).store(in: &observers)
         }
 
-        guard let publisher = publisher else { return }
+        guard let publisher else { return }
 
         let onChange: (Value) -> Void = { [weak self] val in
-            guard let self = self, self.apply else { return }
+            guard let self, self.apply else { return }
             Defaults[key] = val
         }
 
-        if let debounce = debounce {
+        if let debounce {
             self[keyPath: publisher]
                 .debounce(for: debounce, scheduler: RunLoop.main)
                 .sink(receiveValue: onChange).store(in: &observers)
@@ -130,13 +130,13 @@ public extension ObservableSettings {
         transformer: SettingTransformer<Value, Transformed>
     ) {
         let onSettingChange: (Defaults.KeyChange<Value>) -> Void = { [weak self] change in
-            guard let self = self else { return }
+            guard let self else { return }
             self.withoutApply {
                 self[keyPath: property] = transformer.to(change.newValue)
             }
         }
 
-        if let debounce = debounce {
+        if let debounce {
             Defaults.publisher(key)
                 .debounce(for: debounce, scheduler: RunLoop.main)
                 .sink(receiveValue: onSettingChange).store(in: &observers)
@@ -146,14 +146,14 @@ public extension ObservableSettings {
                 .sink(receiveValue: onSettingChange).store(in: &observers)
         }
 
-        guard let publisher = publisher else { return }
+        guard let publisher else { return }
 
         let onChange: (Transformed) -> Void = { [weak self] val in
-            guard let self = self, self.apply, let transform = transformer.from else { return }
+            guard let self, self.apply, let transform = transformer.from else { return }
             Defaults[key] = transform(val)
         }
 
-        if let debounce = debounce {
+        if let debounce {
             self[keyPath: publisher]
                 .debounce(for: debounce, scheduler: RunLoop.main)
                 .sink(receiveValue: onChange).store(in: &observers)
@@ -178,7 +178,7 @@ public class Setting<Value: Defaults.Serializable> {
         observer = Defaults.publisher(key)
             .debounce(for: .milliseconds(10), scheduler: RunLoop.main)
             .sink { [weak self] in
-                guard let self = self else { return }
+                guard let self else { return }
                 self.storage.value = $0.newValue
                 self.storage.oldValue = $0.oldValue
             }
@@ -299,7 +299,7 @@ public func createWindow(
         }
 
         if let wc = controller {
-            if let screen = screen, let w = wc.window {
+            if let screen, let w = wc.window {
                 w.setFrameOrigin(CGPoint(x: screen.frame.minX, y: screen.frame.minY))
                 if fillScreen {
                     w.setFrame(screen.frame, display: false)

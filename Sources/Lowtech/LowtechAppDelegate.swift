@@ -26,12 +26,12 @@ open class LowtechAppDelegate: NSObject, NSApplicationDelegate, ObservableObject
 
     @MainActor
     open func applicationDidResignActive(_ notification: Notification) {
-        debug(notification)
+//        debug(notification)
     }
 
     @MainActor
     open func applicationDidBecomeActive(_ notification: Notification) {
-        debug(notification)
+//        debug(notification)
         if Defaults[.hideMenubarIcon] {
             statusBar?.showPopoverIfNotVisible()
         }
@@ -159,7 +159,7 @@ open class LowtechAppDelegate: NSObject, NSApplicationDelegate, ObservableObject
 
     @MainActor
     public func initMenubar() {
-        guard let contentView = contentView else {
+        guard let contentView else {
             return
         }
 

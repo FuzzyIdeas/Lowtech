@@ -146,7 +146,7 @@ public struct HScrollView<Content: View>: View {
                 computeGradientOpacity()
             }
 
-            if let gradientColor = gradientColor {
+            if let gradientColor {
                 LinearGradient(
                     colors: [gradientColor, gradientColor.opacity(0)],
                     startPoint: .trailing,
@@ -213,7 +213,7 @@ public struct HomekitSlider: View {
                     .colorMultiply(colorMultiply)
                     .frame(height: geometry.size.height * percentage.cg)
 
-                if let image = image {
+                if let image {
                     Image(systemName: image)
                         .resizable()
                         .frame(width: imageSize, height: imageSize, alignment: .bottom)
@@ -300,7 +300,7 @@ public struct HomekitSlider: View {
                     latest: true
                 )
                 .sink { event in
-                    guard let event = event, event.deltaX == 0, event.scrollingDeltaY != 0 else {
+                    guard let event, event.deltaX == 0, event.scrollingDeltaY != 0 else {
                         HomekitSlider.sliderTouched = false
                         withAnimation(.spring()) {
                             scale = 1.0
@@ -387,7 +387,7 @@ public struct BigSurSlider: View {
                     Rectangle()
                         .foregroundColor(color ?? colors.accent)
                         .frame(width: cgPercentage == 1 ? geometry.size.width : w * cgPercentage + sliderHeight / 2)
-                    if let image = image {
+                    if let image {
                         Image(systemName: image)
                             .resizable()
                             .frame(width: 12, height: 12, alignment: .center)
@@ -425,7 +425,7 @@ public struct BigSurSlider: View {
                 .contrast(!isEnabled ? 0.4 : 1.0)
                 .saturation(!isEnabled ? 0.4 : 1.0)
 
-                if !isEnabled, hovering, let enableText = enableText, let enable = enable {
+                if !isEnabled, hovering, let enableText, let enable {
                     SwiftUI.Button(enableText) {
                         enable()
                     }
@@ -522,8 +522,8 @@ public struct BigSurSlider: View {
                 .filter { event in event?.type == .scrollWheel }
                 .throttle(for: .milliseconds(20), scheduler: DispatchQueue.main, latest: true)
                 .sink { event in
-                    guard hovering, env.hoveringSlider, let event = event, event.momentumPhase.rawValue == 0 else {
-                        if let event = event, event.scrollingDeltaX + event.scrollingDeltaY == 0, event.phase.rawValue == 0,
+                    guard hovering, env.hoveringSlider, let event, event.momentumPhase.rawValue == 0 else {
+                        if let event, event.scrollingDeltaX + event.scrollingDeltaY == 0, event.phase.rawValue == 0,
                            env.draggingSlider
                         {
                             env.draggingSlider = false

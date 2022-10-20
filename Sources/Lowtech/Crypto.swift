@@ -16,7 +16,7 @@ public extension Bundle {
 
         var code: SecStaticCode?
         status = SecStaticCodeCreateWithPath(bundleURL as CFURL, [], &code)
-        guard status == noErr, let code = code else {
+        guard status == noErr, let code else {
             return false
         }
 
@@ -25,7 +25,7 @@ public extension Bundle {
             "anchor apple generic and certificate leaf[field.1.2.840.113635.100.6.1.25.1]" as CFString,
             [], &requirement
         )
-        guard status == noErr, let requirement = requirement else {
+        guard status == noErr, let requirement else {
             return false
         }
 

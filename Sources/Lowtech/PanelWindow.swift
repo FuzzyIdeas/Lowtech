@@ -31,9 +31,9 @@ open class PanelWindow: LowtechWindow {
     override open var canBecomeKey: Bool { true }
 
     open func show(at point: NSPoint? = nil, animate: Bool = false, activate: Bool = true, corner: ScreenCorner? = nil, margin: CGFloat? = nil, screen: NSScreen? = nil) {
-        if let corner = corner {
+        if let corner {
             moveToScreen(screen, corner: corner, margin: margin, animate: animate)
-        } else if let point = point {
+        } else if let point {
             withAnim(animate: animate) { w in w.setFrameOrigin(point) }
         } else {
             withAnim(animate: animate) { w in w.center() }

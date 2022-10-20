@@ -116,7 +116,7 @@ public func shell(
         )
     }
 
-    guard let timeout = timeout else {
+    guard let timeout else {
         task.waitUntilExit()
         return ProcessStatus(
             output: stdout(of: task),
