@@ -92,6 +92,7 @@ open class LowtechProAppDelegate: LowtechIndieAppDelegate, PADProductDelegate, P
         }
     }
 
+    @MainActor
     public func willShowPaddle(_: PADUIType, product _: PADProduct) -> PADDisplayConfiguration? {
         statusBar?.showPopoverIfNotVisible()
 

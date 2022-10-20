@@ -205,6 +205,8 @@ open class LowtechWindow: NSWindow, NSWindowDelegate {
                 w.setFrameOrigin(NSPoint(x: o.x, y: o.y + (f.height - frame.height) / 2).applying(.init(translationX: self.margin, y: 0)))
             case .right:
                 w.setFrameOrigin(NSPoint(x: (o.x + f.width) - frame.width, y: o.y + (f.height - frame.height) / 2).applying(.init(translationX: -self.margin, y: 0)))
+            case .center:
+                w.center()
             }
         }
     }
@@ -249,4 +251,6 @@ public enum ScreenCorner: Int, Codable, DefaultsSerializable {
     case bottom
     case left
     case right
+
+    case center
 }
