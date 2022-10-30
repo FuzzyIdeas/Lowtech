@@ -3,10 +3,10 @@
     "pins": [
       {
         "package": "AppReceiptValidator",
-        "repositoryURL": "https://github.com/alin23/AppReceiptValidator.git",
+        "repositoryURL": "https://github.com/IdeasOnCanvas/AppReceiptValidator.git",
         "state": {
           "branch": "main",
-          "revision": "d9ee2be62eb84308573a37eb69978f6ca4fdf9f7",
+          "revision": "b5cdf299431f80c42a4b5ae032c1f99a3a0b4bd7",
           "version": null
         }
       },
