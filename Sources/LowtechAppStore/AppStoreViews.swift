@@ -33,6 +33,16 @@ open class LowtechAppStoreDelegate: LowtechAppDelegate {
 
     @MainActor
     @inline(__always)
+    open func toggleTrialOSD() {
+        if trialOSD.alphaValue > 0 {
+            hideTrialOSD()
+        } else {
+            showTrialOSD()
+        }
+    }
+
+    @MainActor
+    @inline(__always)
     open func showTrialOSD() {
         guard trialMode, trialExpired() else {
             return
@@ -43,7 +53,11 @@ open class LowtechAppStoreDelegate: LowtechAppDelegate {
 
     // MARK: Public
 
-    public lazy var trialOSD = OSDWindow(swiftuiView: TrialOSDContainer().any)
+    public lazy var trialOSD = {
+        let w = OSDWindow(swiftuiView: TrialOSDContainer().any)
+        w.alphaValue = 0
+        return w
+    }()
 }
 
 // MARK: - TrialOSDContainer

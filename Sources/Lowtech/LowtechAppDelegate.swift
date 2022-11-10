@@ -79,6 +79,7 @@ open class LowtechAppDelegate: NSObject, NSApplicationDelegate, ObservableObject
             guard showPopoverOnSpecialKey else {
                 return
             }
+
             statusBar?.togglePopover(sender: self)
         }
         KM.initHotkeys()
@@ -93,6 +94,9 @@ open class LowtechAppDelegate: NSObject, NSApplicationDelegate, ObservableObject
         initialized = true
         KM.initialized = true
     }
+
+    @MainActor
+    open func onPopoverNotAllowed() {}
 
     // MARK: Public
 

@@ -365,9 +365,9 @@ public struct BigSurSlider: View {
         _mark = mark ?? .constant(0)
         _imgColor = .constant(.black)
 
-        _knobColor = knobColorBinding ?? colorBinding ?? .constant(knobColor ?? colors.accent)
-        _knobTextColor = knobTextColorBinding ?? .constant(knobTextColor ?? ((color ?? colors.accent).textColor(colors: colors)))
-        _imgColor = .constant(imgColor ?? color?.textColor(colors: colors) ?? Color.black)
+        _knobColor = knobColorBinding ?? colorBinding ?? .constant(knobColor ?? Colors.saffron)
+        _knobTextColor = knobTextColorBinding ?? .constant(knobTextColor ?? ((color ?? Colors.saffron).textColor(colors: Colors.light)))
+        _imgColor = .constant(imgColor ?? color?.textColor(colors: Colors.light) ?? Color.black)
         self.enable = enable
     }
 

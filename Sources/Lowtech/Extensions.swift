@@ -133,7 +133,7 @@ extension NumberFormatter {
     }
 }
 
-extension Bool {
+public extension Bool {
     @inline(__always) var i: Int {
         self ? 1 : 0
     }

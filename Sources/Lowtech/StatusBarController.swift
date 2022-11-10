@@ -133,6 +133,8 @@ open class StatusBarController: NSObject, NSWindowDelegate, ObservableObject {
     @Atomic public var changedWindowScreen = false
     @Atomic public var draggingWindow = false
 
+    public var allowPopover = true
+
     public var window: PanelWindow? {
         didSet {
             window?.delegate = self
@@ -223,11 +225,19 @@ open class StatusBarController: NSObject, NSWindowDelegate, ObservableObject {
             window = PanelWindow(swiftuiView: view())
         }
         guard statusItem.isVisible else {
-            window!.show(at: centerOnScreen ? nil : .mouseLocation(centeredOn: window), corner: screenCorner, margin: margin)
+            if allowPopover {
+                window!.show(at: centerOnScreen ? nil : .mouseLocation(centeredOn: window), corner: screenCorner, margin: margin)
+            } else {
+                LowtechAppDelegate.instance.onPopoverNotAllowed()
+            }
             return
         }
 
-        window!.show(at: position, corner: screenCorner, margin: margin)
+        if allowPopover {
+            window!.show(at: position, corner: screenCorner, margin: margin)
+        } else {
+            LowtechAppDelegate.instance.onPopoverNotAllowed()
+        }
         eventMonitor?.start()
     }
 
