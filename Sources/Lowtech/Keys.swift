@@ -1226,4 +1226,35 @@ public let KM = KeysManager()
         @State var disabledOpacity: CGFloat = 0.6
     }
 
+    import Carbon
+    public extension SauceKey {
+        var character: String {
+            switch QWERTYKeyCode.i {
+            case kVK_ANSI_0: return "0"
+            case kVK_ANSI_1: return "1"
+            case kVK_ANSI_2: return "2"
+            case kVK_ANSI_3: return "3"
+            case kVK_ANSI_4: return "4"
+            case kVK_ANSI_5: return "5"
+            case kVK_ANSI_6: return "6"
+            case kVK_ANSI_7: return "7"
+            case kVK_ANSI_8: return "8"
+            case kVK_ANSI_9: return "9"
+            case kVK_ISO_Section: return "§"
+            case kVK_ANSI_Equal: return "="
+            case kVK_ANSI_Minus: return "-"
+            case kVK_ANSI_RightBracket: return "]"
+            case kVK_ANSI_LeftBracket: return "["
+            case kVK_ANSI_Quote: return "'"
+            case kVK_ANSI_Semicolon: return ";"
+            case kVK_ANSI_Backslash: return "\\"
+            case kVK_ANSI_Comma: return ","
+            case kVK_ANSI_Slash: return "/"
+            case kVK_ANSI_Period: return "."
+            case kVK_ANSI_Grave: return "`"
+            default: return rawValue.uppercased()
+            }
+        }
+    }
+
 #endif
