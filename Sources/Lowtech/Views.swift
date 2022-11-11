@@ -536,6 +536,8 @@ public protocol Nameable {
             kVK_ANSI_Quote, kVK_ANSI_Semicolon, kVK_ANSI_Backslash, kVK_ISO_Section,
             kVK_ANSI_Comma, kVK_ANSI_Slash, kVK_ANSI_Period, kVK_ANSI_Grave,
         ]
+
+        static let ALPHA_KEYS: Set<Int> = ALPHANUMERIC_KEYS.subtracting(.NUMBER_KEYS)
         static let ALL_KEYS: Set<Int> = FUNCTION_KEYS.union(NUMBER_KEYS).union(ALPHANUMERIC_KEYS).union(SYMBOL_KEYS)
     }
 

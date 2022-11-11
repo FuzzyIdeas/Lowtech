@@ -1252,6 +1252,8 @@ public let KM = KeysManager()
             case kVK_ANSI_Slash: return "/"
             case kVK_ANSI_Period: return "."
             case kVK_ANSI_Grave: return "`"
+            case kVK_Return: return "⏎"
+            case kVK_Space: return "⎵"
             default: return rawValue.uppercased()
             }
         }
