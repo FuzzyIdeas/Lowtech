@@ -1066,7 +1066,7 @@ public let KM = KeysManager()
 
         var str: String { map(\.str).joined() }
         var directionalStr: String { map(\.directionalStr).joined() }
-        var readableStr: String { map(\.readableStr).joined(separator: "+") }
+        var readableStr: String { map(\.readableStr).joined(separator: " + ") }
         var shortReadableStr: String { map(\.shortReadableStr).joined(separator: "+") }
 
         var allPressed: Bool { allSatisfy(\.pressed) }

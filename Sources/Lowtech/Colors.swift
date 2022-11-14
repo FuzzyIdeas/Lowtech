@@ -121,17 +121,11 @@ public extension Color {
     }
 
     func textColor(colors: Colors) -> Color {
-        if initialColorScheme == nil {
-            initialColorScheme = colors.colorScheme
-        }
-
-        switch initialColorScheme {
+        switch colors.colorScheme {
         case .light:
             return memoz.isLight ? colors.highContrast : colors.inverted
         case .dark:
             return memoz.isLight ? colors.inverted : colors.highContrast
-        case .none:
-            return memoz.isLight ? colors.highContrast : colors.inverted
         @unknown default:
             return memoz.isLight ? colors.highContrast : colors.inverted
         }

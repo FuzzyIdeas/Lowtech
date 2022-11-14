@@ -434,8 +434,8 @@ public struct ToggleButton: ButtonStyle {
     }
 
     func fgColor(_ configuration: Configuration) -> Color {
-        let textColor = color.textColor(colors: colors)
-        return isOn ? textColor : .primary
+        guard isOn else { return .primary }
+        return color.textColor(colors: colors)
     }
 }
 
