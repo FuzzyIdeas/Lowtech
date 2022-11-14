@@ -86,7 +86,7 @@ open class LowtechAppDelegate: NSObject, NSApplicationDelegate, ObservableObject
         KM.initFlagsListener()
 
         if Defaults[.launchCount] == 1, showPopoverOnFirstLaunch {
-            mainAsyncAfter(ms: 3000) {
+            mainAsyncAfter(ms: 1000) {
                 guard let s = self.statusBar, s.window == nil || !s.window!.isVisible else { return }
                 s.showPopover(self)
             }
