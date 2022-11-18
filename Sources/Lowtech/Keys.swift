@@ -1003,6 +1003,19 @@ public let KM = KeysManager()
             }
         }
 
+        public var sideIndependentReadableStr: String {
+            switch self {
+            case .rcmd, .lcmd:
+                return "Command"
+            case .ralt, .lalt:
+                return "Option"
+            case .lctrl, .rctrl:
+                return "Control"
+            case .lshift, .rshift:
+                return "Shift"
+            }
+        }
+
         public var shortReadableStr: String {
             switch self {
             case .rcmd:

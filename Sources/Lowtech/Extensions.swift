@@ -1328,3 +1328,9 @@ public extension Decodable {
 public extension FlattenSequence {
     var arr: [Element] { Array(self) }
 }
+
+public extension Binding<Int> {
+    var f: Binding<Float> {
+        Binding<Float>(get: { wrappedValue.f }, set: { wrappedValue = $0.intround })
+    }
+}
