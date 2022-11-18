@@ -154,6 +154,49 @@ public protocol Nameable {
     import Magnet
     import Sauce
 
+    public struct ScreenPlacementView: View {
+        // MARK: Lifecycle
+
+        public init(screenPlacement: Binding<ScreenCorner?>) {
+            _screenPlacement = screenPlacement
+        }
+
+        // MARK: Public
+
+        public var body: some View {
+            VStack(alignment: .leading, spacing: 10) {
+                HStack(alignment: .top, spacing: 10) {
+                    Button("   ") { screenPlacement = .topLeft }
+                        .buttonStyle(PickerButton(enumValue: $screenPlacement, onValue: .topLeft))
+                    Button("   ") { screenPlacement = .top }
+                        .buttonStyle(PickerButton(enumValue: $screenPlacement, onValue: .top))
+                    Button("   ") { screenPlacement = .topRight }
+                        .buttonStyle(PickerButton(enumValue: $screenPlacement, onValue: .topRight))
+                }
+                HStack(alignment: .center, spacing: 10) {
+                    Button("   ") { screenPlacement = .left }
+                        .buttonStyle(PickerButton(enumValue: $screenPlacement, onValue: .left))
+                    Button("   ") { screenPlacement = .center }
+                        .buttonStyle(PickerButton(enumValue: $screenPlacement, onValue: .center))
+                    Button("   ") { screenPlacement = .right }
+                        .buttonStyle(PickerButton(enumValue: $screenPlacement, onValue: .right))
+                }
+                HStack(alignment: .bottom, spacing: 10) {
+                    Button("   ") { screenPlacement = .bottomLeft }
+                        .buttonStyle(PickerButton(enumValue: $screenPlacement, onValue: .bottomLeft))
+                    Button("   ") { screenPlacement = .bottom }
+                        .buttonStyle(PickerButton(enumValue: $screenPlacement, onValue: .bottom))
+                    Button("   ") { screenPlacement = .bottomRight }
+                        .buttonStyle(PickerButton(enumValue: $screenPlacement, onValue: .bottomRight))
+                }
+            }
+        }
+
+        // MARK: Internal
+
+        @Binding var screenPlacement: ScreenCorner?
+    }
+
     open class SizedPopUpButton: NSPopUpButton {
         // MARK: Public
 
