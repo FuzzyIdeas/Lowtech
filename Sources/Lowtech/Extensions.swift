@@ -536,7 +536,16 @@ public extension UInt8 {
     }
 }
 
+infix operator %%
+
 public extension BinaryInteger {
+    @inline(__always)
+    static func %% (_ a: Self, _ n: Self) -> Self {
+        precondition(n > 0, "modulus must be positive")
+        let r = a % n
+        return r >= 0 ? r : r + n
+    }
+
     @inline(__always) var ns: NSNumber {
         NSNumber(value: d)
     }
