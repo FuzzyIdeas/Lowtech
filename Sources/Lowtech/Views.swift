@@ -387,7 +387,7 @@ public protocol Nameable {
         }
 
         public static func keyString(_ keyCode: Int) -> String {
-            SauceKey(QWERTYKeyCode: keyCode)?.character ?? ""
+            Sauce.shared.character(for: keyCode, cocoaModifiers: []) ?? SauceKey(QWERTYKeyCode: keyCode)?.character ?? ""
         }
 
         // MARK: Internal
@@ -539,28 +539,37 @@ public protocol Nameable {
     }
 
     public extension Set<Int> {
-        static let NUMBER_KEYS: Set<Int> = [
-            kVK_ANSI_0, kVK_ANSI_1, kVK_ANSI_2, kVK_ANSI_3, kVK_ANSI_4, kVK_ANSI_5, kVK_ANSI_6, kVK_ANSI_7, kVK_ANSI_8, kVK_ANSI_9,
-        ]
-        static let FUNCTION_KEYS: Set<Int> = [
-            kVK_F1, kVK_F2, kVK_F3, kVK_F4, kVK_F5, kVK_F6, kVK_F7, kVK_F8, kVK_F9, kVK_F10, kVK_F11, kVK_F12,
-            kVK_F13, kVK_F14, kVK_F15, kVK_F16, kVK_F17, kVK_F18, kVK_F19, kVK_F20,
-        ]
-        static let ALPHANUMERIC_KEYS: Set<Int> = [
-            kVK_ANSI_0, kVK_ANSI_1, kVK_ANSI_2, kVK_ANSI_3, kVK_ANSI_4, kVK_ANSI_5, kVK_ANSI_6, kVK_ANSI_7, kVK_ANSI_8, kVK_ANSI_9,
-            kVK_ANSI_Q, kVK_ANSI_W, kVK_ANSI_E, kVK_ANSI_R, kVK_ANSI_T, kVK_ANSI_Y, kVK_ANSI_U, kVK_ANSI_I, kVK_ANSI_O, kVK_ANSI_P,
-            kVK_ANSI_A, kVK_ANSI_S, kVK_ANSI_D, kVK_ANSI_F, kVK_ANSI_G, kVK_ANSI_H, kVK_ANSI_J, kVK_ANSI_K, kVK_ANSI_L,
-            kVK_ANSI_Z, kVK_ANSI_X, kVK_ANSI_C, kVK_ANSI_V, kVK_ANSI_B, kVK_ANSI_N, kVK_ANSI_M,
-        ]
+        static var NUMBER_KEYS: Set<Int> = Set(Set<CGKeyCode>.NUMBER_KEYS.map { Int($0) })
+        static var FUNCTION_KEYS: Set<Int> = Set(Set<CGKeyCode>.FUNCTION_KEYS.map { Int($0) })
+        static var ALPHANUMERIC_KEYS: Set<Int> = Set(Set<CGKeyCode>.ALPHANUMERIC_KEYS.map { Int($0) })
+        static var SYMBOL_KEYS: Set<Int> = Set(Set<CGKeyCode>.SYMBOL_KEYS.map { Int($0) })
+        static var ALPHA_KEYS: Set<Int> = Set(Set<CGKeyCode>.ALPHA_KEYS.map { Int($0) })
+        static var ALL_KEYS: Set<Int> = Set(Set<CGKeyCode>.ALL_KEYS.map { Int($0) })
+    }
 
-        static let SYMBOL_KEYS: Set<Int> = [
-            kVK_ANSI_Equal, kVK_ANSI_Minus, kVK_ANSI_RightBracket, kVK_ANSI_LeftBracket,
-            kVK_ANSI_Quote, kVK_ANSI_Semicolon, kVK_ANSI_Backslash, kVK_ISO_Section,
-            kVK_ANSI_Comma, kVK_ANSI_Slash, kVK_ANSI_Period, kVK_ANSI_Grave,
-        ]
+    public extension Set<CGKeyCode> {
+        static var NUMBER_KEYS: Set<CGKeyCode> = Set([
+            SauceKey.zero, SauceKey.one, SauceKey.two, SauceKey.three, SauceKey.four, SauceKey.five, SauceKey.six, SauceKey.seven, SauceKey.eight, SauceKey.nine,
+        ].map { Sauce.shared.keyCode(for: $0) })
+        static var FUNCTION_KEYS: Set<CGKeyCode> = Set([
+            SauceKey.f1, SauceKey.f2, SauceKey.f3, SauceKey.f4, SauceKey.f5, SauceKey.f6, SauceKey.f7, SauceKey.f8, SauceKey.f9, SauceKey.f10, SauceKey.f11, SauceKey.f12,
+            SauceKey.f13, SauceKey.f14, SauceKey.f15, SauceKey.f16, SauceKey.f17, SauceKey.f18, SauceKey.f19, SauceKey.f20,
+        ].map { Sauce.shared.keyCode(for: $0) })
+        static var ALPHANUMERIC_KEYS: Set<CGKeyCode> = Set([
+            SauceKey.zero, SauceKey.one, SauceKey.two, SauceKey.three, SauceKey.four, SauceKey.five, SauceKey.six, SauceKey.seven, SauceKey.eight, SauceKey.nine,
+            SauceKey.q, SauceKey.w, SauceKey.e, SauceKey.r, SauceKey.t, SauceKey.y, SauceKey.u, SauceKey.i, SauceKey.o, SauceKey.p,
+            SauceKey.a, SauceKey.s, SauceKey.d, SauceKey.f, SauceKey.g, SauceKey.h, SauceKey.j, SauceKey.k, SauceKey.l,
+            SauceKey.z, SauceKey.x, SauceKey.c, SauceKey.v, SauceKey.b, SauceKey.n, SauceKey.m,
+        ].map { Sauce.shared.keyCode(for: $0) })
 
-        static let ALPHA_KEYS: Set<Int> = ALPHANUMERIC_KEYS.subtracting(.NUMBER_KEYS)
-        static let ALL_KEYS: Set<Int> = FUNCTION_KEYS.union(NUMBER_KEYS).union(ALPHANUMERIC_KEYS).union(SYMBOL_KEYS)
+        static var SYMBOL_KEYS: Set<CGKeyCode> = Set([
+            SauceKey.equal, SauceKey.minus, SauceKey.rightBracket, SauceKey.leftBracket,
+            SauceKey.quote, SauceKey.semicolon, SauceKey.backslash, SauceKey.section,
+            SauceKey.comma, SauceKey.slash, SauceKey.period, SauceKey.grave,
+        ].map { Sauce.shared.keyCode(for: $0) })
+
+        static var ALPHA_KEYS: Set<CGKeyCode> = ALPHANUMERIC_KEYS.subtracting(.NUMBER_KEYS)
+        static var ALL_KEYS: Set<CGKeyCode> = FUNCTION_KEYS.union(NUMBER_KEYS).union(ALPHANUMERIC_KEYS).union(SYMBOL_KEYS)
     }
 
     public struct MenuHotkeyView: View {

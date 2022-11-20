@@ -42,6 +42,38 @@ public class KeysManager: ObservableObject {
             .sink { notification in
                 self.recheckFlags()
             }.store(in: &observers)
+        NotificationCenter.default.publisher(for: .SauceSelectedKeyboardKeyCodesChanged)
+            .sink { _ in
+                Set<CGKeyCode>.NUMBER_KEYS = Set([
+                    SauceKey.zero, SauceKey.one, SauceKey.two, SauceKey.three, SauceKey.four, SauceKey.five, SauceKey.six, SauceKey.seven, SauceKey.eight, SauceKey.nine,
+                ].map { Sauce.shared.keyCode(for: $0) })
+                Set<CGKeyCode>.FUNCTION_KEYS = Set([
+                    SauceKey.f1, SauceKey.f2, SauceKey.f3, SauceKey.f4, SauceKey.f5, SauceKey.f6, SauceKey.f7, SauceKey.f8, SauceKey.f9, SauceKey.f10, SauceKey.f11, SauceKey.f12,
+                    SauceKey.f13, SauceKey.f14, SauceKey.f15, SauceKey.f16, SauceKey.f17, SauceKey.f18, SauceKey.f19, SauceKey.f20,
+                ].map { Sauce.shared.keyCode(for: $0) })
+                Set<CGKeyCode>.ALPHANUMERIC_KEYS = Set([
+                    SauceKey.zero, SauceKey.one, SauceKey.two, SauceKey.three, SauceKey.four, SauceKey.five, SauceKey.six, SauceKey.seven, SauceKey.eight, SauceKey.nine,
+                    SauceKey.q, SauceKey.w, SauceKey.e, SauceKey.r, SauceKey.t, SauceKey.y, SauceKey.u, SauceKey.i, SauceKey.o, SauceKey.p,
+                    SauceKey.a, SauceKey.s, SauceKey.d, SauceKey.f, SauceKey.g, SauceKey.h, SauceKey.j, SauceKey.k, SauceKey.l,
+                    SauceKey.z, SauceKey.x, SauceKey.c, SauceKey.v, SauceKey.b, SauceKey.n, SauceKey.m,
+                ].map { Sauce.shared.keyCode(for: $0) })
+
+                Set<CGKeyCode>.SYMBOL_KEYS = Set([
+                    SauceKey.equal, SauceKey.minus, SauceKey.rightBracket, SauceKey.leftBracket,
+                    SauceKey.quote, SauceKey.semicolon, SauceKey.backslash, SauceKey.section,
+                    SauceKey.comma, SauceKey.slash, SauceKey.period, SauceKey.grave,
+                ].map { Sauce.shared.keyCode(for: $0) })
+
+                Set<CGKeyCode>.ALPHA_KEYS = Set<CGKeyCode>.ALPHANUMERIC_KEYS.subtracting(Set<CGKeyCode>.NUMBER_KEYS)
+                Set<CGKeyCode>.ALL_KEYS = Set<CGKeyCode>.FUNCTION_KEYS.union(Set<CGKeyCode>.NUMBER_KEYS).union(Set<CGKeyCode>.ALPHANUMERIC_KEYS).union(Set<CGKeyCode>.SYMBOL_KEYS)
+
+                Set<Int>.NUMBER_KEYS = Set(Set<CGKeyCode>.NUMBER_KEYS.map { Int($0) })
+                Set<Int>.FUNCTION_KEYS = Set(Set<CGKeyCode>.FUNCTION_KEYS.map { Int($0) })
+                Set<Int>.ALPHANUMERIC_KEYS = Set(Set<CGKeyCode>.ALPHANUMERIC_KEYS.map { Int($0) })
+                Set<Int>.SYMBOL_KEYS = Set(Set<CGKeyCode>.SYMBOL_KEYS.map { Int($0) })
+                Set<Int>.ALPHA_KEYS = Set(Set<CGKeyCode>.ALPHA_KEYS.map { Int($0) })
+                Set<Int>.ALL_KEYS = Set(Set<CGKeyCode>.ALL_KEYS.map { Int($0) })
+            }.store(in: &observers)
     }
 
     // MARK: Open
@@ -435,7 +467,7 @@ public class KeysManager: ObservableObject {
         }
     }
 
-    @Published public var specialKey = "" {
+    @Published public var specialKey: SauceKey? = nil {
         didSet {
             reinitHotkeys()
         }
@@ -519,7 +551,7 @@ public class KeysManager: ObservableObject {
 
         unregisterSpecialHotkey()
         computeKeyModifiers()
-        specialKeyIdentifier = "SPECIAL_KEY\(specialKey)"
+        specialKeyIdentifier = "SPECIAL_KEY\(specialKey?.character ?? "NOKEY")"
         initHotkeys()
     }
 
@@ -568,11 +600,11 @@ public class KeysManager: ObservableObject {
     }
 
     public func initSpecialHotkeys() {
-        if !specialKey.isEmpty, !specialKeyModifiers.isEmpty {
+        if let specialKey, !specialKeyModifiers.isEmpty {
             specialHotkey = HotKey(
                 identifier: specialKeyIdentifier,
                 keyCombo: KeyCombo(
-                    key: .init(character: specialKey, virtualKeyCode: nil)!,
+                    key: specialKey,
                     cocoaModifiers: specialKeyModifiers.sideIndependentModifiers
                 )!,
                 actionQueue: .main,
@@ -1242,6 +1274,14 @@ public let KM = KeysManager()
     import Carbon
     public extension SauceKey {
         var character: String {
+            switch QWERTYKeyCode.i {
+            case kVK_Return: return "⏎"
+            case kVK_Space: return "⎵"
+            default: return Sauce.shared.character(for: QWERTYKeyCode.i, cocoaModifiers: [])?.uppercased() ?? rawValue.uppercased()
+            }
+        }
+
+        var QWERTYCharacter: String {
             switch QWERTYKeyCode.i {
             case kVK_ANSI_0: return "0"
             case kVK_ANSI_1: return "1"
