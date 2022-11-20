@@ -377,7 +377,7 @@ public class KeysManager: ObservableObject {
     @Published public var multiTapTime = [[TriggerKey]: Date]()
     public var multiTapPublisher = PassthroughSubject<([TriggerKey], Int), Never>()
 
-    public lazy var specialKeyIdentifier = "SPECIAL_KEY\(specialKey)"
+    public lazy var specialKeyIdentifier = "SPECIAL_KEY-\(specialKey?.character ?? "NO_KEY")"
 
     public var primaryKeys: [String] = []
     public var secondaryKeys: [String] = []
@@ -551,7 +551,7 @@ public class KeysManager: ObservableObject {
 
         unregisterSpecialHotkey()
         computeKeyModifiers()
-        specialKeyIdentifier = "SPECIAL_KEY\(specialKey?.character ?? "NOKEY")"
+        specialKeyIdentifier = "SPECIAL_KEY-\(specialKey?.character ?? "NO_KEY")"
         initHotkeys()
     }
 
