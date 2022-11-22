@@ -600,13 +600,13 @@ public class KeysManager: ObservableObject {
     }
 
     public func initSpecialHotkeys() {
-        if let specialKey, !specialKeyModifiers.isEmpty {
+        if let specialKey, !specialKeyModifiers.isEmpty, let combo = KeyCombo(
+            key: specialKey,
+            cocoaModifiers: specialKeyModifiers.sideIndependentModifiers
+        ) {
             specialHotkey = HotKey(
                 identifier: specialKeyIdentifier,
-                keyCombo: KeyCombo(
-                    key: specialKey,
-                    cocoaModifiers: specialKeyModifiers.sideIndependentModifiers
-                )!,
+                keyCombo: combo,
                 actionQueue: .main,
                 detectKeyHold: false,
                 handler: handleSpecialHotkey
