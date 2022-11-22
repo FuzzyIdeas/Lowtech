@@ -43,7 +43,7 @@ public class KeysManager: ObservableObject {
                 self.recheckFlags()
             }.store(in: &observers)
         NotificationCenter.default.publisher(for: .SauceSelectedKeyboardKeyCodesChanged)
-            .sink { _ in
+            .sink { [self] _ in
                 Set<CGKeyCode>.NUMBER_KEYS = Set([
                     SauceKey.zero, SauceKey.one, SauceKey.two, SauceKey.three, SauceKey.four, SauceKey.five, SauceKey.six, SauceKey.seven, SauceKey.eight, SauceKey.nine,
                 ].map { Sauce.shared.keyCode(for: $0) })
@@ -73,6 +73,12 @@ public class KeysManager: ObservableObject {
                 Set<Int>.SYMBOL_KEYS = Set(Set<CGKeyCode>.SYMBOL_KEYS.map { Int($0) })
                 Set<Int>.ALPHA_KEYS = Set(Set<CGKeyCode>.ALPHA_KEYS.map { Int($0) })
                 Set<Int>.ALL_KEYS = Set(Set<CGKeyCode>.ALL_KEYS.map { Int($0) })
+
+                if keepSpecialKeyPosition, let specialKeyCode {
+                    self.specialKey = Sauce.shared.key(for: specialKeyCode.i)
+                }
+
+                reinitHotkeys()
             }.store(in: &observers)
     }
 
@@ -401,6 +407,10 @@ public class KeysManager: ObservableObject {
     @Published public var disabledSecondaryAltKeys = false
     @Published public var disabledSecondaryRightShiftKeys = false
     @Published public var disabledSecondaryLeftShiftKeys = false
+
+    public lazy var specialKeyCode: CGKeyCode? = specialKey?.QWERTYKeyCode
+
+    public var keepSpecialKeyPosition = false
 
     @Published public var testHotkey: HotKey? = nil {
         didSet {
