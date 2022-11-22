@@ -131,6 +131,9 @@ open class LowtechWindow: NSWindow, NSWindowDelegate {
     public var animateOnResize = false
     @Published public var screenPlacement: NSScreen?
 
+    public var screenCorner: ScreenCorner?
+    public var margin: CGFloat = 0
+
     public func windowDidBecomeKey(_ notification: Notification) {
         closed = false
     }
@@ -233,15 +236,12 @@ open class LowtechWindow: NSWindow, NSWindowDelegate {
     // MARK: Internal
 
     @Atomic var inAnim = false
-    public var screenCorner: ScreenCorner?
-    public var margin: CGFloat = 0
-
     lazy var wc = NSWindowController(window: self)
 }
 
 // MARK: - ScreenCorner
 
-public enum ScreenCorner: Int, Codable, DefaultsSerializable {
+public enum ScreenCorner: Int, Codable, Defaults.Serializable {
     case bottomLeft
     case bottomRight
     case topLeft

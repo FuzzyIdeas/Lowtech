@@ -29,11 +29,11 @@ let package = Package(
     ],
     dependencies: [
         // Dependencies declare other packages that this package depends on.
-        .package(url: "https://github.com/sindresorhus/Defaults", from: "6.2.1"),
+        .package(url: "https://github.com/sindresorhus/Defaults", from: "7.0.0"),
         .package(url: "https://github.com/mxcl/Path.swift", from: "1.4.0"),
         .package(url: "https://github.com/apple/swift-atomics", from: "1.0.2"),
         .package(url: "https://github.com/alin23/RegexSwiftOld", from: "1.3.0"),
-        .package(url: "https://github.com/alin23/FuzzyFind", branch: "main"),
+        .package(url: "https://github.com/alin23/FuzzyMatcher", branch: "main"),
         .package(url: "https://github.com/sindresorhus/LaunchAtLogin", branch: "main"),
         .package(url: "https://github.com/alin23/Magnet", branch: "dev"),
         .package(url: "https://github.com/Clipy/Sauce", from: "2.2.0"),
@@ -65,7 +65,7 @@ let package = Package(
                 .product(name: "VisualEffects", package: "VisualEffects"),
                 .product(name: "EonilFSEvents", package: "FSEvents"),
                 .product(name: "DynamicColor", package: "DynamicColor"),
-                .product(name: "FuzzyFind", package: "FuzzyFind"),
+                .product(name: "FuzzyMatcher", package: "FuzzyMatcher"),
                 .product(name: "SystemColors", package: "swiftui-system-colors"),
                 .product(name: "MemoZ", package: "MemoZ"),
             ]
@@ -77,7 +77,9 @@ let package = Package(
                 .product(name: "SwiftDate", package: "SwiftDate"),
                 .product(name: "AppReceiptValidator", package: "AppReceiptValidator"),
                 .product(name: "CryptorECC", package: "BlueECC"),
-            ]
+            ],
+            exclude: ["Numbers.swift.secret"]
+
         ),
         .target(
             name: "LowtechIndie",
