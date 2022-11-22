@@ -233,8 +233,8 @@ open class LowtechWindow: NSWindow, NSWindowDelegate {
     // MARK: Internal
 
     @Atomic var inAnim = false
-    var screenCorner: ScreenCorner?
-    var margin: CGFloat = 0
+    public var screenCorner: ScreenCorner?
+    public var margin: CGFloat = 0
 
     lazy var wc = NSWindowController(window: self)
 }
