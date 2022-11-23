@@ -1296,3 +1296,34 @@ public extension Binding<Int> {
         Binding<Float>(get: { wrappedValue.f }, set: { wrappedValue = $0.intround })
     }
 }
+
+public extension String {
+    subscript(_ idx: Int) -> String {
+        switch idx {
+        case 0:
+            return String(first!)
+        case (count - 1) ... Int.max:
+            return String(last!)
+        case Int.min ..< 0:
+            return String(suffix(-idx).first!)
+        default:
+            return String(prefix(idx + 1).last!)
+        }
+    }
+
+    subscript(_ range: Range<Int>) -> String {
+        String(prefix(range.upperBound).suffix(range.upperBound - range.lowerBound))
+    }
+}
+
+// MARK: - Text + AdditiveArithmetic
+
+extension Text: AdditiveArithmetic {
+    public static func - (lhs: Text, rhs: Text) -> Text {
+        lhs + rhs
+    }
+
+    public static var zero: Text {
+        Text("")
+    }
+}

@@ -916,3 +916,63 @@ public struct AnimationCompletionObserverModifier<Value>: AnimatableModifier whe
         }
     }
 }
+
+// MARK: - HighlightedText
+
+public struct HighlightedText: View {
+    // MARK: Lifecycle
+
+    public init(text: String, indices: [Int], highlightColor: Color) {
+        _text = State(initialValue: text)
+        _indices = State(initialValue: indices)
+        _highlightColor = State(initialValue: highlightColor)
+    }
+
+    // MARK: Public
+
+    public var body: some View {
+        let indices = indices.filter { $0 < text.count }.sorted()
+        let maxIdx = text.count - 1
+
+        if indices.isEmpty {
+            return Text(text)
+        } else if indices.count == 1, let idx = indices.first {
+            switch idx {
+            case 0:
+                return Text(text[0]).foregroundColor(highlightColor) + Text(text[1 ..< text.count])
+            case maxIdx:
+                return Text(text[0 ..< maxIdx]) + Text(text[maxIdx]).foregroundColor(highlightColor)
+            default:
+                return Text(text[0 ..< idx]) + Text(text[idx]).foregroundColor(highlightColor) + Text(text[(idx + 1) ..< text.count])
+            }
+        } else {
+            var lastIdx = 1
+            let first = indices.first!
+            let last = indices.last!
+            return indices.map { i in
+                switch i {
+                case 0:
+                    return Text(text[i]).foregroundColor(highlightColor)
+                case maxIdx:
+                    return Text(text[lastIdx ..< maxIdx]) + Text(text[i]).foregroundColor(highlightColor)
+                case first:
+                    let t = Text(text[0 ..< i]) + Text(text[i]).foregroundColor(highlightColor)
+                    lastIdx = i + 1
+                    return t
+                case last:
+                    return Text(text[lastIdx ..< i]) + Text(text[i]).foregroundColor(highlightColor) + Text(text[i + 1 ..< text.count])
+                default:
+                    let t = Text(text[lastIdx ..< i]) + Text(text[i]).foregroundColor(highlightColor)
+                    lastIdx = i + 1
+                    return t
+                }
+            }.sum()
+        }
+    }
+
+    // MARK: Internal
+
+    @State var text: String
+    @State var indices: [Int]
+    @State var highlightColor: Color
+}
