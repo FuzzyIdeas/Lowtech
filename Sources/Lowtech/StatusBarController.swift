@@ -84,22 +84,20 @@ open class StatusBarController: NSObject, NSWindowDelegate, ObservableObject {
         }.store(in: &observers)
 
         eventMonitor = GlobalEventMonitor(mask: [.leftMouseDown, .rightMouseDown], handler: mouseEventHandler)
-        dragEventMonitor = LocalEventMonitor(mask: [.leftMouseDown, .leftMouseUp]) { ev in
-            switch ev.type {
-            case .leftMouseDown:
-                self.draggingWindow = true
-            case .leftMouseUp:
-                self.draggingWindow = false
-                if self.changedWindowScreen {
-                    self.changedWindowScreen = false
-                    NotificationCenter.default.post(name: .mainScreenChanged, object: nil)
-                }
-            default:
-                break
+        dragEventMonitorLocal = LocalEventMonitor(mask: [.leftMouseDown, .leftMouseUp, .rightMouseUp, .otherMouseUp]) { self.dragHandler($0) }
+        dragEventMonitorLocal.start()
+        dragEventMonitorGlobal = GlobalEventMonitor(mask: [.leftMouseDown, .leftMouseUp, .rightMouseUp, .otherMouseUp]) { ev in
+            guard self.draggingWindow else {
+                return
             }
-            return ev
+
+            self.draggingWindow = false
+            if self.changedWindowScreen {
+                self.changedWindowScreen = false
+                NotificationCenter.default.post(name: .mainScreenChanged, object: nil)
+            }
         }
-        dragEventMonitor.start()
+        dragEventMonitorGlobal.start()
 
         NSApp.publisher(for: \.mainMenu).sink { _ in self.fixMenu() }
             .store(in: &observers)
@@ -259,9 +257,26 @@ open class StatusBarController: NSObject, NSWindowDelegate, ObservableObject {
 
     // MARK: Internal
 
-    var dragEventMonitor: LocalEventMonitor!
+    var dragEventMonitorLocal: LocalEventMonitor!
+    var dragEventMonitorGlobal: GlobalEventMonitor!
 
     var delegate: StatusBarDelegate?
+
+    func dragHandler(_ ev: NSEvent) -> NSEvent? {
+        switch ev.type {
+        case .leftMouseDown:
+            draggingWindow = true
+        case .leftMouseUp, .rightMouseUp, .otherMouseUp:
+            draggingWindow = false
+            if changedWindowScreen {
+                changedWindowScreen = false
+                NotificationCenter.default.post(name: .mainScreenChanged, object: nil)
+            }
+        default:
+            break
+        }
+        return ev
+    }
 
     func mouseEventHandler(_ event: NSEvent?) {
         guard let window, event?.window == nil else { return }
