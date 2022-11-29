@@ -60,7 +60,7 @@ open class StatusBarController: NSObject, NSWindowDelegate, ObservableObject {
             statusBarButton.image?.size = NSSize(width: 18.0, height: 18.0)
             statusBarButton.image?.isTemplate = true
 
-            statusBarButton.action = #selector(togglePopover(sender:))
+            statusBarButton.action = #selector(statusItemClick(sender:))
             statusBarButton.target = self
         }
 
@@ -177,6 +177,12 @@ open class StatusBarController: NSObject, NSWindowDelegate, ObservableObject {
             storedPosition = middle
         }
         return middle
+    }
+
+    @objc public func statusItemClick(sender: AnyObject) {
+        draggingWindow = false
+        togglePopover(sender: sender)
+        draggingWindow = false
     }
 
     @objc public func togglePopover(sender: AnyObject) {
