@@ -26,7 +26,7 @@ public func != <T, V: Equatable>(lhs: KeyPath<T, V>, rhs: V) -> (T) -> Bool {
     { $0[keyPath: lhs] != rhs }
 }
 
-infix operator ?!
+infix operator ?!: NilCoalescingPrecedence
 
 public func ?! (_ str: String?, _ str2: String) -> String {
     guard let str, !str.isEmpty else {
