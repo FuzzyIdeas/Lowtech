@@ -33,8 +33,8 @@
         "repositoryURL": "https://github.com/sindresorhus/Defaults",
         "state": {
           "branch": null,
-          "revision": "7a22d378742acbef49ecff11b9de8bf8b72b34dc",
-          "version": "7.0.0"
+          "revision": "d71bfd8ffbf944ef08eacbca5fb96d6f69bf7696",
+          "version": "7.1.0"
         }
       },
       {
@@ -96,7 +96,7 @@
         "repositoryURL": "https://github.com/alin23/PaddleSPM",
         "state": {
           "branch": "main",
-          "revision": "23c359e9344a27f96d59284dbc957bf123b567f9",
+          "revision": "442ee896d2f75302c4b3ac83413661b7964cc766",
           "version": null
         }
       },
@@ -132,8 +132,8 @@
         "repositoryURL": "https://github.com/sparkle-project/Sparkle",
         "state": {
           "branch": null,
-          "revision": "2a98381dfe72e24bf593c5c06d2c4fc1763c3f19",
-          "version": "2.3.0"
+          "revision": "9d85a02fe7916caa7531847452c4933d331503a5",
+          "version": "2.3.1"
         }
       },
       {
@@ -141,8 +141,8 @@
         "repositoryURL": "https://github.com/apple/swift-atomics",
         "state": {
           "branch": null,
-          "revision": "919eb1d83e02121cdb434c7bfc1f0c66ef17febe",
-          "version": "1.0.2"
+          "revision": "ff3d2212b6b093db7f177d0855adbc4ef9c5f036",
+          "version": "1.0.3"
         }
       },
       {

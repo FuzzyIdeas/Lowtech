@@ -8,6 +8,8 @@ import SwiftDate
 // MARK: - LowtechProAppDelegate
 
 open class LowtechProAppDelegate: LowtechIndieAppDelegate, PADProductDelegate, PaddleDelegate {
+    public static var showNextPaddleError = true
+
     public var paddleVendorID = ""
     public var paddleAPIKey = ""
     public var paddleProductID = ""
@@ -102,6 +104,57 @@ open class LowtechProAppDelegate: LowtechIndieAppDelegate, PADProductDelegate, P
         }
 
         return PADDisplayConfiguration(.window, hideNavigationButtons: false, parentWindow: nil)
+    }
+
+    @MainActor
+    public func willShowPaddle(_ alert: PADAlert) -> Bool {
+        if alert.alertType == .error, !LowtechProAppDelegate.showNextPaddleError {
+            LowtechProAppDelegate.showNextPaddleError = true
+
+            return false
+        }
+
+        return true
+    }
+
+    @MainActor
+    public func paddleDidError(_ error: Error) {
+        guard let code = PADErrorCode(rawValue: (error as NSError).code) else { return }
+
+        switch code {
+        case .licenseCodeUtilized, .tooManyActivationsOrExpired, .noActivations:
+            guard let product,
+                  let s = self.statusBar, let window = s.window,
+                  let sheet = window.sheets.first,
+                  let paddleController = sheet.windowController as? PADActivateWindowController,
+                  let email = paddleController.emailTxt?.stringValue,
+                  let licenseCode = paddleController.licenseTxt?.stringValue
+            else { return }
+
+            LowtechProAppDelegate.showNextPaddleError = false
+            product.activations(forLicense: licenseCode) { activations, error in
+                guard let activationsList = activations as? [[String: Any]], let oldestActivation = activationsList.first
+                else { return }
+
+                product.deactivateActivation(oldestActivation["activation_id"] as! String, license: licenseCode) { deactivated, error in
+                    guard deactivated else { return }
+                    mainAsync {
+                        product.activateEmail(email, license: licenseCode) { didActivate, error in
+                            guard didActivate else {
+                                if let error {
+                                    printerr(error.localizedDescription)
+                                    paddleController.showErrorAlert(error.localizedDescription)
+                                }
+                                return
+                            }
+                            paddleController.closeDialog(.activated, internalUICloseReason: nil)
+                        }
+                    }
+                }
+            }
+        default:
+            break
+        }
     }
 }
 
