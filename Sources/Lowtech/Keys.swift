@@ -120,11 +120,14 @@ public class KeysManager: ObservableObject {
         KM.fn = modifierFlags.contains(.fn)
         KM.flags = modifierFlags.triggerKeys
 
-        if specialKeyModifiers.allPressed {
-            registerSpecialHotkey()
-        } else {
-            unregisterSpecialHotkey()
+        if testKeyCombo == nil || testKeyCombo!.key != specialKey {
+            if specialKeyModifiers.allPressed {
+                registerSpecialHotkey()
+            } else {
+                unregisterSpecialHotkey()
+            }
         }
+
         if primaryKeyModifiers.allPressed {
             registerPrimaryHotkeys()
         } else {

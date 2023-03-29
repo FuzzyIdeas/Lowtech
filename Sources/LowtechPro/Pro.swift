@@ -124,7 +124,7 @@ open class LowtechProAppDelegate: LowtechIndieAppDelegate, PADProductDelegate, P
         switch code {
         case .licenseCodeUtilized, .tooManyActivationsOrExpired, .noActivations:
             guard let product,
-                  let s = self.statusBar, let window = s.window,
+                  let s = statusBar, let window = s.window,
                   let sheet = window.sheets.first,
                   let paddleController = sheet.windowController as? PADActivateWindowController,
                   let email = paddleController.emailTxt?.stringValue,
