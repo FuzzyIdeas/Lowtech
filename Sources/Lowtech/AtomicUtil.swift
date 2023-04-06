@@ -3,7 +3,7 @@ import Atomics
 // MARK: - Atomic
 
 @propertyWrapper
-public struct Atomic<Value: AtomicValue> {
+public struct Atomic<Value: AtomicValue> where Value.AtomicRepresentation.Value == Value {
     // MARK: Lifecycle
 
     public init(wrappedValue: Value) {
