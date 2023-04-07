@@ -1327,3 +1327,7 @@ extension Text: AdditiveArithmetic {
         Text("")
     }
 }
+
+public extension NSVisualEffectView.Material {
+    static let osd = NSVisualEffectView.Material(rawValue: 26) ?? .hudWindow
+}

@@ -9,13 +9,22 @@ import SwiftUI
 open class OSDWindow: LowtechWindow {
     // MARK: Lifecycle
 
-    public convenience init(swiftuiView: AnyView, allSpaces: Bool = true, canScreenshot: Bool = true, screen: NSScreen? = nil, corner: ScreenCorner? = nil, allowsMouse: Bool = false) {
+    public convenience init(
+        swiftuiView: AnyView,
+        releaseWhenClosed: Bool = true,
+        level: NSWindow.Level = NSWindow.Level(CGShieldingWindowLevel().i),
+        allSpaces: Bool = true,
+        canScreenshot: Bool = true,
+        screen: NSScreen? = nil,
+        corner: ScreenCorner? = nil,
+        allowsMouse: Bool = false
+    ) {
         self.init(contentViewController: NSHostingController(rootView: swiftuiView))
 
         screenPlacement = screen
         screenCorner = corner
 
-        level = NSWindow.Level(CGShieldingWindowLevel().i)
+        self.level = level
         collectionBehavior = [.stationary, .ignoresCycle, .fullScreenDisallowsTiling]
         if allSpaces {
             collectionBehavior.formUnion(.canJoinAllSpaces)
@@ -35,6 +44,7 @@ open class OSDWindow: LowtechWindow {
         hasShadow = false
         styleMask = [.fullSizeContentView]
         hidesOnDeactivate = false
+        isReleasedWhenClosed = releaseWhenClosed
         delegate = self
     }
 
@@ -45,6 +55,7 @@ open class OSDWindow: LowtechWindow {
         closeAfter closeMilliseconds: Int = 3050,
         fadeAfter fadeMilliseconds: Int = 2000,
         offCenter: CGFloat? = nil,
+        verticalOffset: CGFloat? = nil,
         centerWindow: Bool = true,
         corner: ScreenCorner? = nil,
         margin: CGFloat? = nil,
@@ -59,7 +70,12 @@ open class OSDWindow: LowtechWindow {
             withAnim(animate: animate) { w in
                 w.setFrameOrigin(screenFrame.origin)
                 if centerWindow { w.center() }
-                if offCenter != 0 {
+                if let verticalOffset {
+                    setFrameOrigin(CGPoint(
+                        x: (screenFrame.width / 2 - frame.size.width / 2) + screenFrame.origin.x,
+                        y: screenFrame.origin.y + verticalOffset
+                    ))
+                } else if offCenter != 0 {
                     let yOff = screenFrame.height / (offCenter ?? 2.2)
                     w.setFrame(frame.offsetBy(dx: 0, dy: -yOff), display: false)
                 }
@@ -68,7 +84,9 @@ open class OSDWindow: LowtechWindow {
 
         alphaValue = 1
         wc.showWindow(nil)
-        makeKeyAndOrderFront(nil)
+        if canBecomeKey {
+            makeKeyAndOrderFront(nil)
+        }
         orderFrontRegardless()
 
         closer?.cancel()
@@ -84,6 +102,19 @@ open class OSDWindow: LowtechWindow {
                 self?.close()
             }
         }
+    }
+
+    // MARK: Public
+
+    public func hide() {
+        fader = nil
+        closer = nil
+
+        if let v = contentView?.superview {
+            v.alphaValue = 0.0
+        }
+        close()
+        windowController?.close()
     }
 
     // MARK: Internal
@@ -133,6 +164,8 @@ open class LowtechWindow: NSWindow, NSWindowDelegate {
 
     public var screenCorner: ScreenCorner?
     public var margin: CGFloat = 0
+
+    public lazy var wc = NSWindowController(window: self)
 
     public func windowDidBecomeKey(_ notification: Notification) {
         closed = false
@@ -233,10 +266,16 @@ open class LowtechWindow: NSWindow, NSWindowDelegate {
         }, completionHandler: onEnd)
     }
 
+    public func windowShouldClose(_ sender: NSWindow) -> Bool {
+        guard isReleasedWhenClosed else { return true }
+        windowController?.window = nil
+        windowController = nil
+        return true
+    }
+
     // MARK: Internal
 
     @Atomic var inAnim = false
-    lazy var wc = NSWindowController(window: self)
 }
 
 // MARK: - ScreenCorner
