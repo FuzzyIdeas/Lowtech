@@ -89,7 +89,7 @@ open class LowtechProAppDelegate: LowtechIndieAppDelegate, PADProductDelegate, P
         }
         paddle.showLicenseRecovery(for: product) { _, error in
             if let error {
-                printerr("Error on recovering license from Paddle: \(error)")
+                log.error("Error on recovering license from Paddle: \(error)")
             }
         }
     }
@@ -142,7 +142,7 @@ open class LowtechProAppDelegate: LowtechIndieAppDelegate, PADProductDelegate, P
                         product.activateEmail(email, license: licenseCode) { didActivate, error in
                             guard didActivate else {
                                 if let error {
-                                    printerr(error.localizedDescription)
+                                    log.error(error.localizedDescription)
                                     paddleController.showErrorAlert(error.localizedDescription)
                                 }
                                 return
@@ -297,7 +297,7 @@ public class LowtechPro: ObservableObject {
                         print("Differences in \(product.productName ?? "product") after refresh")
                     }
                     if let error {
-                        printerr("Error on refreshing \(product.productName ?? "product") from Paddle: \(error)")
+                        log.error("Error on refreshing \(product.productName ?? "product") from Paddle: \(error)")
                     }
 
                     if trialActive(product: product) || product.activated {
@@ -317,7 +317,7 @@ public class LowtechPro: ObservableObject {
         product.verifyActivation { [self] (state: PADVerificationState, error: Error?) in
             mainAsync { [self] in
                 if let verificationError = error {
-                    printerr(
+                    log.error(
                         "Error on verifying activation of \(product.productName ?? "product") from Paddle: \(verificationError.localizedDescription)"
                     )
                 }
@@ -357,7 +357,7 @@ public class LowtechPro: ObservableObject {
                     print("\(product.productName ?? "Product") verified")
                     self.enablePro()
                 case PADVerificationState(rawValue: 2):
-                    printerr("\(product.productName ?? "Product") verification failed because of network connection: \(state)")
+                    log.error("\(product.productName ?? "Product") verification failed because of network connection: \(state)")
                 default:
                     print("\(product.productName ?? "Product") verification unknown state: \(state)")
                 }

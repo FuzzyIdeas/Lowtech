@@ -1,15 +1,77 @@
 import Foundation
+import os
 
-public func debug(_ msg: @autoclosure () -> Any, function: String = #function) {
-    #if DEBUG
-        print("\(function): \(msg())")
-    #endif
+#if DEBUG
+    @inline(__always) public func debug(_ message: @autoclosure @escaping () -> String) {
+        log.oslog.debug("\(message())")
+    }
+
+    @inline(__always) public func trace(_ message: @autoclosure @escaping () -> String) {
+        log.oslog.trace("\(message())")
+    }
+
+    @inline(__always) public func err(_ message: @autoclosure @escaping () -> String) {
+        log.oslog.critical("\(message())")
+    }
+#else
+    @inline(__always) public func trace(_: @autoclosure () -> String) {}
+    @inline(__always) public func debug(_: @autoclosure () -> String) {}
+    @inline(__always) public func err(_: @autoclosure () -> String) {}
+#endif
+
+// MARK: - SwiftyLogger
+
+public final class SwiftyLogger {
+    // MARK: Public
+
+    @inline(__always) public class func verbose(_ message: String, context: Any? = "") {
+        #if DEBUG
+            oslog.trace("🫥 \(message, privacy: .public) \(String(describing: context ?? ""), privacy: .public)")
+        #else
+            oslog.trace("\(message, privacy: .public) \(String(describing: context ?? ""), privacy: .public)")
+        #endif
+    }
+
+    @inline(__always) public class func debug(_ message: String, context: Any? = "") {
+        #if DEBUG
+            oslog.debug("🌲 \(message, privacy: .public) \(String(describing: context ?? ""), privacy: .public)")
+        #else
+            oslog.debug("\(message, privacy: .public) \(String(describing: context ?? ""), privacy: .public)")
+        #endif
+    }
+
+    @inline(__always) public class func info(_ message: String, context: Any? = "") {
+        #if DEBUG
+            oslog.info("💠 \(message, privacy: .public) \(String(describing: context ?? ""), privacy: .public)")
+        #else
+            oslog.info("\(message, privacy: .public) \(String(describing: context ?? ""), privacy: .public)")
+        #endif
+    }
+
+    @inline(__always) public class func warning(_ message: String, context: Any? = "") {
+        #if DEBUG
+            oslog.warning("🦧 \(message, privacy: .public) \(String(describing: context ?? ""), privacy: .public)")
+        #else
+            oslog.warning("\(message, privacy: .public) \(String(describing: context ?? ""), privacy: .public)")
+        #endif
+    }
+
+    @inline(__always) public class func error(_ message: String, context: Any? = "") {
+        #if DEBUG
+            oslog.fault("👹 \(message, privacy: .public) \(String(describing: context ?? ""), privacy: .public)")
+        #else
+            oslog.fault("\(message, privacy: .public) \(String(describing: context ?? ""), privacy: .public)")
+        #endif
+    }
+
+    @inline(__always) public class func traceCalls() {
+        traceLog.trace("\(Thread.callStackSymbols.joined(separator: "\n"), privacy: .public)")
+    }
+
+    // MARK: Internal
+
+    static let oslog = Logger(subsystem: Bundle.main.bundleIdentifier ?? "com.lowtechguys.Logger", category: "default")
+    static let traceLog = Logger(subsystem: Bundle.main.bundleIdentifier ?? "com.lowtechguys.Logger", category: "trace")
 }
 
-public func err(_ msg: @autoclosure () -> Any, function: String = #function) {
-    printerr("\(function): \(msg())")
-}
-
-public func printerr(_ msg: String, end: String = "\n") {
-    fputs("\(msg)\(end)", stderr)
-}
+public let log = SwiftyLogger.self
