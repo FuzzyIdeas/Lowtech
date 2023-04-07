@@ -365,6 +365,90 @@ public func mapNumber<T: Numeric & Comparable & FloatingPoint>(_ number: T, from
     }
 }
 
+public extension Double {
+    func map(from: (Double, Double), to: (Double, Double)) -> Double {
+        lerp(invlerp(self, min: from.0, max: from.1), min: to.0, max: to.1)
+    }
+
+    func map(from: (Double, Double), to: (Double, Double), gamma: Double) -> Double {
+        lerp(pow(invlerp(self, min: from.0, max: from.1), 1.0 / gamma), min: to.0, max: to.1)
+    }
+}
+
+public extension Float {
+    func map(from: (Float, Float), to: (Float, Float)) -> Float {
+        lerp(invlerp(self, min: from.0, max: from.1), min: to.0, max: to.1)
+    }
+
+    func map(from: (Float, Float), to: (Float, Float), gamma: Float) -> Float {
+        lerp(pow(invlerp(self, min: from.0, max: from.1), 1.0 / gamma), min: to.0, max: to.1)
+    }
+}
+
+public extension CGFloat {
+    func map(from: (CGFloat, CGFloat), to: (CGFloat, CGFloat)) -> CGFloat {
+        lerp(invlerp(self, min: from.0, max: from.1), min: to.0, max: to.1)
+    }
+
+    func map(from: (CGFloat, CGFloat), to: (CGFloat, CGFloat), gamma: CGFloat) -> CGFloat {
+        lerp(pow(invlerp(self, min: from.0, max: from.1), 1.0 / gamma), min: to.0, max: to.1)
+    }
+}
+
+@inline(__always)
+public func lerp(_ value: Double, min: Double, max: Double) -> Double {
+    min + (max - min) * value
+}
+
+@inline(__always)
+public func invlerp(_ value: Double, min: Double, max: Double) -> Double {
+    max == min ? min : (value - min) / (max - min)
+}
+
+@inline(__always)
+public func lerp(_ value: Float, min: Float, max: Float) -> Float {
+    min + (max - min) * value
+}
+
+@inline(__always)
+public func invlerp(_ value: Float, min: Float, max: Float) -> Float {
+    max == min ? min : (value - min) / (max - min)
+}
+
+@inline(__always)
+public func lerp(_ value: CGFloat, min: CGFloat, max: CGFloat) -> CGFloat {
+    min + (max - min) * value
+}
+
+@inline(__always)
+public func invlerp(_ value: CGFloat, min: CGFloat, max: CGFloat) -> CGFloat {
+    max == min ? min : (value - min) / (max - min)
+}
+
+@inline(__always)
+public func lerpGamma22(_ value: Double, min: Double, max: Double) -> Double {
+    let normalizedValue = invlerp(value, min: min, max: max)
+    return pow(normalizedValue, 2.2) * (max - min) + min
+}
+
+@inline(__always)
+public func lerpGamma(_ value: Double, min: Double, max: Double, gamma: Double) -> Double {
+    let normalizedValue = invlerp(value, min: min, max: max)
+    return pow(normalizedValue, gamma) * (max - min) + min
+}
+
+@inline(__always)
+public func invlerpGamma22(_ interpolated: Double, min: Double, max: Double) -> Double {
+    let normalizedValue = pow(invlerp(interpolated, min: min, max: max), 1.0 / 2.2)
+    return normalizedValue * (max - min) + min
+}
+
+@inline(__always)
+public func invlerpGamma(_ interpolated: Double, min: Double, max: Double, gamma: Double) -> Double {
+    let normalizedValue = pow(invlerp(interpolated, min: min, max: max), 1.0 / gamma)
+    return normalizedValue * (max - min) + min
+}
+
 public let NO_SHADOW: NSShadow = {
     let s = NSShadow()
     s.shadowColor = .clear
