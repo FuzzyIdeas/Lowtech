@@ -5,13 +5,9 @@ import SwiftUI
 // MARK: - LicenseView
 
 public struct LicenseView: View {
-    // MARK: Lifecycle
-
     public init(pro: LowtechPro) {
         self.pro = pro
     }
-
-    // MARK: Public
 
     public var body: some View {
         HStack {
@@ -38,8 +34,5 @@ public struct LicenseView: View {
         .padding(.top, 10)
     }
 
-    // MARK: Internal
-
     @ObservedObject var pro: LowtechPro
-    @Environment(\.colors) var colors
 }

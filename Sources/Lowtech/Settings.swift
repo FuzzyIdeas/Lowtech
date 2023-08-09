@@ -17,3 +17,7 @@ public func first<T>(this: T, other _: T) -> T {
 public func last<T>(this _: T, other: T) -> T {
     other
 }
+
+public func pub<T: Equatable>(_ key: Defaults.Key<T>) -> Publishers.Filter<Publishers.RemoveDuplicates<Publishers.Drop<AnyPublisher<Defaults.KeyChange<T>, Never>>>> {
+    Defaults.publisher(key).dropFirst().removeDuplicates().filter { $0.oldValue != $0.newValue }
+}

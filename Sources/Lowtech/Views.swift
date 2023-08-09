@@ -4,7 +4,6 @@ import Combine
 import Defaults
 import Foundation
 import SwiftUI
-import VisualEffects
 
 extension NSButton {
     override open var focusRingType: NSFocusRingType {
@@ -20,11 +19,54 @@ extension NSSegmentedControl {
     }
 }
 
+// MARK: - WindowModifierView
+
+class WindowModifierView: NSView {
+    init(_ modifier: @escaping (NSWindow) -> Void) {
+        self.modifier = modifier
+        super.init(frame: .zero)
+    }
+
+    override init(frame frameRect: NSRect) {
+        super.init(frame: frameRect)
+    }
+
+    required init?(coder: NSCoder) {
+        super.init(coder: coder)
+    }
+
+    var modifier: ((NSWindow) -> Void)?
+
+    override func viewDidMoveToWindow() {
+        if let window, let modifier {
+            modifier(window)
+        }
+        super.viewDidMoveToWindow()
+    }
+}
+
+// MARK: - WindowModifier
+
+struct WindowModifier: NSViewRepresentable {
+    init(_ modifier: @escaping (NSWindow) -> Void) {
+        self.modifier = modifier
+    }
+
+    var modifier: (NSWindow) -> Void
+
+    func makeNSView(context: Self.Context) -> NSView { WindowModifierView(modifier) }
+    func updateNSView(_ nsView: NSView, context: Context) {}
+}
+
+public extension View {
+    func windowModifier(_ modifier: @escaping (NSWindow) -> Void) -> some View {
+        background(WindowModifier { window in modifier(window) })
+    }
+}
+
 // MARK: - NotificationView
 
 public struct NotificationView: View {
-    // MARK: Lifecycle
-
     public init(
         notificationLines: [String] = [],
         yesButtonText: String? = nil,
@@ -36,8 +78,6 @@ public struct NotificationView: View {
         _noButtonText = State(initialValue: noButtonText)
         _buttonAction = State(initialValue: buttonAction)
     }
-
-    // MARK: Public
 
     public var body: some View {
         let hasButtons = noButtonText != nil || yesButtonText != nil
@@ -68,7 +108,7 @@ public struct NotificationView: View {
                         Button(noButtonText) {
                             buttonAction?(false)
                         }
-                        .buttonStyle(FlatButton(color: .primary.opacity(0.7), textColor: colors.inverted))
+                        .buttonStyle(FlatButton(color: .primary.opacity(0.7), textColor: .inverted))
                         .font(.system(size: 13, weight: .semibold))
                         .keyboardShortcut(KeyboardShortcut(.space))
                     }
@@ -77,7 +117,7 @@ public struct NotificationView: View {
                         Button(yesButtonText) {
                             buttonAction?(true)
                         }
-                        .buttonStyle(FlatButton(color: Colors.red.opacity(0.9), textColor: colors.inverted))
+                        .buttonStyle(FlatButton(color: Color.hotRed.opacity(0.9), textColor: .inverted))
                         .font(.system(size: 13, weight: .semibold))
                         .keyboardShortcut(KeyboardShortcut(.return))
                     }
@@ -88,15 +128,13 @@ public struct NotificationView: View {
         .fixedSize(horizontal: true, vertical: false)
         .padding(20)
         .background(
-            VisualEffectBlur(material: .hudWindow, blendingMode: .withinWindow, state: .active)
-                .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
-                .shadow(color: Colors.blackMauve.opacity(colorScheme == .dark ? 0.5 : 0.25), radius: 4, x: 0, y: 3)
+            .regularMaterial
         )
+        .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
+        .shadow(color: Color.blackMauve.opacity(colorScheme == .dark ? 0.5 : 0.25), radius: 4, x: 0, y: 3)
         .focusable(false)
         .padding(20)
     }
-
-    // MARK: Internal
 
     @State var notificationLines: [String] = []
     @State var yesButtonText: String? = nil
@@ -104,7 +142,6 @@ public struct NotificationView: View {
     @State var buttonAction: ((Bool) -> Void)? = nil
 
     @Environment(\.colorScheme) var colorScheme
-    @Environment(\.colors) var colors
 
     let fontSize: CGFloat = 16
 }
@@ -155,13 +192,9 @@ public protocol Nameable {
     import Sauce
 
     public struct ScreenPlacementView: View {
-        // MARK: Lifecycle
-
         public init(screenPlacement: Binding<ScreenCorner?>) {
             _screenPlacement = screenPlacement
         }
-
-        // MARK: Public
 
         public var body: some View {
             VStack(alignment: .leading, spacing: 10) {
@@ -192,14 +225,10 @@ public protocol Nameable {
             }
         }
 
-        // MARK: Internal
-
         @Binding var screenPlacement: ScreenCorner?
     }
 
     open class SizedPopUpButton: NSPopUpButton {
-        // MARK: Public
-
         override public var intrinsicContentSize: NSSize {
             guard let width, let height else {
                 return super.intrinsicContentSize
@@ -208,8 +237,6 @@ public protocol Nameable {
             return NSSize(width: width, height: height)
         }
 
-        // MARK: Internal
-
         var width: CGFloat?
         var height: CGFloat?
     }
@@ -217,16 +244,10 @@ public protocol Nameable {
     // MARK: - PopUpButton
 
     public struct PopUpButton<T: Nameable>: NSViewRepresentable {
-        // MARK: Open
-
         open class Coordinator: NSObject {
-            // MARK: Lifecycle
-
             init(_ popUpButton: PopUpButton) {
                 button = popUpButton
             }
-
-            // MARK: Internal
 
             var button: PopUpButton
             var observer: Cancellable?
@@ -239,8 +260,6 @@ public protocol Nameable {
                 return m
             }()
         }
-
-        // MARK: Public
 
         public func makeCoordinator() -> Coordinator {
             Coordinator(self)
@@ -290,8 +309,6 @@ public protocol Nameable {
             button.height = height
         }
 
-        // MARK: Internal
-
         @Binding var selection: T
         @State var width: CGFloat?
         @State var height: CGFloat?
@@ -301,40 +318,31 @@ public protocol Nameable {
     }
 
     public struct DynamicKey: View {
-        // MARK: Lifecycle
-
         public init(
-            key: Binding<String>,
-            keyCode: Binding<Int>,
+            key: Binding<SauceKey>,
             recording: Binding<Bool>? = nil,
-            recordingColor: Color = Colors.red,
-            darkHoverColor: Color = Colors.red,
-            lightHoverColor: Color = Colors.lunarYellow,
-            allowedKeys: Set<String>? = nil,
-            allowedKeyCodes: Set<Int>? = nil,
-            fontSize: CGFloat = 13,
+            recordingColor: Color = Color.hotRed,
+            darkHoverColor: Color = Color.hotRed,
+            lightHoverColor: Color = Color.lunarYellow,
+            allowedKeys: Set<SauceKey>? = nil,
             width: CGFloat? = nil
         ) {
             _key = key
-            _keyCode = keyCode
             _recording = recording ?? .constant(false)
 
             self.recordingColor = recordingColor
             self.darkHoverColor = darkHoverColor
             self.lightHoverColor = lightHoverColor
             self.allowedKeys = allowedKeys
-            self.allowedKeyCodes = allowedKeyCodes
 
-            _fontSize = State(wrappedValue: fontSize)
             _width = State(wrappedValue: width)
         }
 
-        // MARK: Public
-
         @Environment(\.isEnabled) public var isEnabled
+        @Environment(\.font) public var font
 
         public var body: some View {
-            Button(key.uppercased() ?! DynamicKey.keyString(keyCode)) {
+            Button(key.character.uppercased()) {
                 if env.recording, !recording {
                     env.recording = false
                     return
@@ -348,15 +356,13 @@ public protocol Nameable {
                     width: width
                 )
             )
-            .font(.system(size: fontSize, weight: .bold, design: .monospaced))
+            .font(font?.monospaced() ?? .mono(13, weight: .bold))
             .colorMultiply(multiplyColor)
-            .background(recording ? KeyEventHandling(
-                recording: $recording,
-                key: $key,
-                keyCode: $keyCode,
-                allowedKeys: allowedKeys,
-                allowedKeyCodes: allowedKeyCodes
-            ) : nil)
+            .background(
+                recording
+                    ? KeyEventHandling(recording: $recording, key: $key, allowedKeys: allowedKeys)
+                    : nil
+            )
             .cornerRadius(6)
             .onHover { hovering in
                 guard !recording, isEnabled else { return }
@@ -390,20 +396,15 @@ public protocol Nameable {
             Sauce.shared.character(for: keyCode, cocoaModifiers: []) ?? SauceKey(QWERTYKeyCode: keyCode)?.character ?? ""
         }
 
-        // MARK: Internal
-
-        var darkHoverColor = Colors.red
-        var lightHoverColor = Colors.lunarYellow
-        var recordingColor = Color.red
-        var allowedKeys: Set<String>?
-        var allowedKeyCodes: Set<Int>?
+        var darkHoverColor = Color.hotRed
+        var lightHoverColor = Color.lunarYellow
+        var recordingColor = Color.hotRed
+        var allowedKeys: Set<SauceKey>?
 
         @EnvironmentObject var env: EnvState
         @Environment(\.colorScheme) var colorScheme
-        @Environment(\.colors) var colors
 
-        @Binding var key: String
-        @Binding var keyCode: Int
+        @Binding var key: SauceKey
         @Binding var recording: Bool
 
         @State var multiplyColor = Color.white
@@ -411,53 +412,38 @@ public protocol Nameable {
         @State var textColor = Color.primary
         @State var hoverColor = Color.primary
 
-        @State var fontSize: CGFloat = 13
         @State var width: CGFloat? = nil
     }
 
     // MARK: - KeyEventHandling
 
     public struct KeyEventHandling: NSViewRepresentable {
-        // MARK: Lifecycle
-
         public init(
             recording: Binding<Bool>,
-            key: Binding<String>,
-            keyCode: Binding<Int>,
-            allowedKeys: Set<String>? = nil,
-            allowedKeyCodes: Set<Int>? = nil,
+            key: Binding<SauceKey>,
+            allowedKeys: Set<SauceKey>? = nil,
             onCancel: (() -> Void)? = nil
         ) {
             _recording = recording
             _key = key
-            _keyCode = keyCode
 
             self.allowedKeys = allowedKeys
-            self.allowedKeyCodes = allowedKeyCodes
             self.onCancel = onCancel
         }
 
-        // MARK: Open
-
         open class Coordinator: NSObject {
-            // MARK: Lifecycle
-
             init(_ handler: KeyEventHandling) {
                 eventHandler = handler
             }
-
-            // MARK: Internal
 
             var eventHandler: KeyEventHandling
         }
 
         open class KeyView: NSView {
-            // MARK: Public
-
             override public var acceptsFirstResponder: Bool { true }
 
             override public func keyDown(with event: NSEvent) {
-                guard let context else {
+                guard let context, let key = event.keyCombo?.key ?? SauceKey(QWERTYKeyCode: event.keyCode.i) else {
                     return
                 }
 
@@ -471,10 +457,8 @@ public protocol Nameable {
                     return
                 }
 
-                if let allowedKeyCodes = context.coordinator.eventHandler.allowedKeyCodes {
-                    guard allowedKeyCodes.contains(event.keyCode.i) else { return }
-                } else if let allowedKeys = context.coordinator.eventHandler.allowedKeys {
-                    guard let letter = event.charactersIgnoringModifiers?.lowercased(), allowedKeys.contains(letter) else { return }
+                if let allowedKeys = context.coordinator.eventHandler.allowedKeys {
+                    guard allowedKeys.contains(key) else { return }
                 } else {
                     guard let letter = event.charactersIgnoringModifiers?.lowercased(), ALPHANUMERICS.contains(letter) else { return }
                 }
@@ -486,16 +470,11 @@ public protocol Nameable {
                 #endif
 
                 context.coordinator.eventHandler.recording = false
-                context.coordinator.eventHandler.key = letter
-                context.coordinator.eventHandler.keyCode = event.keyCode.i
+                context.coordinator.eventHandler.key = key
             }
-
-            // MARK: Internal
 
             dynamic var context: Context?
         }
-
-        // MARK: Public
 
         public func makeCoordinator() -> Coordinator {
             Coordinator(self)
@@ -527,14 +506,10 @@ public protocol Nameable {
             }
         }
 
-        // MARK: Internal
-
         @Binding var recording: Bool
-        @Binding var key: String
-        @Binding var keyCode: Int
+        @Binding var key: SauceKey
 
-        var allowedKeys: Set<String>?
-        var allowedKeyCodes: Set<Int>?
+        var allowedKeys: Set<SauceKey>?
         var onCancel: (() -> Void)?
     }
 
@@ -547,42 +522,46 @@ public protocol Nameable {
         static var ALL_KEYS: Set<Int> = Set(Set<CGKeyCode>.ALL_KEYS.map { Int($0) })
     }
 
-    public extension Set<CGKeyCode> {
-        static var NUMBER_KEYS: Set<CGKeyCode> = Set([
+    public extension SauceKey {
+        static let NUMBER_KEYS: [SauceKey] = [
             SauceKey.zero, SauceKey.one, SauceKey.two, SauceKey.three, SauceKey.four, SauceKey.five, SauceKey.six, SauceKey.seven, SauceKey.eight, SauceKey.nine,
-        ].map { Sauce.shared.keyCode(for: $0) })
-        static var FUNCTION_KEYS: Set<CGKeyCode> = Set([
+        ]
+        static let FUNCTION_KEYS: [SauceKey] = [
             SauceKey.f1, SauceKey.f2, SauceKey.f3, SauceKey.f4, SauceKey.f5, SauceKey.f6, SauceKey.f7, SauceKey.f8, SauceKey.f9, SauceKey.f10, SauceKey.f11, SauceKey.f12,
             SauceKey.f13, SauceKey.f14, SauceKey.f15, SauceKey.f16, SauceKey.f17, SauceKey.f18, SauceKey.f19, SauceKey.f20,
-        ].map { Sauce.shared.keyCode(for: $0) })
-        static var ALPHANUMERIC_KEYS: Set<CGKeyCode> = Set([
+        ]
+        static let ALPHANUMERIC_KEYS: [SauceKey] = [
             SauceKey.zero, SauceKey.one, SauceKey.two, SauceKey.three, SauceKey.four, SauceKey.five, SauceKey.six, SauceKey.seven, SauceKey.eight, SauceKey.nine,
             SauceKey.q, SauceKey.w, SauceKey.e, SauceKey.r, SauceKey.t, SauceKey.y, SauceKey.u, SauceKey.i, SauceKey.o, SauceKey.p,
             SauceKey.a, SauceKey.s, SauceKey.d, SauceKey.f, SauceKey.g, SauceKey.h, SauceKey.j, SauceKey.k, SauceKey.l,
             SauceKey.z, SauceKey.x, SauceKey.c, SauceKey.v, SauceKey.b, SauceKey.n, SauceKey.m,
-        ].map { Sauce.shared.keyCode(for: $0) })
+        ]
 
-        static var SYMBOL_KEYS: Set<CGKeyCode> = Set([
+        static let SYMBOL_KEYS: [SauceKey] = [
             SauceKey.equal, SauceKey.minus, SauceKey.rightBracket, SauceKey.leftBracket,
             SauceKey.quote, SauceKey.semicolon, SauceKey.backslash, SauceKey.section,
             SauceKey.comma, SauceKey.slash, SauceKey.period, SauceKey.grave,
-        ].map { Sauce.shared.keyCode(for: $0) })
+        ]
+
+        static let ALPHA_KEYS: [SauceKey] = ALPHANUMERIC_KEYS.without(NUMBER_KEYS)
+        static let ALL_KEYS: [SauceKey] = FUNCTION_KEYS + ALPHANUMERIC_KEYS + SYMBOL_KEYS
+    }
+    public extension Set<CGKeyCode> {
+        static var NUMBER_KEYS: Set<CGKeyCode> = SauceKey.NUMBER_KEYS.map { Sauce.shared.keyCode(for: $0) }.set
+        static var FUNCTION_KEYS: Set<CGKeyCode> = SauceKey.FUNCTION_KEYS.map { Sauce.shared.keyCode(for: $0) }.set
+        static var ALPHANUMERIC_KEYS: Set<CGKeyCode> = SauceKey.ALPHANUMERIC_KEYS.map { Sauce.shared.keyCode(for: $0) }.set
+
+        static var SYMBOL_KEYS: Set<CGKeyCode> = SauceKey.SYMBOL_KEYS.map { Sauce.shared.keyCode(for: $0) }.set
 
         static var ALPHA_KEYS: Set<CGKeyCode> = ALPHANUMERIC_KEYS.subtracting(.NUMBER_KEYS)
         static var ALL_KEYS: Set<CGKeyCode> = FUNCTION_KEYS.union(NUMBER_KEYS).union(ALPHANUMERIC_KEYS).union(SYMBOL_KEYS)
     }
 
     public struct MenuHotkeyView: View {
-        // MARK: Lifecycle
-
         public init(modifiers: Binding<[TriggerKey]>, key: Binding<String>) {
             _modifiers = modifiers
             _key = key
         }
-
-        // MARK: Public
-
-        @Environment(\.colors) public var colors
 
         @Binding public var modifiers: [TriggerKey]
         @Binding public var key: String
@@ -594,16 +573,16 @@ public protocol Nameable {
                         .frame(minWidth: 16)
                         .padding(.vertical, 1)
                         .padding(.horizontal, 3)
-                        .foregroundColor(colors.bg.primary)
-                        .background(colors.fg.primary)
+                        .foregroundColor(Color.bg.primary)
+                        .background(Color.fg.primary)
                         .clipShape(RoundedRectangle(cornerRadius: 4, style: .continuous))
                         .shadow(color: .black.opacity(0.2), radius: 2, x: 0, y: 1)
                     Text(key.uppercased())
                         .frame(minWidth: 16)
                         .padding(.vertical, 1)
                         .padding(.horizontal, 3)
-                        .foregroundColor(colors.bg.primary)
-                        .background(colors.fg.primary)
+                        .foregroundColor(Color.bg.primary)
+                        .background(Color.fg.primary)
                         .clipShape(RoundedRectangle(cornerRadius: 4, style: .continuous))
                         .shadow(color: .black.opacity(0.2), radius: 2, x: 0, y: 1)
                 }
@@ -617,13 +596,9 @@ public protocol Nameable {
 // MARK: - NamespaceWrapper
 
 public class NamespaceWrapper: ObservableObject {
-    // MARK: Lifecycle
-
     public init(_ namespace: Namespace.ID) {
         self.namespace = namespace
     }
-
-    // MARK: Public
 
     public var namespace: Namespace.ID
 }
@@ -631,14 +606,10 @@ public class NamespaceWrapper: ObservableObject {
 // MARK: - EnvState
 
 open class EnvState: ObservableObject {
-    // MARK: Lifecycle
-
     public init(recording: Bool = false, closed: Bool = true) {
         self.recording = recording
         self.closed = closed
     }
-
-    // MARK: Public
 
     @Published public var recording = false
     @Published public var closed = true
@@ -647,8 +618,6 @@ open class EnvState: ObservableObject {
         didSet { oldValue?.cancel() }
     }
 
-    // MARK: Internal
-
     @Published var hoveringSlider = false
     @Published var draggingSlider = false
 }
@@ -656,15 +625,11 @@ open class EnvState: ObservableObject {
 // MARK: - PopoverView
 
 public struct PopoverView<Content: View>: View {
-    // MARK: Lifecycle
-
     public init(name: String, visible: Binding<Bool>, @ViewBuilder content: @escaping () -> Content) {
         _name = name.state
         _visible = visible
         self.content = content
     }
-
-    // MARK: Public
 
     public var body: some View {
         VStack {
@@ -677,8 +642,6 @@ public struct PopoverView<Content: View>: View {
         .onAppear { setup(visible) }
         .onChange(of: visible) { setup($0) }
     }
-
-    // MARK: Internal
 
     let content: () -> Content
 
@@ -705,24 +668,19 @@ public struct PopoverView<Content: View>: View {
 // MARK: - LowtechView
 
 public struct LowtechView<Content: View>: View {
-    // MARK: Lifecycle
-
     public init(accentColor: Color, @ViewBuilder content: () -> Content) {
         self.content = content()
         _accentColor = accentColor.state
     }
 
-    // MARK: Public
-
     @Environment(\.colorScheme) public var colorScheme
-    @State public var accentColor: Color = .red
+    @State public var accentColor: Color = .hotRed
 
     @ViewBuilder public let content: Content
 
     public var body: some View {
         content
             .environmentObject(EnvState())
-            .colors(Colors(colorScheme, accent: accentColor))
     }
 }
 
@@ -733,14 +691,10 @@ public extension View {
 // MARK: - PaddedPopoverView
 
 public struct PaddedPopoverView<Content>: View where Content: View {
-    // MARK: Lifecycle
-
     public init(background: AnyView, @ViewBuilder content: () -> Content) {
         self.content = content()
         _background = background.state
     }
-
-    // MARK: Public
 
     public var body: some View {
         ZStack {
@@ -753,8 +707,6 @@ public struct PaddedPopoverView<Content>: View where Content: View {
         }.preferredColorScheme(.light)
     }
 
-    // MARK: Internal
-
     @State var background: AnyView
     @ViewBuilder let content: Content
 }
@@ -762,17 +714,13 @@ public struct PaddedPopoverView<Content>: View where Content: View {
 // MARK: - ErrorPopoverView
 
 public struct ErrorPopoverView: View {
-    // MARK: Lifecycle
-
     public init(error: Binding<String>) {
         _error = error
     }
 
-    // MARK: Public
-
     public var body: some View {
         ZStack {
-            Color.red.brightness(0.4).scaleEffect(1.5)
+            Color.hotRed.brightness(0.4).scaleEffect(1.5)
             VStack(alignment: .leading, spacing: 10) {
                 HStack {
                     Text("Error").font(.system(size: 24, weight: .heavy)).foregroundColor(.black).padding(.trailing)
@@ -792,29 +740,21 @@ public struct ErrorPopoverView: View {
         .onDisappear { error = "" }
     }
 
-    // MARK: Internal
-
     @Binding var error: String
 }
 
 // MARK: - ErrorTextView
 
 public struct ErrorTextView: View {
-    // MARK: Lifecycle
-
     public init(error: String) {
         _error = error.state
     }
-
-    // MARK: Public
 
     public var body: some View {
         Text(error).font(.system(size: 16, weight: .medium))
             .foregroundColor(.black)
             .frame(width: 340, alignment: .topLeading)
     }
-
-    // MARK: Internal
 
     @State var error: String
 }
@@ -851,7 +791,7 @@ public struct EdgeBorder: Shape {
 
             var h: CGFloat {
                 switch edge {
-                case .top, .bottom: return self.width
+                case .top, .bottom: return width
                 case .leading, .trailing: return rect.height
                 }
             }
@@ -875,15 +815,11 @@ public extension View {
 
 // An animatable modifier that is used for observing animations for a given animatable value.
 public struct AnimationCompletionObserverModifier<Value>: AnimatableModifier where Value: VectorArithmetic {
-    // MARK: Lifecycle
-
     public init(observedValue: Value, completion: @escaping () -> Void) {
         self.completion = completion
         animatableData = observedValue
         targetValue = observedValue
     }
-
-    // MARK: Public
 
     /// While animating, SwiftUI changes the old input value to the new target value using this property. This value is set to the old value until the animation completes.
     public var animatableData: Value {
@@ -896,8 +832,6 @@ public struct AnimationCompletionObserverModifier<Value>: AnimatableModifier whe
         /// We're not really modifying the view so we can directly return the original input value.
         content
     }
-
-    // MARK: Private
 
     /// The target value for which we're observing. This value is directly set once the animation starts. During animation, `animatableData` will hold the oldValue and is only updated to the target value once the animation completes.
     private var targetValue: Value
@@ -912,7 +846,7 @@ public struct AnimationCompletionObserverModifier<Value>: AnimatableModifier whe
         /// Dispatching is needed to take the next runloop for the completion callback.
         /// This prevents errors like "Modifying state during view update, this will cause undefined behavior."
         DispatchQueue.main.async {
-            self.completion()
+            completion()
         }
     }
 }
@@ -920,15 +854,11 @@ public struct AnimationCompletionObserverModifier<Value>: AnimatableModifier whe
 // MARK: - HighlightedText
 
 public struct HighlightedText: View {
-    // MARK: Lifecycle
-
     public init(text: String, indices: [Int], highlightColor: Color) {
         _text = State(initialValue: text)
         _indices = State(initialValue: indices)
         _highlightColor = State(initialValue: highlightColor)
     }
-
-    // MARK: Public
 
     public var body: some View {
         let indices = indices.filter { $0 < text.count }.sorted()
@@ -970,9 +900,88 @@ public struct HighlightedText: View {
         }
     }
 
-    // MARK: Internal
-
     @State var text: String
     @State var indices: [Int]
     @State var highlightColor: Color
+}
+
+// MARK: - VisualEffectBlur
+
+public struct VisualEffectBlur: View {
+    public init(
+        material: NSVisualEffectView.Material = .headerView,
+        blendingMode: NSVisualEffectView.BlendingMode = .withinWindow,
+        state: NSVisualEffectView.State = .followsWindowActiveState,
+        appearance: NSAppearance? = nil
+    ) {
+        self.material = material
+        self.blendingMode = blendingMode
+        self.state = state
+        self.appearance = appearance
+    }
+
+    public var body: some View {
+        Representable(
+            material: material,
+            blendingMode: blendingMode,
+            state: state,
+            appearance: appearance
+        ).accessibility(hidden: true)
+    }
+
+    private var material: NSVisualEffectView.Material
+    private var blendingMode: NSVisualEffectView.BlendingMode
+    private var state: NSVisualEffectView.State
+    private var appearance: NSAppearance?
+}
+
+// MARK: - Representable
+
+extension VisualEffectBlur {
+    struct Representable: NSViewRepresentable {
+        var material: NSVisualEffectView.Material
+        var blendingMode: NSVisualEffectView.BlendingMode
+        var state: NSVisualEffectView.State
+        var appearance: NSAppearance?
+
+        func makeNSView(context: Context) -> NSVisualEffectView {
+            context.coordinator.visualEffectView
+        }
+
+        func updateNSView(_ view: NSVisualEffectView, context: Context) {
+            context.coordinator.update(material: material)
+            context.coordinator.update(blendingMode: blendingMode)
+            context.coordinator.update(state: state)
+            context.coordinator.update(appearance: appearance)
+        }
+
+        func makeCoordinator() -> Coordinator {
+            Coordinator()
+        }
+
+    }
+
+    class Coordinator {
+        init() {
+            visualEffectView.blendingMode = .withinWindow
+        }
+
+        let visualEffectView = NSVisualEffectView()
+
+        func update(appearance: NSAppearance?) {
+            visualEffectView.appearance = appearance
+        }
+
+        func update(material: NSVisualEffectView.Material) {
+            visualEffectView.material = material
+        }
+
+        func update(blendingMode: NSVisualEffectView.BlendingMode) {
+            visualEffectView.blendingMode = blendingMode
+        }
+
+        func update(state: NSVisualEffectView.State) {
+            visualEffectView.state = state
+        }
+    }
 }

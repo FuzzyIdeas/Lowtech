@@ -11,8 +11,6 @@ public enum AnimationSpeed: String, Codable, Defaults.Serializable {
     case snappy
     case instant
 
-    // MARK: Public
-
     public var animation: Animation {
         switch self {
         case .fluid:
@@ -45,13 +43,9 @@ public extension Defaults.Keys {
 // MARK: - AnimationManager
 
 public class AnimationManager: ObservableObject, ObservableSettings {
-    // MARK: Lifecycle
-
     init() {
         initObservers()
     }
-
-    // MARK: Public
 
     @MainActor public static let shared = AnimationManager()
 

@@ -8,13 +8,10 @@
 import Foundation
 import Lowtech
 import SwiftUI
-import VisualEffects
 
 // MARK: - LowtechAppStoreDelegate
 
 open class LowtechAppStoreDelegate: LowtechAppDelegate {
-    // MARK: Open
-
     @MainActor
     @inline(__always)
     open func trialExpired() -> Bool {
@@ -51,8 +48,6 @@ open class LowtechAppStoreDelegate: LowtechAppDelegate {
         trialOSD.show(closeAfter: 0, fadeAfter: 0, offCenter: 0, centerWindow: false, corner: .bottomRight, screen: .main)
     }
 
-    // MARK: Public
-
     public lazy var trialOSD = {
         let w = OSDWindow(swiftuiView: TrialOSDContainer().any)
         w.alphaValue = 0
@@ -63,11 +58,7 @@ open class LowtechAppStoreDelegate: LowtechAppDelegate {
 // MARK: - TrialOSDContainer
 
 public struct TrialOSDContainer: View {
-    // MARK: Lifecycle
-
     public init() {}
-
-    // MARK: Public
 
     public var body: some View {
         HStack {
@@ -86,16 +77,16 @@ public struct TrialOSDContainer: View {
                             .buttonStyle(FlatButton(color: .blue, textColor: .white))
                     }
                     Button("Quit app") { NSApp.terminate(nil) }
-                        .buttonStyle(FlatButton(color: Colors.red, textColor: .white))
+                        .buttonStyle(FlatButton(color: Color.red, textColor: .white))
                 }
             }.fixedSize()
         }
         .padding()
         .background(
-            VisualEffectBlur(material: .hudWindow, blendingMode: .withinWindow, state: .active)
-                .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
-                .shadow(radius: 6, x: 0, y: 3)
+            .regularMaterial
         )
+        .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
+        .shadow(radius: 6, x: 0, y: 3)
         .padding()
     }
 }

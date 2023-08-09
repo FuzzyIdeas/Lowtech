@@ -3,12 +3,42 @@ import Defaults
 import Lowtech
 import LowtechIndie
 import Paddle
-import SwiftDate
+import Sentry
+
+// MARK: - ProManager
+
+public class ProManager: ObservableObject {
+    @Published public var pro: LowtechPro? = nil
+}
+
+public let PM = ProManager()
+
+public var PRO: LowtechPro? { (LowtechProAppDelegate.instance as? LowtechProAppDelegate)?.pro }
 
 // MARK: - LowtechProAppDelegate
 
 open class LowtechProAppDelegate: LowtechIndieAppDelegate, PADProductDelegate, PaddleDelegate {
+    open func getSentryUser() -> User {
+        let user = User(userId: SERIAL_NUMBER_HASH)
+        guard let product else { return user }
+        if Defaults[.paddleConsent] {
+            user.email = product.activationEmail
+        }
+        user.username = product.activationID
+
+        return user
+    }
+
     public static var showNextPaddleError = true
+
+    public static var proDelegate: LowtechProAppDelegate? {
+        guard let instance = LowtechAppDelegate.instance else {
+            return nil
+        }
+        return instance as? LowtechProAppDelegate
+    }
+
+    public var sentryDSN: String? = nil
 
     public var paddleVendorID = ""
     public var paddleAPIKey = ""
@@ -21,6 +51,7 @@ open class LowtechProAppDelegate: LowtechIndieAppDelegate, PADProductDelegate, P
     public var trialType: PADProductTrialType = .timeLimited
     public var trialText = ""
     public var image = ""
+    public var hasFreeFeatures = false
 
     public lazy var pro = LowtechPro(
         paddleVendorID: paddleVendorID,
@@ -35,7 +66,8 @@ open class LowtechProAppDelegate: LowtechIndieAppDelegate, PADProductDelegate, P
         trialText: trialText,
         image: image,
         productDelegate: self,
-        paddleDelegate: self
+        paddleDelegate: self,
+        hasFreeFeatures: hasFreeFeatures
     )
 
     public func productPurchased(_ checkoutData: PADCheckoutData) {
@@ -75,6 +107,8 @@ open class LowtechProAppDelegate: LowtechIndieAppDelegate, PADProductDelegate, P
             pro.verifyLicense()
         }
     #endif
+
+    public static var enableSentry: Bool = Defaults[.enableSentry]
 
     @IBAction public func activateLicense(_: Any) {
         pro.showLicenseActivation()
@@ -156,6 +190,56 @@ open class LowtechProAppDelegate: LowtechIndieAppDelegate, PADProductDelegate, P
             break
         }
     }
+
+    public func configureSentry() {
+        guard let dsn = sentryDSN else { return }
+        enableSentryObserver = enableSentryObserver ?? pub(.enableSentry)
+            .debounce(for: .seconds(1), scheduler: RunLoop.main)
+            .sink { change in
+                LowtechProAppDelegate.enableSentry = change.newValue
+                if change.newValue {
+                    self.configureSentry()
+                } else {
+                    SentrySDK.close()
+                }
+            }
+
+        guard LowtechProAppDelegate.enableSentry else { return }
+        UserDefaults.standard.register(defaults: ["NSApplicationCrashOnExceptions": true])
+
+        let release = (Bundle.main.infoDictionary?["CFBundleVersion"] as? String) ?? "1"
+
+        SentrySDK.start { options in
+            options.dsn = dsn
+            options.releaseName = "v\(release)"
+            options.dist = release
+            options.appHangTimeoutInterval = 60
+        }
+
+        SentrySDK.configureScope { scope in
+            scope.setUser(self.getSentryUser())
+        }
+
+        guard sentryLaunchEvent == nil, Defaults[.lastLaunchVersion] != release else { return }
+        sentryLaunchEvent = mainAsyncAfter(ms: 100) {
+//            sentryLaunchEvent = mainAsyncAfter(ms: 60 * 1000 * 10) {
+            guard LowtechProAppDelegate.enableSentry else { return }
+
+            SentrySDK.capture(message: "Launch")
+            Defaults[.lastLaunchVersion] = release
+        }
+    }
+
+    var enableSentryObserver: Cancellable?
+    var sentryLaunchEvent: DispatchWorkItem?
+}
+
+public func crumb(_ msg: String, level: SentryLevel = .info, category: String) {
+    guard LowtechProAppDelegate.enableSentry else { return }
+
+    let crumb = Breadcrumb(level: level, category: category)
+    crumb.message = msg
+    SentrySDK.addBreadcrumb(crumb)
 }
 
 public var paddle: Paddle?
@@ -164,8 +248,6 @@ public var product: PADProduct?
 // MARK: - LowtechPro
 
 public class LowtechPro: ObservableObject {
-    // MARK: Lifecycle
-
     public init(
         paddleVendorID: String,
         paddleAPIKey: String,
@@ -179,7 +261,8 @@ public class LowtechPro: ObservableObject {
         trialText: String,
         image: String? = nil,
         productDelegate: PADProductDelegate? = nil,
-        paddleDelegate: PaddleDelegate? = nil
+        paddleDelegate: PaddleDelegate? = nil,
+        hasFreeFeatures: Bool = false
     ) {
         self.paddleVendorID = paddleVendorID
         self.paddleAPIKey = paddleAPIKey
@@ -210,16 +293,14 @@ public class LowtechPro: ObservableObject {
         }
 
         product.delegate = productDelegate
-        product.preventFreeUsageBeforeSubscriptionPurchase = true
-        product.canForceExit = true
-        product.willContinueAtTrialEnd = false
+        product.preventFreeUsageBeforeSubscriptionPurchase = !hasFreeFeatures
+        product.canForceExit = !hasFreeFeatures
+        product.willContinueAtTrialEnd = hasFreeFeatures
 
         if product.activated || trialActive(product: product) {
             enablePro()
         }
     }
-
-    // MARK: Public
 
     @Published public var onTrial = false
     @Published public var productActivated = false
@@ -230,7 +311,11 @@ public class LowtechPro: ObservableObject {
         guard let paddle, let product else {
             return
         }
-        paddle.showProductAccessDialog(with: product)
+        if productActivated {
+            paddle.showLicenseActivationDialog(for: product, email: product.activationEmail, licenseCode: product.licenseCode)
+        } else {
+            paddle.showProductAccessDialog(with: product)
+        }
     }
 
     public func showCheckout() {
@@ -277,7 +362,7 @@ public class LowtechPro: ObservableObject {
     }
 
     public func licenseExpired(_ product: PADProduct) -> Bool {
-        product.licenseCode != nil && (product.licenseExpiryDate ?? Date.distantFuture).isInPast
+        product.licenseCode != nil && (product.licenseExpiryDate ?? Date.distantFuture) < Date()
     }
 
     public func trialActive(product: PADProduct) -> Bool {
@@ -301,10 +386,10 @@ public class LowtechPro: ObservableObject {
                     }
 
                     if trialActive(product: product) || product.activated {
-                        self.enablePro()
+                        enablePro()
                     }
 
-                    self.verifyLicense()
+                    verifyLicense()
                 }
         }
     }
@@ -329,15 +414,21 @@ public class LowtechPro: ObservableObject {
                     print("\(product.productName ?? "") noActivation")
 
                     if onTrial {
-                        self.enablePro()
+                        enablePro()
                     } else {
-                        self.disablePro()
+                        disablePro()
                     }
                     if !onTrial {
                         paddle.showProductAccessDialog(with: product)
                     }
                 case .unableToVerify where error == nil:
                     print("\(product.productName ?? "Product") unableToVerify (network problems)")
+                case .unverified where error?.localizedDescription == "Machine does not match activations.":
+                    print("\(product.productName ?? "Product") unableToVerify (machine does not match)")
+                    disablePro()
+                    if !onTrial {
+                        paddle.showProductAccessDialog(with: product)
+                    }
                 case .unverified where error == nil:
                     if retryUnverified {
                         retryUnverified = false
@@ -355,7 +446,7 @@ public class LowtechPro: ObservableObject {
                     }
                 case .verified:
                     print("\(product.productName ?? "Product") verified")
-                    self.enablePro()
+                    enablePro()
                 case PADVerificationState(rawValue: 2):
                     log.error("\(product.productName ?? "Product") verification failed because of network connection: \(state)")
                 default:
@@ -381,8 +472,6 @@ public class LowtechPro: ObservableObject {
         onTrial = trialActive(product: product)
     }
 
-    // MARK: Internal
-
     let paddleVendorID: String
     let paddleAPIKey: String
     let paddleProductID: String
@@ -404,7 +493,7 @@ public class LowtechPro: ObservableObject {
         defaultProductConfig.vendorName = vendorName
         defaultProductConfig.price = price
         defaultProductConfig.currency = currency
-        defaultProductConfig.imagePath = image != nil ? Bundle.main.pathForImageResource(image!) : nil
+        defaultProductConfig.imagePath = Bundle.main.pathForImageResource(image ?? "AppIcon")
         defaultProductConfig.trialLength = trialDays
         defaultProductConfig.trialType = trialType
         defaultProductConfig.trialText = trialText
@@ -422,10 +511,10 @@ public class LowtechPro: ObservableObject {
             #if DEBUG
                 return true
             #else
-                return timeSince(verifyDate) > 1.days.timeInterval
+                return timeSince(verifyDate) > (60 * 60 * 24)
             #endif
         } else {
-            return timeSince(verifyDate) > 5.minutes.timeInterval
+            return timeSince(verifyDate) > (5 * 60)
         }
     }
 }

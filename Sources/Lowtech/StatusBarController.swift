@@ -11,14 +11,10 @@ public extension NSNotification.Name {
 // MARK: - StatusBarDelegate
 
 class StatusBarDelegate: NSObject, NSWindowDelegate {
-    // MARK: Lifecycle
-
     convenience init(statusBarController: StatusBarController) {
         self.init()
         self.statusBarController = statusBarController
     }
-
-    // MARK: Internal
 
     var statusBarController: StatusBarController!
 
@@ -34,8 +30,6 @@ class StatusBarDelegate: NSObject, NSWindowDelegate {
 
 @MainActor
 open class StatusBarController: NSObject, NSWindowDelegate, ObservableObject {
-    // MARK: Lifecycle
-
     public init(_ view: @autoclosure @escaping () -> AnyView, image: String = "MenubarIcon") {
         self.view = view
 
@@ -103,16 +97,12 @@ open class StatusBarController: NSObject, NSWindowDelegate, ObservableObject {
             .store(in: &observers)
     }
 
-    // MARK: Open
-
     open func windowWillClose(_: Notification) {
         debug("windowWillClose")
         if !Defaults[.popoverClosed] {
             Defaults[.popoverClosed] = true
         }
     }
-
-    // MARK: Public
 
     public var view: () -> AnyView
     public var screenObserver: Cancellable?
@@ -261,8 +251,6 @@ open class StatusBarController: NSObject, NSWindowDelegate, ObservableObject {
         }
     }
 
-    // MARK: Internal
-
     var dragEventMonitorLocal: LocalEventMonitor!
     var dragEventMonitorGlobal: GlobalEventMonitor!
 
@@ -290,8 +278,6 @@ open class StatusBarController: NSObject, NSWindowDelegate, ObservableObject {
             hidePopover(LowtechAppDelegate.instance)
         }
     }
-
-    // MARK: Private
 
     private var statusBar: NSStatusBar
     private var eventMonitor: GlobalEventMonitor?

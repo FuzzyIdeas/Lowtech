@@ -18,7 +18,7 @@ struct ChildSizeReader<Content: View>: View {
             }
         )
         .onPreferenceChange(SizePreferenceKey.self) { preferences in
-            self.size = preferences
+            size = preferences
         }
     }
 }

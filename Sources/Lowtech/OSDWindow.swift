@@ -7,8 +7,6 @@ import SwiftUI
 // MARK: - OSDWindow
 
 open class OSDWindow: LowtechWindow {
-    // MARK: Lifecycle
-
     public convenience init(
         swiftuiView: AnyView,
         releaseWhenClosed: Bool = true,
@@ -48,22 +46,86 @@ open class OSDWindow: LowtechWindow {
         delegate = self
     }
 
-    // MARK: Open
-
     open func show(
         at point: NSPoint? = nil,
         closeAfter closeMilliseconds: Int = 3050,
         fadeAfter fadeMilliseconds: Int = 2000,
+        fadeDuration: TimeInterval = 1,
         offCenter: CGFloat? = nil,
         verticalOffset: CGFloat? = nil,
         centerWindow: Bool = true,
         corner: ScreenCorner? = nil,
         margin: CGFloat? = nil,
+        marginHorizontal: CGFloat? = nil,
+        screen: NSScreen? = nil,
+        animate: Bool = false
+    ) {
+        position(at: point, offCenter: offCenter, verticalOffset: verticalOffset, centerWindow: centerWindow, corner: corner, margin: margin, marginHorizontal: marginHorizontal, screen: screen, animate: animate)
+
+        resizeObserver = observe(NSWindow.didResizeNotification, throttle: .milliseconds(10)) { [weak self] in
+            self?.position(at: point, offCenter: offCenter, verticalOffset: verticalOffset, centerWindow: centerWindow, corner: corner, margin: margin, marginHorizontal: marginHorizontal, screen: screen, animate: animate)
+        }
+
+        alphaValue = 1
+        wc.showWindow(nil)
+        if canBecomeKey {
+            makeKeyAndOrderFront(nil)
+        }
+        orderFrontRegardless()
+
+        closer?.cancel()
+        guard closeMilliseconds > 0 else { return }
+        fader = mainAsyncAfter(ms: fadeMilliseconds) { [weak self] in
+            guard let self, self.isVisible else { return }
+            NSAnimationContext.runAnimationGroup { ctx in
+                ctx.duration = fadeDuration
+                self.animator().alphaValue = 0.01
+            }
+
+            self.closer = mainAsyncAfter(ms: closeMilliseconds) { [weak self] in
+                self?.close()
+            }
+        }
+    }
+
+    public func hide() {
+        fader = nil
+        closer = nil
+
+        if let v = contentView?.superview {
+            v.alphaValue = 0.0
+        }
+        close()
+        windowController?.close()
+    }
+
+    var resizeObserver: Cancellable?
+
+    var closer: DispatchWorkItem? {
+        didSet {
+            oldValue?.cancel()
+        }
+    }
+
+    var fader: DispatchWorkItem? {
+        didSet {
+            oldValue?.cancel()
+        }
+    }
+
+    func position(
+        at point: NSPoint? = nil,
+        offCenter: CGFloat? = nil,
+        verticalOffset: CGFloat? = nil,
+        centerWindow: Bool = true,
+        corner: ScreenCorner? = nil,
+        margin: CGFloat? = nil,
+        marginHorizontal: CGFloat? = nil,
         screen: NSScreen? = nil,
         animate: Bool = false
     ) {
         if let corner {
-            moveToScreen(screen, corner: corner, margin: margin, animate: animate)
+            moveToScreen(screen, corner: corner, margin: margin, marginHorizontal: marginHorizontal, animate: animate)
         } else if let point {
             withAnim(animate: animate) { w in w.setFrameOrigin(point) }
         } else if let screenFrame = (screen ?? NSScreen.withMouse ?? NSScreen.main)?.visibleFrame {
@@ -81,62 +143,12 @@ open class OSDWindow: LowtechWindow {
                 }
             }
         }
-
-        alphaValue = 1
-        wc.showWindow(nil)
-        if canBecomeKey {
-            makeKeyAndOrderFront(nil)
-        }
-        orderFrontRegardless()
-
-        closer?.cancel()
-        guard closeMilliseconds > 0 else { return }
-        fader = mainAsyncAfter(ms: fadeMilliseconds) { [weak self] in
-            guard let self, self.isVisible else { return }
-            NSAnimationContext.runAnimationGroup { ctx in
-                ctx.duration = 1
-                self.animator().alphaValue = 0.01
-            }
-
-            self.closer = mainAsyncAfter(ms: closeMilliseconds) { [weak self] in
-                self?.close()
-            }
-        }
-    }
-
-    // MARK: Public
-
-    public func hide() {
-        fader = nil
-        closer = nil
-
-        if let v = contentView?.superview {
-            v.alphaValue = 0.0
-        }
-        close()
-        windowController?.close()
-    }
-
-    // MARK: Internal
-
-    var closer: DispatchWorkItem? {
-        didSet {
-            oldValue?.cancel()
-        }
-    }
-
-    var fader: DispatchWorkItem? {
-        didSet {
-            oldValue?.cancel()
-        }
     }
 }
 
 // MARK: - LowtechWindow
 
 open class LowtechWindow: NSWindow, NSWindowDelegate {
-    // MARK: Open
-
     open var onMouseUp: ((NSEvent) -> Void)?
     open var onMouseDown: ((NSEvent) -> Void)?
     open var onMouseDrag: ((NSEvent) -> Void)?
@@ -156,14 +168,13 @@ open class LowtechWindow: NSWindow, NSWindowDelegate {
         onMouseUp(event)
     }
 
-    // MARK: Public
-
     public var closed = true
     public var animateOnResize = false
     @Published public var screenPlacement: NSScreen?
 
     public var screenCorner: ScreenCorner?
     public var margin: CGFloat = 0
+    public var marginHorizontal: CGFloat? = nil
 
     public lazy var wc = NSWindowController(window: self)
 
@@ -202,13 +213,16 @@ open class LowtechWindow: NSWindow, NSWindowDelegate {
         }
     }
 
-    public func moveToScreen(_ screen: NSScreen? = nil, corner: ScreenCorner? = nil, margin: CGFloat? = nil, animate: Bool = false) {
+    public func moveToScreen(_ screen: NSScreen? = nil, corner: ScreenCorner? = nil, margin: CGFloat? = nil, marginHorizontal: CGFloat? = nil, animate: Bool = false) {
         guard let screenFrame = (screen ?? NSScreen.withMouse ?? NSScreen.main)?.visibleFrame else {
             return
         }
 
         if let margin {
             self.margin = margin
+        }
+        if let marginHorizontal {
+            self.marginHorizontal = marginHorizontal
         }
         if let screen {
             screenPlacement = screen
@@ -226,21 +240,21 @@ open class LowtechWindow: NSWindow, NSWindowDelegate {
 
             switch corner {
             case .bottomLeft:
-                w.setFrameOrigin(o.applying(.init(translationX: self.margin, y: self.margin)))
+                w.setFrameOrigin(o.applying(.init(translationX: self.marginHorizontal ?? self.margin, y: self.margin)))
             case .bottomRight:
-                w.setFrameOrigin(NSPoint(x: (o.x + f.width) - frame.width, y: o.y).applying(.init(translationX: -self.margin, y: self.margin)))
+                w.setFrameOrigin(NSPoint(x: (o.x + f.width) - frame.width, y: o.y).applying(.init(translationX: -(self.marginHorizontal ?? self.margin), y: self.margin)))
             case .topLeft:
-                w.setFrameOrigin(NSPoint(x: o.x, y: (o.y + f.height) - frame.height).applying(.init(translationX: self.margin, y: -self.margin)))
+                w.setFrameOrigin(NSPoint(x: o.x, y: (o.y + f.height) - frame.height).applying(.init(translationX: self.marginHorizontal ?? self.margin, y: -self.margin)))
             case .topRight:
-                w.setFrameOrigin(NSPoint(x: (o.x + f.width) - frame.width, y: (o.y + f.height) - frame.height).applying(.init(translationX: -self.margin, y: -self.margin)))
+                w.setFrameOrigin(NSPoint(x: (o.x + f.width) - frame.width, y: (o.y + f.height) - frame.height).applying(.init(translationX: -(self.marginHorizontal ?? self.margin), y: -self.margin)))
             case .top:
                 w.setFrameOrigin(NSPoint(x: o.x + (f.width - frame.width) / 2, y: (o.y + f.height) - frame.height).applying(.init(translationX: 0, y: -self.margin)))
             case .bottom:
                 w.setFrameOrigin(NSPoint(x: o.x + (f.width - frame.width) / 2, y: o.y).applying(.init(translationX: 0, y: self.margin)))
             case .left:
-                w.setFrameOrigin(NSPoint(x: o.x, y: o.y + (f.height - frame.height) / 2).applying(.init(translationX: self.margin, y: 0)))
+                w.setFrameOrigin(NSPoint(x: o.x, y: o.y + (f.height - frame.height) / 2).applying(.init(translationX: self.marginHorizontal ?? self.margin, y: 0)))
             case .right:
-                w.setFrameOrigin(NSPoint(x: (o.x + f.width) - frame.width, y: o.y + (f.height - frame.height) / 2).applying(.init(translationX: -self.margin, y: 0)))
+                w.setFrameOrigin(NSPoint(x: (o.x + f.width) - frame.width, y: o.y + (f.height - frame.height) / 2).applying(.init(translationX: -(self.marginHorizontal ?? self.margin), y: 0)))
             case .center:
                 w.center()
             }
@@ -273,8 +287,6 @@ open class LowtechWindow: NSWindow, NSWindowDelegate {
         return true
     }
 
-    // MARK: Internal
-
     @Atomic var inAnim = false
 }
 
@@ -292,4 +304,39 @@ public enum ScreenCorner: Int, Codable, Defaults.Serializable {
     case right
 
     case center
+
+    public var isTrailing: Bool {
+        switch self {
+        case .bottomRight, .topRight, .right:
+            return true
+        default:
+            return false
+        }
+    }
+
+}
+
+extension NSWindow {
+    func observe(
+        _ name: NSNotification.Name,
+        throttle: RunLoop.SchedulerTimeType.Stride? = nil,
+        debounce: RunLoop.SchedulerTimeType.Stride? = nil,
+        _ action: @escaping () -> Void
+    ) -> Cancellable {
+        let pub = NotificationCenter.default.publisher(for: name, object: self)
+
+        if let throttle {
+            return pub
+                .throttle(for: throttle, scheduler: RunLoop.main, latest: true)
+                .sink { (n: Notification) in action() }
+        }
+
+        if let debounce {
+            return pub
+                .debounce(for: debounce, scheduler: RunLoop.main)
+                .sink { (n: Notification) in action() }
+        }
+
+        return pub.sink { (n: Notification) in action() }
+    }
 }

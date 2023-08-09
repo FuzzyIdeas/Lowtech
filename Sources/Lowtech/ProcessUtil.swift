@@ -3,15 +3,15 @@ import Foundation
 // MARK: - ProcessStatus
 
 public struct ProcessStatus {
-    var output: Data?
-    var error: Data?
-    var success: Bool
+    public var output: Data?
+    public var error: Data?
+    public var success: Bool
 
-    var o: String? {
+    public var o: String? {
         output?.s?.trimmed
     }
 
-    var e: String? {
+    public var e: String? {
         error?.s?.trimmed
     }
 }

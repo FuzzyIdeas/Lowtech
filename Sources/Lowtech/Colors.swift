@@ -2,114 +2,84 @@ import DynamicColor
 import SwiftUI
 import SystemColors
 
-// MARK: - Colors
+#if canImport(AppKit)
+    import AppKit
+#endif
 
-public struct Colors {
-    // MARK: Lifecycle
+#if canImport(UIKit)
+    import UIKit
+#endif
 
-    public init(_ colorScheme: SwiftUI.ColorScheme = .light, accent: Color) {
-        self.accent = accent
-        self.colorScheme = colorScheme
-        bg = BG(colorScheme: colorScheme)
-        fg = FG(colorScheme: colorScheme)
+extension Color {
+    init(light: Color, dark: Color) {
+        #if canImport(UIKit)
+            self.init(light: UIColor(light), dark: UIColor(dark))
+        #else
+            self.init(light: NSColor(light), dark: NSColor(dark))
+        #endif
     }
 
-    // MARK: Public
+    #if canImport(UIKit)
+        init(light: UIColor, dark: UIColor) {
+            #if os(watchOS)
+                // watchOS does not support light mode / dark mode
+                // Per Apple HIG, prefer dark-style interfaces
+                self.init(uiColor: dark)
+            #else
+                self.init(uiColor: UIColor(dynamicProvider: { traits in
+                    switch traits.userInterfaceStyle {
+                    case .light, .unspecified:
+                        return light
 
-    public struct FG {
-        // MARK: Public
+                    case .dark:
+                        return dark
 
-        public var colorScheme: SwiftUI.ColorScheme
+                    @unknown default:
+                        assertionFailure("Unknown userInterfaceStyle: \(traits.userInterfaceStyle)")
+                        return light
+                    }
+                }))
+            #endif
+        }
+    #endif
 
-        public var isDark: Bool { colorScheme == .dark }
-        public var isLight: Bool { colorScheme == .light }
+    #if canImport(AppKit)
+        init(light: NSColor, dark: NSColor) {
+            self.init(nsColor: NSColor(name: nil, dynamicProvider: { appearance in
+                switch appearance.name {
+                case .aqua,
+                     .vibrantLight,
+                     .accessibilityHighContrastAqua,
+                     .accessibilityHighContrastVibrantLight:
+                    return light
 
-        // MARK: Internal
+                case .darkAqua,
+                     .vibrantDark,
+                     .accessibilityHighContrastDarkAqua,
+                     .accessibilityHighContrastVibrantDark:
+                    return dark
 
-        var gray: Color { isDark ? Colors.lightGray : Colors.darkGray }
-        var primary: Color { isDark ? .white : .black }
-    }
-
-    public struct BG {
-        // MARK: Public
-
-        public var colorScheme: SwiftUI.ColorScheme
-
-        public var isDark: Bool { colorScheme == .dark }
-        public var isLight: Bool { colorScheme == .light }
-
-        // MARK: Internal
-
-        var gray: Color { isDark ? Colors.darkGray : Colors.lightGray }
-        var primary: Color { isDark ? .black : .white }
-    }
-
-    public static var light = Colors(.light, accent: Colors.lunarYellow)
-    public static var dark = Colors(.dark, accent: Colors.peach)
-
-    public static let darkGray = Color(hue: 0, saturation: 0.01, brightness: 0.32)
-    public static let blackGray = Color(hue: 0.03, saturation: 0.12, brightness: 0.18)
-    public static let lightGray = Color(hue: 0, saturation: 0.0, brightness: 0.92)
-
-    public static let red = Color(hue: 0.98, saturation: 0.82, brightness: 1.00)
-    public static let lightGold = Color(hue: 0.09, saturation: 0.28, brightness: 0.94)
-
-    public static let blackTurqoise = Color(hex: 0x1D2E32)
-    public static let burntSienna = Color(hex: 0xE48659)
-    public static let scarlet = Color(NSColor(hue: 0.98, saturation: 0.82, brightness: 1.00, alpha: 1.00))
-    public static let saffron = Color(NSColor(hue: 0.11, saturation: 0.82, brightness: 1.00, alpha: 1.00))
-
-    public static let grayMauve = Color(hue: 252 / 360, saturation: 0.29, brightness: 0.43)
-    public static let mauve = Color(hue: 252 / 360, saturation: 0.29, brightness: 0.23)
-    public static let pinkMauve = Color(hue: 0.95, saturation: 0.76, brightness: 0.42)
-    public static let blackMauve = Color(
-        hue: 252 / 360,
-        saturation: 0.08,
-        brightness:
-        0.12
-    )
-    public static let yellow = Color(hue: 39 / 360, saturation: 1.0, brightness: 0.64)
-    public static let lunarYellow = Color(hue: 0.11, saturation: 0.47, brightness: 1.00)
-    public static let sunYellow = Color(hue: 0.1, saturation: 0.57, brightness: 1.00)
-    public static let peach = Color(hue: 0.08, saturation: 0.42, brightness: 1.00)
-    public static let blue = Color(hue: 214 / 360, saturation: 0.7, brightness: 0.84)
-    public static let green = Color(hue: 0.36, saturation: 0.80, brightness: 0.78)
-    public static let lightGreen = Color(hue: 141 / 360, saturation: 0.50, brightness: 0.83)
-
-    public static let xdr = Color(hue: 0.61, saturation: 0.26, brightness: 0.78)
-    public static let subzero = Color(hue: 0.98, saturation: 0.56, brightness: 1.00)
-
-    public var accent: Color
-    public var colorScheme: SwiftUI.ColorScheme
-
-    public var bg: BG
-    public var fg: FG
-
-    public var isDark: Bool { colorScheme == .dark }
-    public var isLight: Bool { colorScheme == .light }
-    public var inverted: Color { isDark ? .black : .white }
-    public var highContrast: Color { isDark ? .white : .black }
-    public var invertedGray: Color { isDark ? Colors.darkGray : Colors.lightGray }
-    public var gray: Color { isDark ? Colors.lightGray : Colors.darkGray }
+                default:
+                    assertionFailure("Unknown appearance: \(appearance.name)")
+                    return light
+                }
+            }))
+        }
+    #endif
 }
 
-// MARK: - ColorsKey
+// MARK: - FG
 
-private struct ColorsKey: EnvironmentKey {
-    public static let defaultValue = Colors.light
+public struct FG {
+    var gray = Color(light: Color.lightGray, dark: Color.darkGray)
+    var primary = Color(light: Color.black, dark: Color.white)
 }
 
-public extension EnvironmentValues {
-    var colors: Colors {
-        get { self[ColorsKey.self] }
-        set { self[ColorsKey.self] = newValue }
-    }
-}
+// MARK: - BG
 
-public extension View {
-    func colors(_ colors: Colors) -> some View {
-        environment(\.colors, colors)
-    }
+public struct BG {
+    var gray = Color(light: Color.darkGray, dark: Color.lightGray)
+    var primary = Color(light: Color.white, dark: Color.black)
 }
 
 public extension Color {
@@ -120,16 +90,46 @@ public extension Color {
         return brightness >= 0.4
     }
 
-    func textColor(colors: Colors) -> Color {
-        switch colors.colorScheme {
-        case .light:
-            return memoz.isLight ? colors.highContrast : colors.inverted
-        case .dark:
-            return memoz.isLight ? colors.inverted : colors.highContrast
-        @unknown default:
-            return memoz.isLight ? colors.highContrast : colors.inverted
-        }
+    func textColor() -> Color {
+        isLight ? .black : .white
     }
-}
 
-var initialColorScheme: ColorScheme!
+    static let darkGray = Color(hue: 0, saturation: 0.01, brightness: 0.32)
+    static let blackGray = Color(hue: 0.03, saturation: 0.12, brightness: 0.18)
+    static let lightGray = Color(hue: 0, saturation: 0.0, brightness: 0.92)
+
+    static let hotRed = Color(hue: 0.98, saturation: 0.82, brightness: 1.00)
+    static let lightGold = Color(hue: 0.09, saturation: 0.28, brightness: 0.94)
+
+    static let blackTurqoise = Color(hex: 0x1D2E32)
+    static let burntSienna = Color(hex: 0xE48659)
+    static let scarlet = Color(NSColor(hue: 0.98, saturation: 0.82, brightness: 1.00, alpha: 1.00))
+    static let saffron = Color(NSColor(hue: 0.11, saturation: 0.82, brightness: 1.00, alpha: 1.00))
+
+    static let lightMauve = Color(hue: 0.95, saturation: 0.39, brightness: 0.93)
+    static let grayMauve = Color(hue: 252 / 360, saturation: 0.29, brightness: 0.43)
+    static let mauve = Color(hue: 252 / 360, saturation: 0.29, brightness: 0.23)
+    static let pinkMauve = Color(hue: 0.95, saturation: 0.76, brightness: 0.42)
+    static let blackMauve = Color(hue: 252 / 360, saturation: 0.08, brightness: 0.12)
+    static let golden = Color(hue: 39 / 360, saturation: 1.0, brightness: 0.64)
+    static let lunarYellow = Color(hue: 0.11, saturation: 0.47, brightness: 1.00)
+    static let sunYellow = Color(hue: 0.1, saturation: 0.57, brightness: 1.00)
+    static let peach = Color(hue: 0.08, saturation: 0.42, brightness: 1.00)
+    static let calmBlue = Color(hue: 214 / 360, saturation: 0.7, brightness: 0.84)
+    static let calmGreen = Color(hue: 0.36, saturation: 0.80, brightness: 0.78)
+    static let lightGreen = Color(hue: 141 / 360, saturation: 0.50, brightness: 0.83)
+
+    static let xdr = Color(hue: 0.61, saturation: 0.26, brightness: 0.78)
+    static let subzero = Color(hue: 0.98, saturation: 0.56, brightness: 1.00)
+
+    static var accent = Color.peach
+
+    static let bg = BG()
+    static let fg = FG()
+
+    static let inverted = Color(light: Color.white, dark: Color.black)
+    static let highContrast = Color(light: Color.black, dark: Color.white)
+    static let invertedGray = Color(light: Color.lightGray, dark: Color.darkGray)
+    static let dynamicGray = Color(light: Color.darkGray, dark: Color.lightGray)
+    static let mauvish = Color(light: Color.pinkMauve, dark: Color.lightMauve)
+}

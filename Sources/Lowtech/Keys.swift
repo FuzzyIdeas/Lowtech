@@ -15,8 +15,6 @@ import SwiftUI
 // MARK: - KeysManager
 
 public class KeysManager: ObservableObject {
-    // MARK: Lifecycle
-
     init() {
         if !primaryKeyModifiers.isEmpty, !primaryKeyModifiers.sideIndependentModifiers.contains(.option) {
             altKeyModifiers = primaryKeyModifiers + [.ralt]
@@ -75,14 +73,12 @@ public class KeysManager: ObservableObject {
                 Set<Int>.ALL_KEYS = Set(Set<CGKeyCode>.ALL_KEYS.map { Int($0) })
 
                 if keepSpecialKeyPosition, let specialKeyCode {
-                    self.specialKey = Sauce.shared.key(for: specialKeyCode.i)
+                    specialKey = Sauce.shared.key(for: specialKeyCode.i)
                 }
 
                 reinitHotkeys()
             }.store(in: &observers)
     }
-
-    // MARK: Open
 
     @Published open var primaryHotkeysRegistered = false
     @Published open var secondaryHotkeysRegistered = false
@@ -329,20 +325,18 @@ public class KeysManager: ObservableObject {
         secondaryAltHotkeysRegistered = false
     }
 
-    // MARK: Public
-
     public var onFlagsChanged: ((NSEvent.ModifierFlags) -> Void)?
     public var onSpecialHotkey: (() -> Void)?
-    public var onPrimaryHotkey: ((String) -> Void)?
-    public var onSecondaryHotkey: ((String) -> Void)?
+    public var onPrimaryHotkey: ((Key) -> Void)?
+    public var onSecondaryHotkey: ((Key) -> Void)?
 
-    public var onAltHotkey: ((String) -> Void)?
-    public var onRightShiftHotkey: ((String) -> Void)?
-    public var onLeftShiftHotkey: ((String) -> Void)?
+    public var onAltHotkey: ((Key) -> Void)?
+    public var onRightShiftHotkey: ((Key) -> Void)?
+    public var onLeftShiftHotkey: ((Key) -> Void)?
 
-    public var onSecondaryAltHotkey: ((String) -> Void)?
-    public var onSecondaryRightShiftHotkey: ((String) -> Void)?
-    public var onSecondaryLeftShiftHotkey: ((String) -> Void)?
+    public var onSecondaryAltHotkey: ((Key) -> Void)?
+    public var onSecondaryRightShiftHotkey: ((Key) -> Void)?
+    public var onSecondaryLeftShiftHotkey: ((Key) -> Void)?
 
     public var onRegisterSpecialHotkey: (() -> Void)?
     public var onUnregisterSpecialHotkey: (() -> Void)?
@@ -388,16 +382,16 @@ public class KeysManager: ObservableObject {
 
     public lazy var specialKeyIdentifier = "SPECIAL_KEY-\(specialKey?.character ?? "NO_KEY")"
 
-    public var primaryKeys: [String] = []
-    public var secondaryKeys: [String] = []
+    public var primaryKeys: [Key] = []
+    public var secondaryKeys: [Key] = []
 
-    public var altKeys: [String] = []
-    public var rightShiftKeys: [String] = []
-    public var leftShiftKeys: [String] = []
+    public var altKeys: [Key] = []
+    public var rightShiftKeys: [Key] = []
+    public var leftShiftKeys: [Key] = []
 
-    public var secondaryAltKeys: [String] = []
-    public var secondaryRightShiftKeys: [String] = []
-    public var secondaryLeftShiftKeys: [String] = []
+    public var secondaryAltKeys: [Key] = []
+    public var secondaryRightShiftKeys: [Key] = []
+    public var secondaryLeftShiftKeys: [Key] = []
 
     public var globalEventMonitor: GlobalEventMonitor!
     public var localEventMonitor: LocalEventMonitor!
@@ -599,6 +593,7 @@ public class KeysManager: ObservableObject {
     }
 
     public func initHotkeys() {
+        computeKeyModifiers()
         initSpecialHotkeys()
         initPrimaryHotkeys()
         initSecondaryHotkeys()
@@ -756,11 +751,11 @@ public class KeysManager: ObservableObject {
     }
 
     public func buildHotkeys(
-        for keys: [String],
+        for keys: [Key],
         modifiers: NSEvent.ModifierFlags,
         identifier: String = "",
         detectKeyHold: Bool = false,
-        ignoredKeys: Set<String>? = nil,
+        ignoredKeys: Set<Key>? = nil,
         action: @escaping (HotKey) -> Void
     ) -> [HotKey] {
         guard modifiers.isNotEmpty else { return [] }
@@ -768,12 +763,12 @@ public class KeysManager: ObservableObject {
         var keys = Set(keys)
         if let ignoredKeys { keys.subtract(ignoredKeys) }
 
-        return keys.compactMap { ch in
-            guard let key = Key(character: ch, virtualKeyCode: nil), let combo = KeyCombo(key: key, cocoaModifiers: modifiers)
+        return keys.compactMap { key in
+            guard let combo = KeyCombo(key: key, cocoaModifiers: modifiers)
             else { return nil }
 
             return HotKey(
-                identifier: "\(identifier)\(ch)",
+                identifier: "\(identifier)\(key.QWERTYCharacter)",
                 keyCombo: combo,
                 actionQueue: .main,
                 detectKeyHold: detectKeyHold,
@@ -817,7 +812,7 @@ public class KeysManager: ObservableObject {
         }
 
         guard !testKeyComboPressedShouldStop(hotkey: hotkey) else { return }
-        onPrimaryHotkey?(hotkey.identifier)
+        onPrimaryHotkey?(hotkey.keyCombo.key)
     }
 
     @objc public func handleSecondaryHotkey(_ hotkey: HotKey) {
@@ -830,7 +825,7 @@ public class KeysManager: ObservableObject {
         }
 
         guard !testKeyComboPressedShouldStop(hotkey: hotkey) else { return }
-        onSecondaryHotkey?(hotkey.identifier.suffix(1).s)
+        onSecondaryHotkey?(hotkey.keyCombo.key)
     }
 
     @objc public func handleAltHotkey(_ hotkey: HotKey) {
@@ -843,7 +838,7 @@ public class KeysManager: ObservableObject {
         }
 
         guard !testKeyComboPressedShouldStop(hotkey: hotkey) else { return }
-        onAltHotkey?(hotkey.identifier.suffix(1).s)
+        onAltHotkey?(hotkey.keyCombo.key)
     }
 
     @objc public func handleRightShiftHotkey(_ hotkey: HotKey) {
@@ -856,7 +851,7 @@ public class KeysManager: ObservableObject {
         }
 
         guard !testKeyComboPressedShouldStop(hotkey: hotkey) else { return }
-        onRightShiftHotkey?(hotkey.identifier.suffix(1).s)
+        onRightShiftHotkey?(hotkey.keyCombo.key)
     }
 
     @objc public func handleLeftShiftHotkey(_ hotkey: HotKey) {
@@ -869,7 +864,7 @@ public class KeysManager: ObservableObject {
         }
 
         guard !testKeyComboPressedShouldStop(hotkey: hotkey) else { return }
-        onLeftShiftHotkey?(hotkey.identifier.suffix(1).s)
+        onLeftShiftHotkey?(hotkey.keyCombo.key)
     }
 
     @objc public func handleSecondaryAltHotkey(_ hotkey: HotKey) {
@@ -882,7 +877,7 @@ public class KeysManager: ObservableObject {
         }
 
         guard !testKeyComboPressedShouldStop(hotkey: hotkey) else { return }
-        onSecondaryAltHotkey?(hotkey.identifier.suffix(1).s)
+        onSecondaryAltHotkey?(hotkey.keyCombo.key)
     }
 
     @objc public func handleSecondaryRightShiftHotkey(_ hotkey: HotKey) {
@@ -895,7 +890,7 @@ public class KeysManager: ObservableObject {
         }
 
         guard !testKeyComboPressedShouldStop(hotkey: hotkey) else { return }
-        onSecondaryRightShiftHotkey?(hotkey.identifier.suffix(1).s)
+        onSecondaryRightShiftHotkey?(hotkey.keyCombo.key)
     }
 
     @objc public func handleSecondaryLeftShiftHotkey(_ hotkey: HotKey) {
@@ -908,10 +903,8 @@ public class KeysManager: ObservableObject {
         }
 
         guard !testKeyComboPressedShouldStop(hotkey: hotkey) else { return }
-        onSecondaryLeftShiftHotkey?(hotkey.identifier.suffix(1).s)
+        onSecondaryLeftShiftHotkey?(hotkey.keyCombo.key)
     }
-
-    // MARK: Internal
 
     static var MULTI_TAP_THRESHOLD_INTERVAL: TimeInterval = 0.4
 
@@ -940,9 +933,27 @@ public let KM = KeysManager()
         case rctrl
         case rshift
 
-        // MARK: Public
-
         public var id: Int { rawValue }
+        public var eventModifier: SwiftUI.EventModifiers {
+            switch self {
+            case .rcmd:
+                return .command
+            case .ralt:
+                return .option
+            case .lcmd:
+                return .command
+            case .lalt:
+                return .option
+            case .lctrl:
+                return .control
+            case .lshift:
+                return .shift
+            case .rshift:
+                return .shift
+            case .rctrl:
+                return .control
+            }
+        }
         public var modifier: NSEvent.ModifierFlags {
             switch self {
             case .rcmd:
@@ -1114,6 +1125,10 @@ public let KM = KeysManager()
         }
 
         var withoutShift: [TriggerKey] { filter { $0 != .lshift && $0 != .rshift } }
+        var eventModifiers: SwiftUI.EventModifiers {
+            SwiftUI.EventModifiers(map(\.eventModifier))
+        }
+
         var modifiers: NSEvent.ModifierFlags {
             NSEvent.ModifierFlags(map(\.modifier))
         }
@@ -1160,7 +1175,8 @@ public let KM = KeysManager()
         }
     }
 
-    extension NSEvent.ModifierFlags {
+    public extension NSEvent.ModifierFlags {
+        static var uselessModifier: NSEvent.ModifierFlags { NSEvent.ModifierFlags(rawValue: 10) }
         var triggerKeys: [TriggerKey] {
             var flags = [TriggerKey]()
             if contains(.leftShift) { flags.append(.lshift) }
@@ -1177,8 +1193,6 @@ public let KM = KeysManager()
     }
 
     public struct DirectionalModifierView: View {
-        // MARK: Lifecycle
-
         public init(triggerKeys: Binding<[TriggerKey]>, disabled: Binding<Bool>, spacing: CGFloat = 3, noFG: Bool = false, disabledOpacity: CGFloat = 0.6) {
             _triggerKeys = triggerKeys
             _disabled = disabled
@@ -1187,57 +1201,55 @@ public let KM = KeysManager()
             _disabledOpacity = State(initialValue: disabledOpacity)
         }
 
-        // MARK: Public
-
         @Environment(\.isEnabled) public var isEnabled
 
         public var body: some View {
             let rcmdTrigger = Binding<Bool>(
-                get: { self.triggerKeys.contains(.rcmd) },
+                get: { triggerKeys.contains(.rcmd) },
                 set: {
                     triggerKeys = triggerKeys.toggling(key: TriggerKey.rcmd, on: $0)
                 }
             )
             let raltTrigger = Binding<Bool>(
-                get: { self.triggerKeys.contains(.ralt) },
+                get: { triggerKeys.contains(.ralt) },
                 set: {
                     triggerKeys = triggerKeys.toggling(key: TriggerKey.ralt, on: $0)
                 }
             )
 
             let lcmdTrigger = Binding<Bool>(
-                get: { self.triggerKeys.contains(.lcmd) },
+                get: { triggerKeys.contains(.lcmd) },
                 set: {
                     triggerKeys = triggerKeys.toggling(key: TriggerKey.lcmd, on: $0)
                 }
             )
             let laltTrigger = Binding<Bool>(
-                get: { self.triggerKeys.contains(.lalt) },
+                get: { triggerKeys.contains(.lalt) },
                 set: {
                     triggerKeys = triggerKeys.toggling(key: TriggerKey.lalt, on: $0)
                 }
             )
             let lctrlTrigger = Binding<Bool>(
-                get: { self.triggerKeys.contains(.lctrl) },
+                get: { triggerKeys.contains(.lctrl) },
                 set: {
                     triggerKeys = triggerKeys.toggling(key: TriggerKey.lctrl, on: $0)
                 }
             )
 
             let lshiftTrigger = Binding<Bool>(
-                get: { self.triggerKeys.contains(.lshift) },
+                get: { triggerKeys.contains(.lshift) },
                 set: {
                     triggerKeys = triggerKeys.toggling(key: TriggerKey.lshift, on: $0)
                 }
             )
             let rshiftTrigger = Binding<Bool>(
-                get: { self.triggerKeys.contains(.rshift) },
+                get: { triggerKeys.contains(.rshift) },
                 set: {
                     triggerKeys = triggerKeys.toggling(key: TriggerKey.rshift, on: $0)
                 }
             )
             let rctrlTrigger = Binding<Bool>(
-                get: { self.triggerKeys.contains(.rctrl) },
+                get: { triggerKeys.contains(.rctrl) },
                 set: {
                     triggerKeys = triggerKeys.toggling(key: TriggerKey.rctrl, on: $0)
                 }
@@ -1275,8 +1287,6 @@ public let KM = KeysManager()
             }.disabled(disabled).opacity(isEnabled ? 1 : disabledOpacity)
         }
 
-        // MARK: Internal
-
         @Binding var triggerKeys: [TriggerKey]
         @Binding var disabled: Bool
         @State var spacing: CGFloat = 3
@@ -1285,6 +1295,11 @@ public let KM = KeysManager()
     }
 
     import Carbon
+    public extension KeyCombo {
+        var modifierFlags: NSEvent.ModifierFlags {
+            keyEquivalentModifierMask.subtracting(.uselessModifier)
+        }
+    }
     public extension SauceKey {
         var character: String {
             switch QWERTYKeyCode.i {

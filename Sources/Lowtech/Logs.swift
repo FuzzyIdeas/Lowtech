@@ -22,8 +22,6 @@ import os
 // MARK: - SwiftyLogger
 
 public final class SwiftyLogger {
-    // MARK: Public
-
     @inline(__always) public class func verbose(_ message: String, context: Any? = "") {
         #if DEBUG
             oslog.trace("🫥 \(message, privacy: .public) \(String(describing: context ?? ""), privacy: .public)")
@@ -67,8 +65,6 @@ public final class SwiftyLogger {
     @inline(__always) public class func traceCalls() {
         traceLog.trace("\(Thread.callStackSymbols.joined(separator: "\n"), privacy: .public)")
     }
-
-    // MARK: Internal
 
     static let oslog = Logger(subsystem: Bundle.main.bundleIdentifier ?? "com.lowtechguys.Logger", category: "default")
     static let traceLog = Logger(subsystem: Bundle.main.bundleIdentifier ?? "com.lowtechguys.Logger", category: "trace")

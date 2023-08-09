@@ -5,8 +5,6 @@ import SwiftUI
 // MARK: - PanelWindow
 
 open class PanelWindow: LowtechWindow {
-    // MARK: Lifecycle
-
     public convenience init(swiftuiView: AnyView, screen: NSScreen? = nil, corner: ScreenCorner? = nil) {
         self.init(contentViewController: NSHostingController(rootView: swiftuiView))
 
@@ -26,11 +24,9 @@ open class PanelWindow: LowtechWindow {
         isMovableByWindowBackground = true
     }
 
-    // MARK: Open
-
     override open var canBecomeKey: Bool { true }
 
-    open func show(at point: NSPoint? = nil, animate: Bool = false, activate: Bool = true, corner: ScreenCorner? = nil, margin: CGFloat? = nil, screen: NSScreen? = nil) {
+    open func show(at point: NSPoint? = nil, animate: Bool = false, activate: Bool = true, corner: ScreenCorner? = nil, margin: CGFloat? = nil, marginHorizontal: CGFloat? = nil, screen: NSScreen? = nil) {
         if let corner {
             moveToScreen(screen, corner: corner, margin: margin, animate: animate)
         } else if let point {

@@ -41,8 +41,6 @@ public typealias Hashids = Hashids_<UInt32>
 // MARK: - Hashids_
 
 open class Hashids_<T>: HashidsGenerator where T: UnsignedInteger {
-    // MARK: Lifecycle
-
     public init(salt: String!, minHashLength: UInt = 0, alphabet: String? = nil) {
         let _alphabet = (alphabet != nil) ? alphabet! : HashidsOptions.ALPHABET
         let _seps = HashidsOptions.SEPARATORS
@@ -100,8 +98,6 @@ open class Hashids_<T>: HashidsGenerator where T: UnsignedInteger {
         }
     }
 
-    // MARK: Open
-
     // MARK: public api
 
     open func encode(_ value: Int64...) -> String? {
@@ -148,11 +144,7 @@ open class Hashids_<T>: HashidsGenerator where T: UnsignedInteger {
         decode(value).map { Int64($0) }
     }
 
-    // MARK: Public
-
     public typealias Char = T
-
-    // MARK: Fileprivate
 
     fileprivate var minHashLength: UInt
     fileprivate var alphabet: [Char]

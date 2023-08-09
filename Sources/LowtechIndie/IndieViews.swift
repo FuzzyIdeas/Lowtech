@@ -3,16 +3,43 @@ import Lowtech
 import Sparkle
 import SwiftUI
 
-// MARK: - VersionView
+// MARK: - GentleUpdateView
 
-public struct VersionView: View {
-    // MARK: Lifecycle
-
+public struct GentleUpdateView: View {
     public init(updater: SPUUpdater) {
         self.updater = updater
     }
 
-    // MARK: Public
+    public var body: some View {
+        if let version = um.newVersion {
+            Button("v\(version) available") { updater.checkForUpdates() }
+                .buttonStyle(FlatButton(
+                    color: .orange,
+                    textColor: Color.blackMauve,
+                    horizontalPadding: 6,
+                    verticalPadding: 3
+                ))
+                .font(.system(size: 12, weight: .semibold))
+                .lineLimit(1)
+                .minimumScaleFactor(.leastNonzeroMagnitude)
+                .scaledToFit()
+        } else {
+            Button("Check for updates") { updater.checkForUpdates() }
+                .buttonStyle(FlatButton())
+                .font(.system(size: 11, weight: .semibold))
+        }
+    }
+
+    @ObservedObject var um = UM
+    @ObservedObject var updater: SPUUpdater
+}
+
+// MARK: - VersionView
+
+public struct VersionView: View {
+    public init(updater: SPUUpdater) {
+        self.updater = updater
+    }
 
     public var body: some View {
         VStack(alignment: .leading) {
@@ -24,9 +51,7 @@ public struct VersionView: View {
 
                 Spacer()
 
-                Button("Check for updates") { updater.checkForUpdates() }
-                    .buttonStyle(FlatButton())
-                    .font(.system(size: 11, weight: .semibold))
+                GentleUpdateView(updater: updater)
             }
             HStack(spacing: 3) {
                 Text("Check automatically")
@@ -70,18 +95,15 @@ public struct VersionView: View {
         .padding(.top, 10)
     }
 
-    // MARK: Internal
-
     @Default(.checkForUpdates) var checkForUpdates
     @Default(.updateCheckInterval) var updateCheckInterval
 
     @ObservedObject var updater: SPUUpdater
-    @Environment(\.colors) var colors
 }
 
 extension Bundle {
     var version: String {
-        (infoDictionary?["CFBundleVersion"] as? String) ?? "1.0.0"
+        (infoDictionary?["CFBundleShortVersionString"] as? String) ?? "1.0.0"
     }
 }
 

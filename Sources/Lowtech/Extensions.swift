@@ -28,11 +28,76 @@ public func != <T, V: Equatable>(lhs: KeyPath<T, V>, rhs: V) -> (T) -> Bool {
 
 infix operator ?!: NilCoalescingPrecedence
 
+public func ?! <K: Hashable, V>(_ dict: [K: V]?, _ dict2: [K: V]) -> [K: V] {
+    guard let dict, !dict.isEmpty else {
+        return dict2
+    }
+    return dict
+}
+
 public func ?! (_ str: String?, _ str2: String) -> String {
     guard let str, !str.isEmpty else {
         return str2
     }
     return str
+}
+
+public func ?! <T: BinaryInteger>(_ num: T?, _ num2: T) -> T {
+    guard let num, num != 0 else {
+        return num2
+    }
+    return num
+}
+
+public func ?! (_ num: Double?, _ num2: Double) -> Double {
+    guard let num, num != 0 else {
+        return num2
+    }
+    return num
+}
+
+public func ?! (_ num: Float?, _ num2: Float) -> Float {
+    guard let num, num != 0 else {
+        return num2
+    }
+    return num
+}
+
+public func ?! (_ num: CGFloat?, _ num2: CGFloat) -> CGFloat {
+    guard let num, num != 0 else {
+        return num2
+    }
+    return num
+}
+
+public func ?! <T: BinaryInteger>(_ num: T, _ num2: T) -> T {
+    num != 0 ? num : num2
+}
+
+public func ?! (_ num: Double, _ num2: Double) -> Double {
+    num != 0 ? num : num2
+}
+
+public func ?! (_ num: Float, _ num2: Float) -> Float {
+    num != 0 ? num : num2
+}
+
+public func ?! (_ num: CGFloat, _ num2: CGFloat) -> CGFloat {
+    num != 0 ? num : num2
+}
+
+public func ?! (_ svc: io_service_t?, _ svc2: io_service_t?) -> io_service_t? {
+    guard let svc, svc != 0 else {
+        return svc2
+    }
+    return svc
+}
+
+public func ?! (_ svc: io_service_t?, _ svc2: io_service_t) -> io_service_t {
+    guard let svc, svc != 0 else {
+        return svc2
+    }
+    return svc
 }
 
 public func ?! <T: Collection>(_ seq: T?, _ seq2: T) -> T {
@@ -165,8 +230,9 @@ public extension Bool {
             }
             let area = NSTrackingArea(
                 rect: rect ?? bounds,
-                options: cursor ? [.mouseEnteredAndExited, .cursorUpdate, .activeInActiveApp] :
-                    [.mouseEnteredAndExited, .activeInActiveApp],
+                options: cursor
+                    ? [.mouseEnteredAndExited, .cursorUpdate, .activeInActiveApp]
+                    : [.mouseEnteredAndExited, .activeInActiveApp],
                 owner: owner ?? self,
                 userInfo: nil
             )
@@ -225,10 +291,36 @@ public extension Bool {
         }
     }
 
+    public extension Double {
+        var evenInt: Int {
+            let x = intround
+            return x + x % 2
+        }
+    }
+
+    public extension Float {
+        var evenInt: Int {
+            let x = intround
+            return x + x % 2
+        }
+    }
+
+    public extension CGFloat {
+        var evenInt: Int {
+            let x = intround
+            return x + x % 2
+        }
+    }
+
     extension NSSize: Comparable {
-        var area: CGFloat { width * height }
+        public var s: String { "\(width.i)×\(height.i)" }
+        public var area: CGFloat { width * height }
         public static func < (lhs: CGSize, rhs: CGSize) -> Bool {
             lhs.area < rhs.area
+        }
+
+        public func scaled(by factor: Double) -> CGSize {
+            CGSize(width: (width * factor).evenInt, height: (height * factor).evenInt)
         }
     }
 
@@ -538,6 +630,15 @@ public extension UInt8 {
 
 infix operator %%
 
+extension UInt64 {
+    func toUInt8Array() -> [UInt8] {
+        [
+            UInt8(self & 0xFF), UInt8((self >> 8) & 0xFF), UInt8((self >> 16) & 0xFF), UInt8((self >> 24) & 0xFF),
+            UInt8((self >> 32) & 0xFF), UInt8((self >> 40) & 0xFF), UInt8((self >> 48) & 0xFF), UInt8((self >> 56) & 0xFF),
+        ]
+    }
+}
+
 public extension BinaryInteger {
     @inline(__always)
     static func %% (_ a: Self, _ n: Self) -> Self {
@@ -554,8 +655,8 @@ public extension BinaryInteger {
         Double(self)
     }
 
-    @inline(__always) var cg: CGGammaValue {
-        CGGammaValue(self)
+    @inline(__always) var cg: CGFloat {
+        CGFloat(self)
     }
 
     @inline(__always) var f: Float {
@@ -611,7 +712,21 @@ public extension BinaryInteger {
     }
 }
 
+import System
 public extension String {
+    var url: URL? {
+        guard contains(":") else { return nil }
+        return URL(string: self)
+    }
+
+    var fileURL: URL {
+        URL(fileURLWithPath: replacingOccurrences(of: "file://", with: ""))
+    }
+
+    var existingFilePath: FilePath? {
+        FileManager.default.fileExists(atPath: self) ? FilePath(self) : nil
+    }
+
     func parseHex(strict: Bool = false) -> Int? {
         guard !strict || starts(with: "0x") || starts(with: "x") || hasSuffix("h") else { return nil }
 
@@ -815,8 +930,40 @@ public extension CAMediaTimingFunction {
 }
 
 public extension CGFloat {
+    @inline(__always) var d: Double {
+        Double(self)
+    }
+
+    @inline(__always) var i: Int {
+        Int(self)
+    }
+
+    @inline(__always) var u8: UInt8 {
+        UInt8(cap(intround, minVal: 0, maxVal: 255))
+    }
+
+    @inline(__always) var u16: UInt16 {
+        UInt16(self)
+    }
+
+    @inline(__always) var u32: UInt32 {
+        UInt32(self)
+    }
+
+    @inline(__always) var i8: Int8 {
+        Int8(cap(intround, minVal: 0, maxVal: 255))
+    }
+
+    @inline(__always) var i16: Int16 {
+        Int16(self)
+    }
+
     @inline(__always) var i32: Int32 {
         Int32(self)
+    }
+
+    @inline(__always) var intround: Int {
+        rounded().i
     }
 
     @inline(__always) var ns: NSNumber {
@@ -824,8 +971,32 @@ public extension CGFloat {
     }
 }
 
+public extension [UInt8] {
+    var data: Data {
+        Data(self)
+    }
+}
+
+public extension PrefixSequence<SHA256Digest> {
+    var data: Data {
+        map { $0 }.data
+    }
+}
+
 public extension Data {
     var s: String? { String(data: self, encoding: .utf8) }
+
+    func base64(urlSafe: Bool = false) -> String {
+        str(hex: false, base64: true, urlSafe: urlSafe)
+    }
+
+    func hex(urlSafe: Bool = false, separator: String = " ") -> String {
+        str(hex: true, base64: false, urlSafe: urlSafe, separator: separator)
+    }
+
+    func urlSafeString(separator: String = " ") -> String {
+        str(hex: false, base64: false, urlSafe: true, separator: separator)
+    }
 
     func str(hex: Bool = false, base64: Bool = false, urlSafe: Bool = false, separator: String = " ") -> String {
         if base64 {
@@ -980,7 +1151,39 @@ public extension Set where Element: Equatable & Hashable {
     }
 }
 
+public func ~= (lhs: Regex<some Any>, rhs: String) -> Bool {
+    (try? lhs.firstMatch(in: rhs)) != nil
+}
+
+public func ~= <T: Equatable>(lhs: [T], rhs: T) -> Bool {
+    lhs.contains(rhs)
+}
+
+public func ~= <T: Equatable & Hashable>(lhs: Set<T>, rhs: T) -> Bool {
+    lhs.contains(rhs)
+}
+
+public extension Sequence where Element: Identifiable {
+    func without(id: Element.ID) -> [Element] {
+        filter { $0.id != id }
+    }
+}
+
+public extension Set where Element: Identifiable {
+    func without(id: Element.ID) -> Set<Element> {
+        filter { $0.id != id }
+    }
+}
+
 public extension Sequence where Element: Equatable & Hashable {
+    func with(_ element: Element) -> [Element] {
+        self + [element]
+    }
+
+    func with(_ elements: [Element]) -> [Element] {
+        self + elements
+    }
+
     func without(_ element: Element) -> [Element] {
         filter { $0 != element }
     }
@@ -989,16 +1192,21 @@ public extension Sequence where Element: Equatable & Hashable {
         filter { !elements.contains($0) }
     }
 
+    func without(_ elements: [Element]) -> [Element] {
+        filter { !elements.contains($0) }
+    }
+
     var uniqued: [Element] { Set(self).arr }
+    var set: Set<Element> { Set(self) }
 
     func replacing(_ element: Element, with newElement: Element) -> [Element] {
         map { $0 == element ? newElement : $0 }
     }
 
-    func without(_ elements: [Element]) -> [Element] {
-        let elSet = Set(elements)
-        return filter { !elSet.contains($0) }
-    }
+//    func without(_ elements: [Element]) -> [Element] {
+//        let elSet = Set(elements)
+//        return filter { !elSet.contains($0) }
+//    }
 }
 
 public extension Collection where Element: Equatable & Hashable, Index: BinaryInteger {
@@ -1035,6 +1243,14 @@ public extension StringProtocol {
 public enum BackportSortOrder {
     case forward
     case reverse
+}
+
+// MARK: - Bool + Comparable
+
+extension Bool: Comparable {
+    public static func < (lhs: Bool, rhs: Bool) -> Bool {
+        !lhs && rhs
+    }
 }
 
 public extension Collection {
@@ -1103,7 +1319,7 @@ public extension Sequence<UInt8> {
     }
 }
 
-public extension OptionSet {
+public extension SetAlgebra {
     mutating func toggle(_ element: Element, minSet: Self? = nil, emptySet: Self? = nil) {
         if contains(element) {
             remove(element)
@@ -1118,7 +1334,7 @@ public extension OptionSet {
 
 public extension Bundle {
     var name: String? {
-        infoDictionary?["CFBundleName"] as? String ?? executable?.basename(dropExtension: true)
+        infoDictionary?["CFBundleName"] as? String ?? executableURL?.deletingPathExtension().lastPathComponent
     }
 
     var isMenuBarApp: Bool {
@@ -1126,17 +1342,7 @@ public extension Bundle {
     }
 }
 
-import MemoZ
-
 public extension NSRunningApplication {
-    var binaryIsValid: Bool {
-        binaryValidCache.fetch(key: identifier, create: { _ in
-            guard let bundleExe = bundle?.executable?.fileReferenceURL, let exePath = executableURL?.path,
-                  let exe = p(exePath)?.fileReferenceURL else { return true }
-            return bundleExe == exe
-        })
-    }
-
     var isRegular: Bool {
         activationPolicyCache.fetch(key: identifier, create: { _ in activationPolicy }) == .regular
     }
@@ -1330,4 +1536,208 @@ extension Text: AdditiveArithmetic {
 
 public extension NSVisualEffectView.Material {
     static let osd = NSVisualEffectView.Material(rawValue: 26) ?? .hudWindow
+}
+
+public extension DispatchQueue {
+    @discardableResult
+    func asyncAfter(ms: Int, _ action: @escaping () -> Void) -> DispatchWorkItem {
+        let deadline = DispatchTime(uptimeNanoseconds: DispatchTime.now().uptimeNanoseconds + UInt64(ms * 1_000_000))
+
+        let workItem = DispatchWorkItem {
+            action()
+        }
+        asyncAfter(deadline: deadline, execute: workItem)
+
+        return workItem
+    }
+}
+
+public extension NSAppearance {
+    static var dark: NSAppearance? { NSAppearance(named: .darkAqua) }
+    static var light: NSAppearance? { NSAppearance(named: .aqua) }
+    static var vibrantDark: NSAppearance? { NSAppearance(named: .vibrantDark) }
+    static var vibrantLight: NSAppearance? { NSAppearance(named: .vibrantLight) }
+}
+
+import CryptoKit
+
+public extension Data {
+    var sha256: String {
+        SHA256.hash(data: self).hexEncodedString()
+    }
+}
+
+public extension FilePath {
+    var sha256: String? {
+        guard let data = fm.contents(atPath: string) else {
+            return nil
+        }
+        return SHA256.hash(data: data).hexEncodedString()
+    }
+
+    func hasExtension(from extensions: [String]) -> Bool {
+        guard let ext = `extension`?.lowercased() else { return false }
+        return extensions.contains(ext)
+    }
+
+    func withSize(width: Int, height: Int) -> FilePath {
+        withSize(CGSize(width: width, height: height))
+    }
+
+    func withExtension(_ ext: String) -> FilePath {
+        removingLastComponent().appending("\(stem!).\(ext)")
+    }
+
+    func withSize(_ size: CGSize) -> FilePath {
+        removingLastComponent().appending("\(stem!.replacing(#/_\d+x\d+$/#, with: ""))_\(size.width.i)x\(size.height.i).\(`extension`!)")
+    }
+
+    @discardableResult
+    func waitForFile(for seconds: TimeInterval) -> Bool {
+        let path = string
+        let sleepSeconds = seconds / 10
+
+        for _ in 1 ... 10 {
+            if fm.fileExists(atPath: path) {
+                return true
+            }
+            Thread.sleep(forTimeInterval: sleepSeconds)
+        }
+        return false
+    }
+
+    var name: FilePath.Component { lastComponent! }
+    var nameWithoutSize: String {
+        "\(stem!.replacing(#/_\d+x\d+$/#, with: "")).\(`extension`!)"
+    }
+
+    var nameWithHash: String {
+        guard let stem, let ext = `extension`, let hash = memoz.sha256 else {
+            return name.string
+        }
+        let name = stem.replacingOccurrences(of: "_\(hash)", with: "")
+        return "\(name)_\(hash).\(ext)"
+    }
+
+    static var tmp = FilePath("/tmp")
+    static var backups = FilePath.dir("/tmp/backups")
+
+    static func dir(_ string: String) -> FilePath {
+        let path = FilePath(string)
+        path.mkdir(withIntermediateDirectories: true)
+        return path
+    }
+
+    func mkdir(withIntermediateDirectories: Bool) {
+        try? fm.createDirectory(atPath: string, withIntermediateDirectories: withIntermediateDirectories)
+    }
+
+    var url: URL { URL(filePath: self)! }
+    var backupPath: FilePath? {
+        FilePath.backups.appending(nameWithHash)
+    }
+
+    enum BackupOperation {
+        case copy
+        case move
+    }
+
+    @discardableResult
+    func backup(force: Bool = false, operation: BackupOperation = .move) -> FilePath? {
+        guard let backupPath else {
+            return nil
+        }
+
+        do {
+            if backupPath.exists {
+                guard force else { return backupPath }
+                try backupPath.delete()
+            }
+            if operation == .copy {
+                try copy(to: backupPath)
+            } else {
+                try move(to: backupPath)
+            }
+        } catch {
+            print("Backup error", error)
+            return nil
+        }
+
+        return backupPath
+    }
+
+    func restore(force: Bool = true) {
+        guard let backupPath else {
+            return
+        }
+        _ = try? backupPath.move(to: self, force: force)
+    }
+
+    func fileSize() -> Int? {
+        do {
+            let attr = try fm.attributesOfItem(atPath: string)
+            return (attr[FileAttributeKey.size] as? UInt64)?.i
+        } catch {
+            err("Error: \(error)")
+        }
+        return nil
+    }
+
+    var exists: Bool { fm.fileExists(atPath: string) }
+
+    @discardableResult
+    func move(to path: FilePath, force: Bool = false) throws -> FilePath {
+        guard path != self else {
+            err("Trying to move path to itself: \(string)")
+            return self
+        }
+
+        let path = path.isDir ? path.appending(name) : path
+
+        if force { try path.delete() }
+        debug("Moving path \(shellString) to \(path.shellString)")
+        try fm.moveItem(atPath: string, toPath: path.string)
+        return path
+    }
+
+    var isDir: Bool {
+        var isDirectory = ObjCBool(false)
+        return fm.fileExists(atPath: string, isDirectory: &isDirectory) && isDirectory.boolValue
+    }
+
+    @discardableResult
+    func copy(to path: FilePath, force: Bool = false) throws -> FilePath {
+        guard path != self else {
+            err("Trying to copy path to itself: \(string)")
+            return self
+        }
+
+        let path = path.isDir ? path.appending(name) : path
+
+        if force { try path.delete() }
+        debug("Copying path \(shellString) to \(path.shellString)")
+        try fm.copyItem(atPath: string, toPath: path.string)
+        return path
+    }
+
+    func delete() throws {
+        guard exists else { return }
+        debug("Deleting path \(shellString)")
+        try fm.removeItem(atPath: string)
+    }
+
+    var shellString: String { string.replacingFirstOccurrence(of: NSHomeDirectory(), with: "~") }
+}
+
+public extension URL {
+    var filePath: FilePath { FilePath(self)! }
+    var existingFilePath: FilePath? { fm.fileExists(atPath: path) ? FilePath(self) : nil }
+}
+
+public let HOME = URL.homeDirectory.filePath
+
+infix operator /: MultiplicationPrecedence
+
+public func / (_ path: FilePath, _ str: String) -> FilePath {
+    path.appending(str)
 }

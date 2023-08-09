@@ -13,8 +13,6 @@ public extension Notification.Name {
 // MARK: - LowtechAppDelegate
 
 open class LowtechAppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
-    // MARK: Open
-
     @Published open var showPopoverOnSpecialKey = true
 
     open var initialized = false
@@ -46,8 +44,8 @@ open class LowtechAppDelegate: NSObject, NSApplicationDelegate, ObservableObject
             .publisher(for: NSNotification.Name(rawValue: kAppleInterfaceThemeChangedNotification), object: nil)
             .debounce(for: .milliseconds(50), scheduler: RunLoop.main)
             .sink { notification in
-                NSAppearance.current = NSApp.effectiveAppearance
-                self.onAppearanceChanged(NSAppearance.current)
+                // NSAppearance.current = NSApp.effectiveAppearance
+                self.onAppearanceChanged(NSApp.effectiveAppearance)
             }.store(in: &observers)
 
         NotificationCenter.default
@@ -93,12 +91,11 @@ open class LowtechAppDelegate: NSObject, NSApplicationDelegate, ObservableObject
         }
         initialized = true
         KM.initialized = true
+        onFinishLaunching?()
     }
 
     @MainActor
     open func onPopoverNotAllowed() {}
-
-    // MARK: Public
 
     public private(set) static var instance: LowtechAppDelegate!
 
@@ -109,6 +106,7 @@ open class LowtechAppDelegate: NSObject, NSApplicationDelegate, ObservableObject
     public var application = NSApplication.shared
 
     public var observers: Set<AnyCancellable> = []
+    public var onFinishLaunching: (() -> Void)? = nil
 
     public var contentView: AnyView?
     public var accentColor: Color?
@@ -167,7 +165,7 @@ open class LowtechAppDelegate: NSObject, NSApplicationDelegate, ObservableObject
             return
         }
 
-        let color = accentColor ?? Colors.yellow
+        let color = accentColor ?? Color.golden
         statusBar = StatusBarController(
             LowtechView(accentColor: color) { contentView }.any
         )

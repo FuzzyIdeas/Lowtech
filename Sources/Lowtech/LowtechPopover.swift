@@ -5,8 +5,6 @@ import Foundation
 // MARK: - LowtechPopover
 
 open class LowtechPopover: NSPopover {
-    // MARK: Lifecycle
-
     public init(_ statusBar: StatusBarController?) {
         super.init()
         self.statusBar = statusBar
@@ -37,8 +35,6 @@ open class LowtechPopover: NSPopover {
     public required init?(coder: NSCoder) {
         super.init(coder: coder)
     }
-
-    // MARK: Open
 
     override open func close() {
         super.close()
@@ -74,11 +70,7 @@ open class LowtechPopover: NSPopover {
         show(relativeTo: view.bounds, of: view, preferredEdge: preferredEdge)
     }
 
-    // MARK: Internal
-
     weak var statusBar: StatusBarController?
-
-    // MARK: Private
 
     private var mockWindow: NSWindow?
     private var mockWindowController: NSWindowController?

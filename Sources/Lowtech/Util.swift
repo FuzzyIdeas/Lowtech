@@ -27,14 +27,10 @@ public func cap<T: Comparable>(_ number: T, minVal: T, maxVal: T) -> T {
 // MARK: - Formatting
 
 public struct Formatting: Hashable {
-    // MARK: Public
-
     public func hash(into hasher: inout Hasher) {
         hasher.combine(padding)
         hasher.combine(decimals)
     }
-
-    // MARK: Internal
 
     let decimals: Int
     let padding: Int
@@ -53,8 +49,6 @@ public protocol ObservableSettings: AnyObject {
 // MARK: - SettingTransformer
 
 public struct SettingTransformer<Value, Transformed> {
-    // MARK: Lifecycle
-
     public init(to: @escaping (Value) -> Transformed, from: ((Transformed) -> Value)? = nil) {
         self.to = to
         self.from = from
@@ -68,8 +62,6 @@ public struct SettingTransformer<Value, Transformed> {
             self.from = nil
         }
     }
-
-    // MARK: Public
 
     public let to: (Value) -> Transformed
     public let from: ((Transformed) -> Value)?
@@ -170,8 +162,6 @@ public extension ObservableSettings {
 @available(macOS 10.15, iOS 13.0, tvOS 13.0, watchOS 6.0, *)
 @propertyWrapper
 public class Setting<Value: Defaults.Serializable> {
-    // MARK: Lifecycle
-
     public init(_ key: Defaults.Key<Value>) {
         self.key = key
         storage = Storage(initialValue: Defaults[key])
@@ -183,8 +173,6 @@ public class Setting<Value: Defaults.Serializable> {
                 self.storage.oldValue = $0.oldValue
             }
     }
-
-    // MARK: Public
 
     public typealias Publisher = AnyPublisher<Defaults.KeyChange<Value>, Never>
 
@@ -199,16 +187,10 @@ public class Setting<Value: Defaults.Serializable> {
         }
     }
 
-    // MARK: Private
-
     private class Storage {
-        // MARK: Lifecycle
-
         init(initialValue: Value) {
             value = initialValue
         }
-
-        // MARK: Internal
 
         var value: Value
         var oldValue: Value?
@@ -224,7 +206,31 @@ public class Setting<Value: Defaults.Serializable> {
     guard !Thread.isMainThread else {
         return action()
     }
-    return DispatchQueue.main.sync { return action() }
+    return DispatchQueue.main.sync { action() }
+}
+
+public func debouncer<T>(in observers: inout Set<AnyCancellable>, throttle: Bool = false, every duration: RunLoop.SchedulerTimeType.Stride? = nil, _ action: @escaping (T) -> Void) -> PassthroughSubject<T, Never> {
+    let subject = PassthroughSubject<T, Never>()
+
+    if let duration {
+        if !throttle {
+            subject
+                .debounce(for: duration, scheduler: RunLoop.main)
+                .sink { action($0) }
+                .store(in: &observers)
+        } else {
+            subject
+                .throttle(for: duration, scheduler: RunLoop.main, latest: true)
+                .sink { action($0) }
+                .store(in: &observers)
+        }
+    } else {
+        subject
+            .sink { action($0) }
+            .store(in: &observers)
+    }
+
+    return subject
 }
 
 @inline(__always) public func mainAsync(_ action: @escaping () -> Void) {
@@ -365,6 +371,45 @@ public func mapNumber<T: Numeric & Comparable & FloatingPoint>(_ number: T, from
     }
 }
 
+@inline(__always) public func lerp(_ value: Double, min: Double, max: Double) -> Double {
+    min + (max - min) * value
+}
+
+@inline(__always) public func invlerp(_ value: Double, min: Double, max: Double) -> Double {
+    max == min ? min : (value - min) / (max - min)
+}
+
+@inline(__always) public func lerp(_ value: Float, min: Float, max: Float) -> Float {
+    min + (max - min) * value
+}
+
+@inline(__always) public func invlerp(_ value: Float, min: Float, max: Float) -> Float {
+    max == min ? min : (value - min) / (max - min)
+}
+
+@inline(__always) public func lerp(_ value: CGFloat, min: CGFloat, max: CGFloat) -> CGFloat {
+    min + (max - min) * value
+}
+
+@inline(__always) public func invlerp(_ value: CGFloat, min: CGFloat, max: CGFloat) -> CGFloat {
+    max == min ? min : (value - min) / (max - min)
+}
+
+public extension BinaryInteger {
+    func map(from: (Self, Self), to: (Self, Self)) -> Self {
+        Self(lerp(invlerp(d, min: from.0.d, max: from.1.d), min: to.0.d, max: to.1.d))
+    }
+
+    func map(from: (Self, Self), to: (Self, Self), gamma: Double) -> Self {
+        Self(lerp(pow(invlerp(d, min: from.0.d, max: from.1.d), 1.0 / gamma), min: to.0.d, max: to.1.d))
+    }
+
+    @inline(__always)
+    func capped(between minVal: Self, and maxVal: Self) -> Self {
+        cap(self, minVal: minVal, maxVal: maxVal)
+    }
+}
+
 public extension Double {
     func map(from: (Double, Double), to: (Double, Double)) -> Double {
         lerp(invlerp(self, min: from.0, max: from.1), min: to.0, max: to.1)
@@ -372,6 +417,11 @@ public extension Double {
 
     func map(from: (Double, Double), to: (Double, Double), gamma: Double) -> Double {
         lerp(pow(invlerp(self, min: from.0, max: from.1), 1.0 / gamma), min: to.0, max: to.1)
+    }
+
+    @inline(__always)
+    func capped(between minVal: Double, and maxVal: Double) -> Double {
+        cap(self, minVal: minVal, maxVal: maxVal)
     }
 }
 
@@ -383,6 +433,11 @@ public extension Float {
     func map(from: (Float, Float), to: (Float, Float), gamma: Float) -> Float {
         lerp(pow(invlerp(self, min: from.0, max: from.1), 1.0 / gamma), min: to.0, max: to.1)
     }
+
+    @inline(__always)
+    func capped(between minVal: Float, and maxVal: Float) -> Float {
+        cap(self, minVal: minVal, maxVal: maxVal)
+    }
 }
 
 public extension CGFloat {
@@ -393,60 +448,11 @@ public extension CGFloat {
     func map(from: (CGFloat, CGFloat), to: (CGFloat, CGFloat), gamma: CGFloat) -> CGFloat {
         lerp(pow(invlerp(self, min: from.0, max: from.1), 1.0 / gamma), min: to.0, max: to.1)
     }
-}
 
-@inline(__always)
-public func lerp(_ value: Double, min: Double, max: Double) -> Double {
-    min + (max - min) * value
-}
-
-@inline(__always)
-public func invlerp(_ value: Double, min: Double, max: Double) -> Double {
-    max == min ? min : (value - min) / (max - min)
-}
-
-@inline(__always)
-public func lerp(_ value: Float, min: Float, max: Float) -> Float {
-    min + (max - min) * value
-}
-
-@inline(__always)
-public func invlerp(_ value: Float, min: Float, max: Float) -> Float {
-    max == min ? min : (value - min) / (max - min)
-}
-
-@inline(__always)
-public func lerp(_ value: CGFloat, min: CGFloat, max: CGFloat) -> CGFloat {
-    min + (max - min) * value
-}
-
-@inline(__always)
-public func invlerp(_ value: CGFloat, min: CGFloat, max: CGFloat) -> CGFloat {
-    max == min ? min : (value - min) / (max - min)
-}
-
-@inline(__always)
-public func lerpGamma22(_ value: Double, min: Double, max: Double) -> Double {
-    let normalizedValue = invlerp(value, min: min, max: max)
-    return pow(normalizedValue, 2.2) * (max - min) + min
-}
-
-@inline(__always)
-public func lerpGamma(_ value: Double, min: Double, max: Double, gamma: Double) -> Double {
-    let normalizedValue = invlerp(value, min: min, max: max)
-    return pow(normalizedValue, gamma) * (max - min) + min
-}
-
-@inline(__always)
-public func invlerpGamma22(_ interpolated: Double, min: Double, max: Double) -> Double {
-    let normalizedValue = pow(invlerp(interpolated, min: min, max: max), 1.0 / 2.2)
-    return normalizedValue * (max - min) + min
-}
-
-@inline(__always)
-public func invlerpGamma(_ interpolated: Double, min: Double, max: Double, gamma: Double) -> Double {
-    let normalizedValue = pow(invlerp(interpolated, min: min, max: max), 1.0 / gamma)
-    return normalizedValue * (max - min) + min
+    @inline(__always)
+    func capped(between minVal: CGFloat, and maxVal: CGFloat) -> CGFloat {
+        cap(self, minVal: minVal, maxVal: maxVal)
+    }
 }
 
 public let NO_SHADOW: NSShadow = {
@@ -460,8 +466,6 @@ public let NO_SHADOW: NSShadow = {
 // MARK: - IndexedCollection
 
 public struct IndexedCollection<Base: RandomAccessCollection>: RandomAccessCollection where Base.Element: Hashable {
-    // MARK: Public
-
     public typealias Index = Base.Index
     public typealias Element = (index: Index, element: Base.Element) where Base.Element: Hashable
 
@@ -484,8 +488,6 @@ public struct IndexedCollection<Base: RandomAccessCollection>: RandomAccessColle
         (index: position, element: base[position])
     }
 
-    // MARK: Internal
-
     let base: Base
 }
 
@@ -505,7 +507,7 @@ public func promptForWorkingDirectoryPermission(
     openPanel.message = message
     openPanel.prompt = prompt
     openPanel.resolvesAliases = true
-    openPanel.allowedFileTypes = ["none"]
+    openPanel.allowedContentTypes = [.folder]
     openPanel.allowsOtherFileTypes = false
     openPanel.allowsMultipleSelection = false
     openPanel.canChooseFiles = false
@@ -583,6 +585,8 @@ public func restoreFileAccess(for workDir: URL? = nil, defaultsKey: Defaults.Key
     }
 }
 
+import UniformTypeIdentifiers
+
 public extension URL {
     @discardableResult
     func withScopedAccess<T>(fileChoiceMessage: String = "Choose a file", _ action: (URL) -> T) -> T? {
@@ -593,6 +597,99 @@ public extension URL {
         url.stopAccessingSecurityScopedResource()
         return result
     }
+
+    func fetch(delegate: URLSessionDataDelegate? = nil) async throws -> Data {
+        let request = URLRequest(url: self, cachePolicy: .useProtocolCachePolicy)
+        let (data, response) = try await downloader.data(for: request, delegate: delegate)
+
+        // Store data in cache
+        if downloadCache.cachedResponse(for: request) == nil {
+            downloadCache.storeCachedResponse(CachedURLResponse(response: response, data: data), for: request)
+        }
+
+        // Move file to target location
+        return data
+    }
+
+    func download(to url: URL? = nil, type: UTType? = nil, delegate: URLSessionDataDelegate? = nil) async throws -> URL {
+        let request = URLRequest(url: self, cachePolicy: .useProtocolCachePolicy)
+        let (data, response) = try await downloader.data(for: request, delegate: delegate)
+
+        // Store data in cache
+        if downloadCache.cachedResponse(for: request) == nil {
+            downloadCache.storeCachedResponse(CachedURLResponse(response: response, data: data), for: request)
+        }
+
+        // Move file to target location
+        let destURL = url ?? FileManager.default.temporaryDirectory.appendingPathComponent(absoluteString.sha1 + (type != nil ? ".\(type!.preferredFilenameExtension!)" : ""))
+        FileManager.default.createFile(atPath: destURL.path, contents: data)
+        return destURL
+    }
 }
 
 public let SWIFTUI_PREVIEW = ProcessInfo.processInfo.environment["XCODE_RUNNING_FOR_PREVIEWS"] == "1"
+
+let downloadCache: URLCache = {
+    let cachesURL = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask)[0]
+    let diskCacheURL = cachesURL.appendingPathComponent("DownloadCache")
+    let cache = URLCache(memoryCapacity: 100_000_000, diskCapacity: 1_000_000_000, directory: diskCacheURL)
+    debug("Cache path: \(diskCacheURL.path)")
+    return cache
+}()
+
+let downloader: URLSession = {
+    let config = URLSessionConfiguration.default
+    config.urlCache = downloadCache
+    return URLSession(configuration: config)
+}()
+
+import CryptoKit
+import IOKit
+
+func IOServiceProperty<T>(_ service: io_service_t, _ key: String) -> T? {
+    guard let cfProp = IORegistryEntryCreateCFProperty(service, key as CFString, kCFAllocatorDefault, 0)
+    else {
+        return nil
+    }
+    guard let value = cfProp.takeRetainedValue() as? T else {
+        cfProp.release()
+        return nil
+    }
+    return value
+}
+
+func generateAPIKey() -> String {
+    var r = SystemRandomNumberGenerator()
+    let serialNumberData = Data(r.next().toUInt8Array() + r.next().toUInt8Array() + r.next().toUInt8Array() + r.next().toUInt8Array())
+    let hash = SHA256.hash(data: serialNumberData)
+        .prefix(20).data.base64()
+        .replacingOccurrences(of: "/", with: ".")
+        .replacingOccurrences(of: "+", with: ".")
+    return hash
+}
+
+func getSerialNumberHash() -> String? {
+    let platformExpert = IOServiceGetMatchingService(kIOMainPortDefault, IOServiceMatching("IOPlatformExpertDevice"))
+
+    guard platformExpert > 0 else {
+        return nil
+    }
+
+    defer { IOObjectRelease(platformExpert) }
+
+    guard let serialNumber: String = IOServiceProperty(platformExpert, kIOPlatformSerialNumberKey) else {
+        return nil
+    }
+
+    guard let serialNumberData = serialNumber.trimmed.data(using: .utf8, allowLossyConversion: true) else {
+        return nil
+    }
+    let hash = SHA256.hash(data: serialNumberData)
+        .prefix(20).data.base64()
+        .replacingOccurrences(of: "/", with: ".")
+        .replacingOccurrences(of: "+", with: ".")
+
+    return hash
+}
+
+public let SERIAL_NUMBER_HASH = getSerialNumberHash() ?? generateAPIKey()
