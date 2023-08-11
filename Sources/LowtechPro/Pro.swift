@@ -132,7 +132,7 @@ open class LowtechProAppDelegate: LowtechIndieAppDelegate, PADProductDelegate, P
     public func willShowPaddle(_: PADUIType, product _: PADProduct) -> PADDisplayConfiguration? {
         statusBar?.showPopoverIfNotVisible()
 
-        if let window = statusBar?.window, window.isVisible {
+        if let window = statusBar?.window ?? NSApp.windows.first(where: { $0.accessibilityRole() != .popover }), window.isVisible {
             window.makeKeyAndOrderFront(nil)
             return PADDisplayConfiguration(.sheet, hideNavigationButtons: false, parentWindow: window)
         }
@@ -221,8 +221,7 @@ open class LowtechProAppDelegate: LowtechIndieAppDelegate, PADProductDelegate, P
         }
 
         guard sentryLaunchEvent == nil, Defaults[.lastLaunchVersion] != release else { return }
-        sentryLaunchEvent = mainAsyncAfter(ms: 100) {
-//            sentryLaunchEvent = mainAsyncAfter(ms: 60 * 1000 * 10) {
+        sentryLaunchEvent = mainAsyncAfter(ms: 60 * 1000 * 10) {
             guard LowtechProAppDelegate.enableSentry else { return }
 
             SentrySDK.capture(message: "Launch")
