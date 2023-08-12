@@ -109,4 +109,4 @@ public extension Bundle {
 
 // MARK: - SPUUpdater + ObservableObject
 
-public extension SPUUpdater: ObservableObject {}
+extension SPUUpdater: ObservableObject {}
