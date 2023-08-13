@@ -221,7 +221,7 @@ open class LowtechProAppDelegate: LowtechIndieAppDelegate, PADProductDelegate, P
         }
 
         guard sentryLaunchEvent == nil, Defaults[.lastLaunchVersion] != release else { return }
-        sentryLaunchEvent = mainAsyncAfter(ms: 60 * 1000 * 10) {
+        sentryLaunchEvent = mainAsyncAfter(ms: 5000) {
             guard LowtechProAppDelegate.enableSentry else { return }
 
             SentrySDK.capture(message: "Launch")
