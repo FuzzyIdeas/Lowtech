@@ -719,14 +719,17 @@ public extension String {
         return URL(string: self)
     }
 
-    var fileURL: URL {
+    var fileURL: URL? {
         guard count <= 10240 else { return nil }
-        URL(fileURLWithPath: replacingOccurrences(of: "file://", with: ""))
+        let str = replacingOccurrences(of: "file://", with: "")
+        guard isNotEmpty else { return nil }
+
+        return URL(fileURLWithPath: str)
     }
 
     var existingFilePath: FilePath? {
         guard count <= 4096 else { return nil }
-        FileManager.default.fileExists(atPath: self) ? FilePath(self) : nil
+        return FileManager.default.fileExists(atPath: self) ? FilePath(self) : nil
     }
 
     func parseHex(strict: Bool = false) -> Int? {
