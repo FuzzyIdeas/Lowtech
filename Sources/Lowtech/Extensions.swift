@@ -715,15 +715,17 @@ public extension BinaryInteger {
 import System
 public extension String {
     var url: URL? {
-        guard contains(":") else { return nil }
+        guard contains(":"), count <= 10240 else { return nil }
         return URL(string: self)
     }
 
     var fileURL: URL {
+        guard count <= 10240 else { return nil }
         URL(fileURLWithPath: replacingOccurrences(of: "file://", with: ""))
     }
 
     var existingFilePath: FilePath? {
+        guard count <= 4096 else { return nil }
         FileManager.default.fileExists(atPath: self) ? FilePath(self) : nil
     }
 
