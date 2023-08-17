@@ -714,14 +714,18 @@ public extension BinaryInteger {
 
 import System
 public extension String {
+    var trimmedPath: String {
+        trimmingCharacters(in: ["\"", "'", "\n", "\t", " ", "(", ")", "[", "]", "{", "}", ","])
+    }
+
     var url: URL? {
         guard contains(":"), count <= 10240 else { return nil }
-        return URL(string: self)
+        return URL(string: trimmedPath)
     }
 
     var fileURL: URL? {
         guard count <= 10240 else { return nil }
-        let str = replacingOccurrences(of: "file://", with: "")
+        let str = trimmedPath.replacingOccurrences(of: "file://", with: "")
         guard isNotEmpty else { return nil }
 
         return URL(fileURLWithPath: str)
@@ -729,7 +733,8 @@ public extension String {
 
     var existingFilePath: FilePath? {
         guard count <= 4096 else { return nil }
-        return FileManager.default.fileExists(atPath: self) ? FilePath(self) : nil
+        let str = trimmedPath
+        return FileManager.default.fileExists(atPath: str) ? FilePath(str) : nil
     }
 
     func parseHex(strict: Bool = false) -> Int? {
