@@ -459,16 +459,20 @@ public class LowtechPro: ObservableObject {
         guard let product else {
             return
         }
-        productActivated = true
-        onTrial = trialActive(product: product)
+        mainAsync {
+            self.productActivated = true
+            self.onTrial = self.trialActive(product: product)
+        }
     }
 
     public func disablePro() {
         guard let product else {
             return
         }
-        productActivated = false
-        onTrial = trialActive(product: product)
+        mainAsync {
+            self.productActivated = false
+            self.onTrial = self.trialActive(product: product)
+        }
     }
 
     let paddleVendorID: String
