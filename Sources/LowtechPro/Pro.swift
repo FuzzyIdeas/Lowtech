@@ -214,6 +214,7 @@ open class LowtechProAppDelegate: LowtechIndieAppDelegate, PADProductDelegate, P
             options.releaseName = "v\(release)"
             options.dist = release
             options.appHangTimeoutInterval = 60
+            options.swiftAsyncStacktraces = true
         }
 
         SentrySDK.configureScope { scope in
