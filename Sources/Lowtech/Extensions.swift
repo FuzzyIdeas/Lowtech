@@ -725,10 +725,10 @@ public extension String {
 
     var fileURL: URL? {
         guard count <= 10240 else { return nil }
-        let str = trimmedPath.replacingOccurrences(of: "file://", with: "")
-        guard isNotEmpty else { return nil }
+        let str = trimmedPath
+        guard str.isNotEmpty, str != "file://" else { return nil }
 
-        return URL(fileURLWithPath: str)
+        return str.starts(with: "file:") ? URL(string: str) : URL(fileURLWithPath: str)
     }
 
     var existingFilePath: FilePath? {
