@@ -13,6 +13,8 @@ public extension Notification.Name {
 // MARK: - LowtechAppDelegate
 
 open class LowtechAppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
+    // MARK: Open
+
     @Published open var showPopoverOnSpecialKey = true
 
     open var initialized = false
@@ -71,6 +73,10 @@ open class LowtechAppDelegate: NSObject, NSApplicationDelegate, ObservableObject
         LowtechAppDelegate.instance = self
         Defaults[.launchCount] += 1
 
+        if shouldRestartOnCrash {
+            restartOnCrash()
+        }
+
         initMenubar()
         initObservers()
         KM.onSpecialHotkey = { [self] in
@@ -97,7 +103,11 @@ open class LowtechAppDelegate: NSObject, NSApplicationDelegate, ObservableObject
     @MainActor
     open func onPopoverNotAllowed() {}
 
+    // MARK: Public
+
     public private(set) static var instance: LowtechAppDelegate!
+
+    public var shouldRestartOnCrash = false
 
     public lazy var trialMode = isTrialMode()
 

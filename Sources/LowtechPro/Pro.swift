@@ -18,6 +18,8 @@ public var PRO: LowtechPro? { (LowtechProAppDelegate.instance as? LowtechProAppD
 // MARK: - LowtechProAppDelegate
 
 open class LowtechProAppDelegate: LowtechIndieAppDelegate, PADProductDelegate, PaddleDelegate {
+    // MARK: Open
+
     open func getSentryUser() -> User {
         let user = User(userId: SERIAL_NUMBER_HASH)
         guard let product else { return user }
@@ -28,6 +30,8 @@ open class LowtechProAppDelegate: LowtechIndieAppDelegate, PADProductDelegate, P
 
         return user
     }
+
+    // MARK: Public
 
     public static var showNextPaddleError = true
 
@@ -191,14 +195,14 @@ open class LowtechProAppDelegate: LowtechIndieAppDelegate, PADProductDelegate, P
         }
     }
 
-    public func configureSentry() {
+    public func configureSentry(restartOnHang: Bool) {
         guard let dsn = sentryDSN else { return }
         enableSentryObserver = enableSentryObserver ?? pub(.enableSentry)
             .debounce(for: .seconds(1), scheduler: RunLoop.main)
             .sink { change in
                 LowtechProAppDelegate.enableSentry = change.newValue
                 if change.newValue {
-                    self.configureSentry()
+                    self.configureSentry(restartOnHang: restartOnHang)
                 } else {
                     SentrySDK.close()
                 }
@@ -213,8 +217,22 @@ open class LowtechProAppDelegate: LowtechIndieAppDelegate, PADProductDelegate, P
             options.dsn = dsn
             options.releaseName = "v\(release)"
             options.dist = release
-            options.appHangTimeoutInterval = 60
+            options.appHangTimeoutInterval = 30
             options.swiftAsyncStacktraces = true
+            if restartOnHang {
+                options.beforeSend = { event in
+                    if let exc = event.exceptions?.first, let mech = exc.mechanism, mech.type == "AppHang", let stack = exc.stacktrace {
+                        log.warning("App Hanging: \(stack)")
+                        asyncAfter(ms: 5000) { restart() }
+                        if event.tags == nil {
+                            event.tags = ["restarted": "true"]
+                        } else {
+                            event.tags!["restarted"] = "true"
+                        }
+                    }
+                    return event
+                }
+            }
         }
 
         SentrySDK.configureScope { scope in
@@ -229,6 +247,8 @@ open class LowtechProAppDelegate: LowtechIndieAppDelegate, PADProductDelegate, P
             Defaults[.lastLaunchVersion] = release
         }
     }
+
+    // MARK: Internal
 
     var enableSentryObserver: Cancellable?
     var sentryLaunchEvent: DispatchWorkItem?
@@ -248,6 +268,8 @@ public var product: PADProduct?
 // MARK: - LowtechPro
 
 public class LowtechPro: ObservableObject {
+    // MARK: Lifecycle
+
     public init(
         paddleVendorID: String,
         paddleAPIKey: String,
@@ -301,6 +323,8 @@ public class LowtechPro: ObservableObject {
             enablePro()
         }
     }
+
+    // MARK: Public
 
     @Published public var onTrial = false
     @Published public var productActivated = false
@@ -475,6 +499,8 @@ public class LowtechPro: ObservableObject {
             self.onTrial = self.trialActive(product: product)
         }
     }
+
+    // MARK: Internal
 
     let paddleVendorID: String
     let paddleAPIKey: String

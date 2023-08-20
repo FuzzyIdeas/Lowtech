@@ -693,3 +693,22 @@ func getSerialNumberHash() -> String? {
 }
 
 public let SERIAL_NUMBER_HASH = getSerialNumberHash() ?? generateAPIKey()
+
+public func restart() {
+    guard CommandLine.arguments.count == 1 else {
+        exit(1)
+    }
+    _ = shell("/usr/bin/open", args: ["-n", Bundle.main.bundlePath], wait: true)
+    exit(0)
+}
+
+public func restartOnCrash() {
+    NSSetUncaughtExceptionHandler { _ in restart() }
+    signal(SIGABRT) { _ in restart() }
+    signal(SIGILL) { _ in restart() }
+    signal(SIGSEGV) { _ in restart() }
+    signal(SIGFPE) { _ in restart() }
+    signal(SIGBUS) { _ in restart() }
+    signal(SIGPIPE) { _ in restart() }
+    signal(SIGTRAP) { _ in restart() }
+}
