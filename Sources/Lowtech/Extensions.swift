@@ -1648,6 +1648,7 @@ public extension FilePath {
         try? fm.createDirectory(atPath: string, withIntermediateDirectories: withIntermediateDirectories)
     }
 
+    var dir: FilePath { removingLastComponent() }
     var url: URL { URL(filePath: self)! }
     var backupPath: FilePath? {
         FilePath.backups.appending(nameWithHash)
