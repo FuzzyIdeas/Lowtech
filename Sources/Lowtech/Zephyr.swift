@@ -11,6 +11,9 @@ import Foundation
 #if os(iOS) || os(tvOS)
     import UIKit
 #endif
+import Combine
+
+var globalObservers: Set<AnyCancellable> = []
 
 // MARK: - ZephyrDataStore
 
@@ -24,6 +27,8 @@ enum ZephyrDataStore {
 
 @objcMembers
 public final class Zephyr: NSObject {
+    // MARK: Lifecycle
+
     /// Zephyr's initialization method.
     ///
     /// Do not call this method directly.
@@ -41,6 +46,8 @@ public final class Zephyr: NSObject {
             }
         }
     }
+
+    // MARK: Public
 
     /// A debug flag.
     ///
@@ -188,7 +195,9 @@ public final class Zephyr: NSObject {
         removeKeysFromBeingMonitored(keys: keys)
     }
 
-    static func observe(keys: Defaults.AnyKey..., userDefaults: UserDefaults = UserDefaults.standard) {
+    // MARK: Internal
+
+    static func observe(keys: Defaults._AnyKey..., userDefaults: UserDefaults = UserDefaults.standard) {
         let keyList = keys.map(\.name)
         NotificationCenter.default.publisher(for: Zephyr.keysDidChangeOnCloudNotification)
             .debounce(for: .milliseconds(800), scheduler: RunLoop.main)
@@ -202,13 +211,15 @@ public final class Zephyr: NSObject {
         addKeysToBeMonitored(keys: keyList)
     }
 
-    static func sync(keys: Defaults.AnyKey..., userDefaults: UserDefaults = UserDefaults.standard) {
+    static func sync(keys: Defaults._AnyKey..., userDefaults: UserDefaults = UserDefaults.standard) {
         sync(keys: keys.map(\.name), userDefaults: userDefaults)
     }
 
-    static func addKeysToBeMonitored(keys: Defaults.AnyKey...) {
+    static func addKeysToBeMonitored(keys: Defaults._AnyKey...) {
         addKeysToBeMonitored(keys: keys.map(\.name))
     }
+
+    // MARK: Private
 
     /// The singleton for Zephyr.
     private static let shared = Zephyr()
@@ -303,11 +314,11 @@ private extension Zephyr {
 // MARK: - Synchronizers
 
 extension Zephyr {
-    static func forceSyncToCloud(keys: Defaults.AnyKey...) {
+    static func forceSyncToCloud(keys: Defaults._AnyKey...) {
         shared.syncSpecificKeys(keys: keys.map(\.name), dataStore: .local)
     }
 
-    static func forceSyncFromCloud(keys: Defaults.AnyKey...) {
+    static func forceSyncFromCloud(keys: Defaults._AnyKey...) {
         shared.syncSpecificKeys(keys: keys.map(\.name), dataStore: .remote)
     }
 
