@@ -27,8 +27,6 @@ enum ZephyrDataStore {
 
 @objcMembers
 public final class Zephyr: NSObject {
-    // MARK: Lifecycle
-
     /// Zephyr's initialization method.
     ///
     /// Do not call this method directly.
@@ -46,8 +44,6 @@ public final class Zephyr: NSObject {
             }
         }
     }
-
-    // MARK: Public
 
     /// A debug flag.
     ///
@@ -195,6 +191,15 @@ public final class Zephyr: NSObject {
         removeKeysFromBeingMonitored(keys: keys)
     }
 
+    public static func stopObserving(keys: Defaults._AnyKey..., userDefaults: UserDefaults = UserDefaults.standard) {
+        stopObserving(keys: keys, userDefaults: userDefaults)
+    }
+
+    public static func stopObserving(keys: [Defaults._AnyKey], userDefaults: UserDefaults = UserDefaults.standard) {
+        let keyList = keys.map(\.name)
+        removeKeysFromBeingMonitored(keys: keyList)
+    }
+
     public static func observe(keys: Defaults._AnyKey..., userDefaults: UserDefaults = UserDefaults.standard) {
         observe(keys: keys, userDefaults: userDefaults)
     }
@@ -213,8 +218,6 @@ public final class Zephyr: NSObject {
         addKeysToBeMonitored(keys: keyList)
     }
 
-    // MARK: Internal
-
     static func sync(keys: Defaults._AnyKey..., userDefaults: UserDefaults = UserDefaults.standard) {
         sync(keys: keys.map(\.name), userDefaults: userDefaults)
     }
@@ -222,8 +225,6 @@ public final class Zephyr: NSObject {
     static func addKeysToBeMonitored(keys: Defaults._AnyKey...) {
         addKeysToBeMonitored(keys: keys.map(\.name))
     }
-
-    // MARK: Private
 
     /// The singleton for Zephyr.
     private static let shared = Zephyr()

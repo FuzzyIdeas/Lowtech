@@ -18,8 +18,6 @@ public var PRO: LowtechPro? { (LowtechProAppDelegate.instance as? LowtechProAppD
 // MARK: - LowtechProAppDelegate
 
 open class LowtechProAppDelegate: LowtechIndieAppDelegate, PADProductDelegate, PaddleDelegate {
-    // MARK: Open
-
     open func getSentryUser() -> User {
         let user = User(userId: SERIAL_NUMBER_HASH)
         guard let product else { return user }
@@ -30,8 +28,6 @@ open class LowtechProAppDelegate: LowtechIndieAppDelegate, PADProductDelegate, P
 
         return user
     }
-
-    // MARK: Public
 
     public static var showNextPaddleError = true
 
@@ -248,8 +244,6 @@ open class LowtechProAppDelegate: LowtechIndieAppDelegate, PADProductDelegate, P
         }
     }
 
-    // MARK: Internal
-
     var enableSentryObserver: Cancellable?
     var sentryLaunchEvent: DispatchWorkItem?
 }
@@ -268,8 +262,6 @@ public var product: PADProduct?
 // MARK: - LowtechPro
 
 public class LowtechPro: ObservableObject {
-    // MARK: Lifecycle
-
     public init(
         paddleVendorID: String,
         paddleAPIKey: String,
@@ -323,8 +315,6 @@ public class LowtechPro: ObservableObject {
             enablePro()
         }
     }
-
-    // MARK: Public
 
     @Published public var onTrial = false
     @Published public var productActivated = false
@@ -499,8 +489,6 @@ public class LowtechPro: ObservableObject {
             self.onTrial = self.trialActive(product: product)
         }
     }
-
-    // MARK: Internal
 
     let paddleVendorID: String
     let paddleAPIKey: String

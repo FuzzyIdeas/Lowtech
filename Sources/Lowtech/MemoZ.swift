@@ -116,7 +116,7 @@ public typealias MemoizationCache = Cache<MemoizationCacheKey, Any>
 /// A key for memoization that uses a `Hashable` instance with a hashable `KeyPath` to form a cache key.
 public struct MemoizationCacheKey: Hashable {
     /// Internal-only key init – keys should be created only via `Hashable.memoize`
-    @usableFromInline internal init(subject: AnyHashable, keyPath: AnyKeyPath) {
+    @usableFromInline init(subject: AnyHashable, keyPath: AnyKeyPath) {
         self.subject = subject
         self.keyPath = keyPath
     }
