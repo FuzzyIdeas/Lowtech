@@ -195,9 +195,11 @@ public final class Zephyr: NSObject {
         removeKeysFromBeingMonitored(keys: keys)
     }
 
-    // MARK: Internal
+    public static func observe(keys: Defaults._AnyKey..., userDefaults: UserDefaults = UserDefaults.standard) {
+        observe(keys: keys, userDefaults: userDefaults)
+    }
 
-    static func observe(keys: Defaults._AnyKey..., userDefaults: UserDefaults = UserDefaults.standard) {
+    public static func observe(keys: [Defaults._AnyKey], userDefaults: UserDefaults = UserDefaults.standard) {
         let keyList = keys.map(\.name)
         NotificationCenter.default.publisher(for: Zephyr.keysDidChangeOnCloudNotification)
             .debounce(for: .milliseconds(800), scheduler: RunLoop.main)
@@ -210,6 +212,8 @@ public final class Zephyr: NSObject {
         sync(keys: keyList, userDefaults: userDefaults)
         addKeysToBeMonitored(keys: keyList)
     }
+
+    // MARK: Internal
 
     static func sync(keys: Defaults._AnyKey..., userDefaults: UserDefaults = UserDefaults.standard) {
         sync(keys: keys.map(\.name), userDefaults: userDefaults)
