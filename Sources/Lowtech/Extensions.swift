@@ -1608,6 +1608,16 @@ public extension FilePath {
         removingLastComponent().appending("\(stem!.replacing(#/_\d+x\d+$/#, with: ""))_\(size.width.i)x\(size.height.i).\(`extension`!)")
     }
 
+    func withFilters(_ filters: String...) -> FilePath {
+        withFilters(filters)
+    }
+
+    func withFilters(_ filters: [String]) -> FilePath {
+        let name = stem!.replacing(#/_\[.+\]$/#, with: "")
+        let filterStr = filters.joined(separator: ",")
+        return removingLastComponent().appending("\(name)_[\(filterStr)].\(`extension`!)")
+    }
+
     @discardableResult
     func waitForFile(for seconds: TimeInterval) -> Bool {
         let path = string
@@ -1625,6 +1635,10 @@ public extension FilePath {
     var name: FilePath.Component { lastComponent! }
     var nameWithoutSize: String {
         "\(stem!.replacing(#/_\d+x\d+$/#, with: "")).\(`extension`!)"
+    }
+
+    var nameWithoutFilters: String {
+        "\(stem!.replacing(#/_\[.+\]$/#, with: "")).\(`extension`!)"
     }
 
     var nameWithHash: String {
