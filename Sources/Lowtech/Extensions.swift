@@ -1519,7 +1519,13 @@ public extension Binding<Int> {
     }
 }
 
+var SAFE_FILENAME_REGEX: Regex = try! Regex(#"[\/:{}<>*|$#&^;'"`\x00-\x09\x0B-\x0C\x0E-\x1F\n\t]"#)
+
 public extension String {
+    var safeFilename: String {
+        replacing(SAFE_FILENAME_REGEX, with: { _ in "_" })
+    }
+
     subscript(_ idx: Int) -> String {
         switch idx {
         case 0:

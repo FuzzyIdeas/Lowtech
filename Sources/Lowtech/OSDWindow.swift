@@ -153,6 +153,8 @@ open class LowtechWindow: NSWindow, NSWindowDelegate {
     open var onMouseDown: ((NSEvent) -> Void)?
     open var onMouseDrag: ((NSEvent) -> Void)?
 
+    override open var canBecomeKey: Bool { true }
+
     override open func mouseDragged(with event: NSEvent) {
         guard !ignoresMouseEvents, let onMouseDrag else { return }
         onMouseDrag(event)
@@ -212,7 +214,6 @@ open class LowtechWindow: NSWindow, NSWindowDelegate {
             w.center()
         }
     }
-
     public func moveToScreen(_ screen: NSScreen? = nil, corner: ScreenCorner? = nil, margin: CGFloat? = nil, marginHorizontal: CGFloat? = nil, animate: Bool = false) {
         guard let screenFrame = (screen ?? NSScreen.withMouse ?? NSScreen.main)?.visibleFrame else {
             return

@@ -43,7 +43,14 @@ open class LocalEventMonitor {
     }
 
     public func start() {
-        monitor = NSEvent.addLocalMonitorForEvents(matching: mask, handler: handler) as! NSObject
+        #if DEBUG
+            monitor = NSEvent.addLocalMonitorForEvents(matching: mask, handler: { event in
+                print("Handling mask \(self.mask) on event: \(event)")
+                return self.handler(event)
+            }) as! NSObject
+        #else
+            monitor = NSEvent.addLocalMonitorForEvents(matching: mask, handler: handler) as! NSObject
+        #endif
     }
 
     public func stop() {
