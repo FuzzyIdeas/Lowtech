@@ -44,7 +44,7 @@ public final class NanoID {
         NanoIDHelper.generate(from: NanoID.defaultAphabet, of: size)
     }
 
-    static func random() -> String {
+    public static func random() -> String {
         NanoIDHelper.generate(from: NanoIDAlphabet.all.toString(), of: arc4random_uniform(30).i + 10)
     }
 
