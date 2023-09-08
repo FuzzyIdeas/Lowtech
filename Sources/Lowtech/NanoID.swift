@@ -26,21 +26,21 @@ import Foundation
 /// let idSecond = nanoID.new()
 
 public final class NanoID {
-    init(alphabet: NanoIDAlphabet..., size: Int) {
+    public init(alphabet: NanoIDAlphabet..., size: Int) {
         self.size = size
         self.alphabet = NanoIDHelper.parse(alphabet)
     }
 
-    static func new() -> String {
+    public static func new() -> String {
         NanoIDHelper.generate(from: defaultAphabet, of: defaultSize)
     }
 
-    static func new(alphabet: NanoIDAlphabet..., size: Int) -> String {
+    public static func new(alphabet: NanoIDAlphabet..., size: Int) -> String {
         let charactersString = NanoIDHelper.parse(alphabet)
         return NanoIDHelper.generate(from: charactersString, of: size)
     }
 
-    static func new(_ size: Int) -> String {
+    public static func new(_ size: Int) -> String {
         NanoIDHelper.generate(from: NanoID.defaultAphabet, of: size)
     }
 
@@ -48,7 +48,7 @@ public final class NanoID {
         NanoIDHelper.generate(from: NanoIDAlphabet.all.toString(), of: arc4random_uniform(30).i + 10)
     }
 
-    func new() -> String {
+    public func new() -> String {
         NanoIDHelper.generate(from: alphabet, of: size)
     }
 
