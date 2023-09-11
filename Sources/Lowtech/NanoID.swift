@@ -45,7 +45,9 @@ public final class NanoID {
     }
 
     public static func random(maxSize: Int = 40) -> String {
-        NanoIDHelper.generate(from: NanoIDAlphabet.all.toString(), of: arc4random_uniform((maxSize - 10).u32).i + 10)
+        maxSize < 10
+            ? NanoID.new(size: maxSize)
+            : NanoIDHelper.generate(from: NanoIDAlphabet.all.toString(), of: arc4random_uniform((maxSize - 10).u32).i + 10)
     }
 
     public func new() -> String {
