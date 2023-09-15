@@ -10,12 +10,12 @@ import Combine
 import Defaults
 import Foundation
 
-@inline(__always)
+@inline(__always) @inlinable
 public func timeSince(_ date: Date) -> TimeInterval {
     date.timeIntervalSinceNow * -1
 }
 
-@inline(__always)
+@inline(__always) @inlinable
 public func timeUntil(_ date: Date) -> TimeInterval {
     date.timeIntervalSinceNow
 }
@@ -371,85 +371,93 @@ public func mapNumber<T: Numeric & Comparable & FloatingPoint>(_ number: T, from
     }
 }
 
-@inline(__always) public func lerp(_ value: Double, min: Double, max: Double) -> Double {
+@inline(__always) @inlinable public func lerp(_ value: Double, min: Double, max: Double) -> Double {
     min + (max - min) * value
 }
 
-@inline(__always) public func invlerp(_ value: Double, min: Double, max: Double) -> Double {
+@inline(__always) @inlinable public func invlerp(_ value: Double, min: Double, max: Double) -> Double {
     max == min ? min : (value - min) / (max - min)
 }
 
-@inline(__always) public func lerp(_ value: Float, min: Float, max: Float) -> Float {
+@inline(__always) @inlinable public func lerp(_ value: Float, min: Float, max: Float) -> Float {
     min + (max - min) * value
 }
 
-@inline(__always) public func invlerp(_ value: Float, min: Float, max: Float) -> Float {
+@inline(__always) @inlinable public func invlerp(_ value: Float, min: Float, max: Float) -> Float {
     max == min ? min : (value - min) / (max - min)
 }
 
-@inline(__always) public func lerp(_ value: CGFloat, min: CGFloat, max: CGFloat) -> CGFloat {
+@inline(__always) @inlinable public func lerp(_ value: CGFloat, min: CGFloat, max: CGFloat) -> CGFloat {
     min + (max - min) * value
 }
 
-@inline(__always) public func invlerp(_ value: CGFloat, min: CGFloat, max: CGFloat) -> CGFloat {
+@inline(__always) @inlinable public func invlerp(_ value: CGFloat, min: CGFloat, max: CGFloat) -> CGFloat {
     max == min ? min : (value - min) / (max - min)
 }
 
 public extension BinaryInteger {
+    @inline(__always) @inlinable
     func map(from: (Self, Self), to: (Self, Self)) -> Self {
         Self(lerp(invlerp(d, min: from.0.d, max: from.1.d), min: to.0.d, max: to.1.d))
     }
 
+    @inline(__always) @inlinable
     func map(from: (Self, Self), to: (Self, Self), gamma: Double) -> Self {
         Self(lerp(pow(invlerp(d, min: from.0.d, max: from.1.d), 1.0 / gamma), min: to.0.d, max: to.1.d))
     }
 
-    @inline(__always)
+    @inline(__always) @inlinable
     func capped(between minVal: Self, and maxVal: Self) -> Self {
         cap(self, minVal: minVal, maxVal: maxVal)
     }
 }
 
 public extension Double {
+    @inline(__always) @inlinable
     func map(from: (Double, Double), to: (Double, Double)) -> Double {
         lerp(invlerp(self, min: from.0, max: from.1), min: to.0, max: to.1)
     }
 
+    @inline(__always) @inlinable
     func map(from: (Double, Double), to: (Double, Double), gamma: Double) -> Double {
         lerp(pow(invlerp(self, min: from.0, max: from.1), 1.0 / gamma), min: to.0, max: to.1)
     }
 
-    @inline(__always)
+    @inline(__always) @inlinable
     func capped(between minVal: Double, and maxVal: Double) -> Double {
         cap(self, minVal: minVal, maxVal: maxVal)
     }
 }
 
 public extension Float {
+    @inline(__always) @inlinable
     func map(from: (Float, Float), to: (Float, Float)) -> Float {
         lerp(invlerp(self, min: from.0, max: from.1), min: to.0, max: to.1)
     }
 
+    @inline(__always) @inlinable
     func map(from: (Float, Float), to: (Float, Float), gamma: Float) -> Float {
         lerp(pow(invlerp(self, min: from.0, max: from.1), 1.0 / gamma), min: to.0, max: to.1)
     }
 
-    @inline(__always)
+    @inline(__always) @inlinable
     func capped(between minVal: Float, and maxVal: Float) -> Float {
         cap(self, minVal: minVal, maxVal: maxVal)
     }
 }
 
 public extension CGFloat {
+    @inline(__always) @inlinable
     func map(from: (CGFloat, CGFloat), to: (CGFloat, CGFloat)) -> CGFloat {
         lerp(invlerp(self, min: from.0, max: from.1), min: to.0, max: to.1)
     }
 
+    @inline(__always) @inlinable
     func map(from: (CGFloat, CGFloat), to: (CGFloat, CGFloat), gamma: CGFloat) -> CGFloat {
         lerp(pow(invlerp(self, min: from.0, max: from.1), 1.0 / gamma), min: to.0, max: to.1)
     }
 
-    @inline(__always)
+    @inline(__always) @inlinable
     func capped(between minVal: CGFloat, and maxVal: CGFloat) -> CGFloat {
         cap(self, minVal: minVal, maxVal: maxVal)
     }

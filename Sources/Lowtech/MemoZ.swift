@@ -240,7 +240,7 @@ public final class Cache<Key: Hashable, Value> {
     @usableFromInline let lock = NSRecursiveLock()
 
     /// Performs an operation on the reference, optionally locking it first
-    @usableFromInline func withLock<T>(exclusive: Bool = true, action: () throws -> T) rethrows -> T {
+    @usableFromInline func withLock<Val>(exclusive: Bool = true, action: () throws -> Val) rethrows -> Val {
         if exclusive { lock.lock() }
         defer { if exclusive { lock.unlock() } }
         return try action()
@@ -268,7 +268,7 @@ public final class Cache<Key: Hashable, Value> {
     @usableFromInline let lock = NSRecursiveLock()
 
     /// Performs an operation on the reference, optionally locking it first
-    @usableFromInline func withLock<T>(exclusive: Bool = true, action: () throws -> T) rethrows -> T {
+    @usableFromInline func withLock<Val>(exclusive: Bool = true, action: () throws -> Val) rethrows -> Val {
         if exclusive { lock.lock() }
         defer { if exclusive { lock.unlock() } }
         return try action()
