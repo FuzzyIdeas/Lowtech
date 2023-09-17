@@ -20,6 +20,7 @@ public func timeUntil(_ date: Date) -> TimeInterval {
     date.timeIntervalSinceNow
 }
 
+@inline(__always) @inlinable
 public func cap<T: Comparable>(_ number: T, minVal: T, maxVal: T) -> T {
     max(min(number, maxVal), minVal)
 }
