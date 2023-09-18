@@ -55,15 +55,6 @@
       }
     },
     {
-      "identity" : "fuzzymatcher",
-      "kind" : "remoteSourceControl",
-      "location" : "https://github.com/alin23/FuzzyMatcher",
-      "state" : {
-        "branch" : "main",
-        "revision" : "b97b7b900faf2a3881b5536be0f50b5c904c2798"
-      }
-    },
-    {
       "identity" : "launchatlogin-modern",
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/sindresorhus/LaunchAtLogin-Modern",

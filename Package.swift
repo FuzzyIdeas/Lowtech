@@ -31,7 +31,6 @@ let package = Package(
         // Dependencies declare other packages that this package depends on.
         .package(url: "https://github.com/sindresorhus/Defaults", from: "7.0.0"),
         .package(url: "https://github.com/apple/swift-atomics", from: "1.0.2"),
-        .package(url: "https://github.com/alin23/FuzzyMatcher", branch: "main"),
         .package(url: "https://github.com/sindresorhus/LaunchAtLogin-Modern", branch: "main"),
         .package(url: "https://github.com/alin23/Magnet", branch: "dev"),
         .package(url: "https://github.com/Clipy/Sauce", from: "2.2.0"),
@@ -59,7 +58,6 @@ let package = Package(
                 .product(name: "Sauce", package: "Sauce"),
                 .product(name: "EonilFSEvents", package: "FSEvents"),
                 .product(name: "DynamicColor", package: "DynamicColor"),
-                .product(name: "FuzzyMatcher", package: "FuzzyMatcher"),
                 .product(name: "SystemColors", package: "swiftui-system-colors"),
             ]
         ),

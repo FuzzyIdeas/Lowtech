@@ -68,7 +68,7 @@ public struct TrialOSDContainer: View {
                     .frame(width: 90, height: 90)
             }
             VStack(alignment: .leading) {
-                Text("Trial period of") + Text(" \(Bundle.main.name ?? "the app") ").bold() + Text("expired for the current session.")
+                Text("Trial period of") + Text(" \(Bundle.main.name) ").bold() + Text("expired for the current session.")
                 Text("Buy the full version from") + Text(" App Store ").bold() + Text("to remove this limitation.")
 
                 HStack {

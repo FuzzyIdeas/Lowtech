@@ -1349,6 +1349,10 @@ public extension SetAlgebra {
 }
 
 public extension Bundle {
+    var icon: NSImage {
+        NSWorkspace.shared.icon(forFile: bundlePath)
+    }
+
     var name: String {
         infoDictionary?["CFBundleName"] as? String
             ?? executableURL?.deletingPathExtension().lastPathComponent
