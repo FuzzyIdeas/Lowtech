@@ -1349,8 +1349,10 @@ public extension SetAlgebra {
 }
 
 public extension Bundle {
-    var name: String? {
-        infoDictionary?["CFBundleName"] as? String ?? executableURL?.deletingPathExtension().lastPathComponent
+    var name: String {
+        infoDictionary?["CFBundleName"] as? String
+            ?? executableURL?.deletingPathExtension().lastPathComponent
+            ?? bundleURL.lastPathComponent.replacingOccurrences(of: ".app", with: "")
     }
 
     var isMenuBarApp: Bool {
