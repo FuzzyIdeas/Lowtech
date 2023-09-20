@@ -1535,13 +1535,13 @@ public extension String {
     subscript(_ idx: Int) -> String {
         switch idx {
         case 0:
-            return String(first!)
+            String(first!)
         case (count - 1) ... Int.max:
-            return String(last!)
+            String(last!)
         case Int.min ..< 0:
-            return String(suffix(-idx).first!)
+            String(suffix(-idx).first!)
         default:
-            return String(prefix(idx + 1).last!)
+            String(prefix(idx + 1).last!)
         }
     }
 
@@ -1783,4 +1783,12 @@ infix operator /: MultiplicationPrecedence
 
 public func / (_ path: FilePath, _ str: String) -> FilePath {
     path.appending(str)
+}
+
+public func focus() {
+    if #available(macOS 14.0, *) {
+        NSApp.activate()
+    } else {
+        NSApp.activate(ignoringOtherApps: true)
+    }
 }
