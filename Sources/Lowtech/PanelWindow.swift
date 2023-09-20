@@ -39,7 +39,7 @@ open class PanelWindow: LowtechWindow {
         makeKeyAndOrderFront(nil)
         orderFrontRegardless()
         if activate {
-            NSApp.activate(ignoringOtherApps: true)
+            focus()
         }
     }
 }
