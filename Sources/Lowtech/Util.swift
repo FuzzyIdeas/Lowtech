@@ -82,7 +82,7 @@ public extension ObservableSettings {
     func bind<Value>(_ key: Defaults.Key<Value>, property: ReferenceWritableKeyPath<Self, Value>, publisher: KeyPath<Self, Published<Value>.Publisher>? = nil, debounce: RunLoop.SchedulerTimeType.Stride? = nil) {
         let onSettingChange: (Defaults.KeyChange<Value>) -> Void = { [weak self] change in
             guard let self else { return }
-            self.withoutApply {
+            withoutApply {
                 self[keyPath: property] = change.newValue
             }
         }
@@ -100,7 +100,7 @@ public extension ObservableSettings {
         guard let publisher else { return }
 
         let onChange: (Value) -> Void = { [weak self] val in
-            guard let self, self.apply else { return }
+            guard let self, apply else { return }
             Defaults[key] = val
         }
 
@@ -124,7 +124,7 @@ public extension ObservableSettings {
     ) {
         let onSettingChange: (Defaults.KeyChange<Value>) -> Void = { [weak self] change in
             guard let self else { return }
-            self.withoutApply {
+            withoutApply {
                 self[keyPath: property] = transformer.to(change.newValue)
             }
         }
@@ -142,7 +142,7 @@ public extension ObservableSettings {
         guard let publisher else { return }
 
         let onChange: (Transformed) -> Void = { [weak self] val in
-            guard let self, self.apply, let transform = transformer.from else { return }
+            guard let self, apply, let transform = transformer.from else { return }
             Defaults[key] = transform(val)
         }
 
@@ -170,8 +170,8 @@ public class Setting<Value: Defaults.Serializable> {
             .debounce(for: .milliseconds(10), scheduler: RunLoop.main)
             .sink { [weak self] in
                 guard let self else { return }
-                self.storage.value = $0.newValue
-                self.storage.oldValue = $0.oldValue
+                storage.value = $0.newValue
+                storage.oldValue = $0.oldValue
             }
     }
 

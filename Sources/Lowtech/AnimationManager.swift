@@ -14,22 +14,22 @@ public enum AnimationSpeed: String, Codable, Defaults.Serializable {
     public var animation: Animation {
         switch self {
         case .fluid:
-            return .jumpySpring
+            .jumpySpring
         case .snappy:
-            return .quickSpring
+            .quickSpring
         case .instant:
-            return .fastSpring
+            .fastSpring
         }
     }
 
     public var multiplier: Double {
         switch self {
         case .fluid:
-            return 0.5
+            0.5
         case .snappy:
-            return 1.25
+            1.25
         case .instant:
-            return 1.75
+            1.75
         }
     }
 }

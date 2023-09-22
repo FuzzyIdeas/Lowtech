@@ -937,180 +937,180 @@ public let KM = KeysManager()
         public var eventModifier: SwiftUI.EventModifiers {
             switch self {
             case .rcmd:
-                return .command
+                .command
             case .ralt:
-                return .option
+                .option
             case .lcmd:
-                return .command
+                .command
             case .lalt:
-                return .option
+                .option
             case .lctrl:
-                return .control
+                .control
             case .lshift:
-                return .shift
+                .shift
             case .rshift:
-                return .shift
+                .shift
             case .rctrl:
-                return .control
+                .control
             }
         }
         public var modifier: NSEvent.ModifierFlags {
             switch self {
             case .rcmd:
-                return .rightCommand
+                .rightCommand
             case .ralt:
-                return .rightOption
+                .rightOption
             case .lcmd:
-                return .leftCommand
+                .leftCommand
             case .lalt:
-                return .leftOption
+                .leftOption
             case .lctrl:
-                return .leftControl
+                .leftControl
             case .lshift:
-                return .leftShift
+                .leftShift
             case .rshift:
-                return .rightShift
+                .rightShift
             case .rctrl:
-                return .rightControl
+                .rightControl
             }
         }
 
         public var sideIndependentModifier: NSEvent.ModifierFlags {
             switch self {
             case .rcmd:
-                return .command
+                .command
             case .ralt:
-                return .option
+                .option
             case .lcmd:
-                return .command
+                .command
             case .lalt:
-                return .option
+                .option
             case .lctrl:
-                return .control
+                .control
             case .lshift:
-                return .shift
+                .shift
             case .rshift:
-                return .shift
+                .shift
             case .rctrl:
-                return .control
+                .control
             }
         }
 
         public var directionalStr: String {
             switch self {
             case .rcmd:
-                return "⌘⃗"
+                "⌘⃗"
             case .ralt:
-                return "⌥⃗"
+                "⌥⃗"
             case .lcmd:
-                return "⌘⃖"
+                "⌘⃖"
             case .lalt:
-                return "⌥⃖"
+                "⌥⃖"
             case .lctrl:
-                return "^⃖"
+                "^⃖"
             case .lshift:
-                return "⇧⃖"
+                "⇧⃖"
             case .rshift:
-                return "⇧⃗"
+                "⇧⃗"
             case .rctrl:
-                return "^⃗"
+                "^⃗"
             }
         }
 
         public var str: String {
             switch self {
             case .rcmd:
-                return "⌘"
+                "⌘"
             case .ralt:
-                return "⌥"
+                "⌥"
             case .lcmd:
-                return "⌘"
+                "⌘"
             case .lalt:
-                return "⌥"
+                "⌥"
             case .lctrl:
-                return "^"
+                "^"
             case .lshift:
-                return "⇧"
+                "⇧"
             case .rshift:
-                return "⇧"
+                "⇧"
             case .rctrl:
-                return "^"
+                "^"
             }
         }
 
         public var readableStr: String {
             switch self {
             case .rcmd:
-                return "Right Command"
+                "Right Command"
             case .ralt:
-                return "Right Option"
+                "Right Option"
             case .lcmd:
-                return "Left Command"
+                "Left Command"
             case .lalt:
-                return "Left Option"
+                "Left Option"
             case .lctrl:
-                return "Left Control"
+                "Left Control"
             case .lshift:
-                return "Left Shift"
+                "Left Shift"
             case .rshift:
-                return "Right Shift"
+                "Right Shift"
             case .rctrl:
-                return "Right Control"
+                "Right Control"
             }
         }
 
         public var sideIndependentReadableStr: String {
             switch self {
             case .rcmd, .lcmd:
-                return "Command"
+                "Command"
             case .ralt, .lalt:
-                return "Option"
+                "Option"
             case .lctrl, .rctrl:
-                return "Control"
+                "Control"
             case .lshift, .rshift:
-                return "Shift"
+                "Shift"
             }
         }
 
         public var shortReadableStr: String {
             switch self {
             case .rcmd:
-                return "rcmd"
+                "rcmd"
             case .ralt:
-                return "ralt"
+                "ralt"
             case .lcmd:
-                return "lcmd"
+                "lcmd"
             case .lalt:
-                return "lalt"
+                "lalt"
             case .lctrl:
-                return "lctrl"
+                "lctrl"
             case .lshift:
-                return "lshift"
+                "lshift"
             case .rshift:
-                return "rshift"
+                "rshift"
             case .rctrl:
-                return "rctrl"
+                "rctrl"
             }
         }
 
         public var pressed: Bool {
             switch self {
             case .rcmd:
-                return KM.rcmd
+                KM.rcmd
             case .ralt:
-                return KM.ralt
+                KM.ralt
             case .lcmd:
-                return KM.lcmd
+                KM.lcmd
             case .lalt:
-                return KM.lalt
+                KM.lalt
             case .lctrl:
-                return KM.lctrl
+                KM.lctrl
             case .lshift:
-                return KM.lshift
+                KM.lshift
             case .rshift:
-                return KM.rshift
+                KM.rshift
             case .rctrl:
-                return KM.rctrl
+                KM.rctrl
             }
         }
 
@@ -1311,31 +1311,31 @@ public let KM = KeysManager()
 
         var QWERTYCharacter: String {
             switch QWERTYKeyCode.i {
-            case kVK_ANSI_0: return "0"
-            case kVK_ANSI_1: return "1"
-            case kVK_ANSI_2: return "2"
-            case kVK_ANSI_3: return "3"
-            case kVK_ANSI_4: return "4"
-            case kVK_ANSI_5: return "5"
-            case kVK_ANSI_6: return "6"
-            case kVK_ANSI_7: return "7"
-            case kVK_ANSI_8: return "8"
-            case kVK_ANSI_9: return "9"
-            case kVK_ISO_Section: return "§"
-            case kVK_ANSI_Equal: return "="
-            case kVK_ANSI_Minus: return "-"
-            case kVK_ANSI_RightBracket: return "]"
-            case kVK_ANSI_LeftBracket: return "["
-            case kVK_ANSI_Quote: return "'"
-            case kVK_ANSI_Semicolon: return ";"
-            case kVK_ANSI_Backslash: return "\\"
-            case kVK_ANSI_Comma: return ","
-            case kVK_ANSI_Slash: return "/"
-            case kVK_ANSI_Period: return "."
-            case kVK_ANSI_Grave: return "`"
-            case kVK_Return: return "⏎"
-            case kVK_Space: return "⎵"
-            default: return rawValue.uppercased()
+            case kVK_ANSI_0: "0"
+            case kVK_ANSI_1: "1"
+            case kVK_ANSI_2: "2"
+            case kVK_ANSI_3: "3"
+            case kVK_ANSI_4: "4"
+            case kVK_ANSI_5: "5"
+            case kVK_ANSI_6: "6"
+            case kVK_ANSI_7: "7"
+            case kVK_ANSI_8: "8"
+            case kVK_ANSI_9: "9"
+            case kVK_ISO_Section: "§"
+            case kVK_ANSI_Equal: "="
+            case kVK_ANSI_Minus: "-"
+            case kVK_ANSI_RightBracket: "]"
+            case kVK_ANSI_LeftBracket: "["
+            case kVK_ANSI_Quote: "'"
+            case kVK_ANSI_Semicolon: ";"
+            case kVK_ANSI_Backslash: "\\"
+            case kVK_ANSI_Comma: ","
+            case kVK_ANSI_Slash: "/"
+            case kVK_ANSI_Period: "."
+            case kVK_ANSI_Grave: "`"
+            case kVK_Return: "⏎"
+            case kVK_Space: "⎵"
+            default: rawValue.uppercased()
             }
         }
     }

@@ -105,28 +105,26 @@ public enum NanoIDAlphabet {
     func toString() -> String {
         switch self {
         case .uppercasedLatinLetters, .lowercasedLatinLetters, .numbers, .symbols:
-            return chars()
+            chars()
         case .urlSafe:
-            return
-                "\(NanoIDAlphabet.uppercasedLatinLetters.chars())\(NanoIDAlphabet.lowercasedLatinLetters.chars())\(NanoIDAlphabet.numbers.chars())~_"
+            "\(NanoIDAlphabet.uppercasedLatinLetters.chars())\(NanoIDAlphabet.lowercasedLatinLetters.chars())\(NanoIDAlphabet.numbers.chars())~_"
         case .all:
-            return
-                "\(NanoIDAlphabet.uppercasedLatinLetters.chars())\(NanoIDAlphabet.lowercasedLatinLetters.chars())\(NanoIDAlphabet.numbers.chars())\(NanoIDAlphabet.symbols.chars())"
+            "\(NanoIDAlphabet.uppercasedLatinLetters.chars())\(NanoIDAlphabet.lowercasedLatinLetters.chars())\(NanoIDAlphabet.numbers.chars())\(NanoIDAlphabet.symbols.chars())"
         }
     }
 
     private func chars() -> String {
         switch self {
         case .uppercasedLatinLetters:
-            return "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+            "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
         case .lowercasedLatinLetters:
-            return "abcdefghijklmnopqrstuvwxyz"
+            "abcdefghijklmnopqrstuvwxyz"
         case .numbers:
-            return "1234567890"
+            "1234567890"
         case .symbols:
-            return "§±!@#$%^&*()_+-=[]{};':,.<>?`~ /|"
+            "§±!@#$%^&*()_+-=[]{};':,.<>?`~ /|"
         default:
-            return ""
+            ""
         }
     }
 }

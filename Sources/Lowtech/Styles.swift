@@ -26,9 +26,9 @@ public struct CheckboxToggleStyle: ToggleStyle {
         public var sfSymbolName: String {
             switch self {
             case .square:
-                return "square"
+                "square"
             case .circle:
-                return "circle"
+                "circle"
             }
         }
     }
@@ -67,11 +67,11 @@ public struct DetailToggleStyle: ToggleStyle {
         public var sfSymbolName: String {
             switch self {
             case .empty:
-                return ""
+                ""
             case .square:
-                return ".square"
+                ".square"
             case .circle:
-                return ".circle"
+                ".circle"
             }
         }
     }

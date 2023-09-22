@@ -76,13 +76,13 @@ open class OSDWindow: LowtechWindow {
         closer?.cancel()
         guard closeMilliseconds > 0 else { return }
         fader = mainAsyncAfter(ms: fadeMilliseconds) { [weak self] in
-            guard let self, self.isVisible else { return }
+            guard let self, isVisible else { return }
             NSAnimationContext.runAnimationGroup { ctx in
                 ctx.duration = fadeDuration
                 self.animator().alphaValue = 0.01
             }
 
-            self.closer = mainAsyncAfter(ms: closeMilliseconds) { [weak self] in
+            closer = mainAsyncAfter(ms: closeMilliseconds) { [weak self] in
                 self?.close()
             }
         }
@@ -309,9 +309,9 @@ public enum ScreenCorner: Int, Codable, Defaults.Serializable {
     public var isTrailing: Bool {
         switch self {
         case .bottomRight, .topRight, .right:
-            return true
+            true
         default:
-            return false
+            false
         }
     }
 

@@ -770,29 +770,29 @@ public struct EdgeBorder: Shape {
         for edge in edges {
             var x: CGFloat {
                 switch edge {
-                case .top, .bottom, .leading: return rect.minX - 0.5
-                case .trailing: return rect.maxX - width + 0.5
+                case .top, .bottom, .leading: rect.minX - 0.5
+                case .trailing: rect.maxX - width + 0.5
                 }
             }
 
             var y: CGFloat {
                 switch edge {
-                case .top, .leading, .trailing: return rect.minY - 0.5
-                case .bottom: return rect.maxY - width + 0.5
+                case .top, .leading, .trailing: rect.minY - 0.5
+                case .bottom: rect.maxY - width + 0.5
                 }
             }
 
             var w: CGFloat {
                 switch edge {
-                case .top, .bottom: return rect.width
-                case .leading, .trailing: return width
+                case .top, .bottom: rect.width
+                case .leading, .trailing: width
                 }
             }
 
             var h: CGFloat {
                 switch edge {
-                case .top, .bottom: return width
-                case .leading, .trailing: return rect.height
+                case .top, .bottom: width
+                case .leading, .trailing: rect.height
                 }
             }
             path.addPath(Path(CGRect(x: x, y: y, width: w, height: h)))
