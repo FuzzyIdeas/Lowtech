@@ -40,7 +40,7 @@ open class OSDWindow: LowtechWindow {
         contentView?.bg = .clear
         isOpaque = false
         hasShadow = false
-        styleMask = [.fullSizeContentView]
+        styleMask = [.fullSizeContentView, .nonactivatingPanel, .utilityWindow]
         hidesOnDeactivate = false
         isReleasedWhenClosed = releaseWhenClosed
         delegate = self
@@ -148,12 +148,14 @@ open class OSDWindow: LowtechWindow {
 
 // MARK: - LowtechWindow
 
-open class LowtechWindow: NSWindow, NSWindowDelegate {
+open class LowtechWindow: NSPanel, NSWindowDelegate {
     open var onMouseUp: ((NSEvent) -> Void)?
     open var onMouseDown: ((NSEvent) -> Void)?
     open var onMouseDrag: ((NSEvent) -> Void)?
 
-    override open var canBecomeKey: Bool { true }
+    open var allowToBecomeKey = false
+
+    override open var canBecomeKey: Bool { allowToBecomeKey }
 
     override open func mouseDragged(with event: NSEvent) {
         guard !ignoresMouseEvents, let onMouseDrag else { return }

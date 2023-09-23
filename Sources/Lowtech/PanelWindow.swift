@@ -36,7 +36,9 @@ open class PanelWindow: LowtechWindow {
         }
 
         wc.showWindow(nil)
-        makeKeyAndOrderFront(nil)
+        if canBecomeKey {
+            makeKeyAndOrderFront(nil)
+        }
         orderFrontRegardless()
         if activate {
             focus()
