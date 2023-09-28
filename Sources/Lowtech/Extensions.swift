@@ -1787,7 +1787,9 @@ public func / (_ path: FilePath, _ str: String) -> FilePath {
 
 public func focus() {
     if #available(macOS 14.0, *) {
-        NSApp.activate()
+        NSApp.activate(ignoringOtherApps: true)
+        // TODO: Use the new API when it's
+        // NSApp.activate()
     } else {
         NSApp.activate(ignoringOtherApps: true)
     }
