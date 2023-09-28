@@ -1,35 +1,35 @@
 import Foundation
 
-final class ThreadSafeDictionary<V: Hashable, T>: Collection {
-    init(dict: [V: T] = [V: T]()) {
+public final class ThreadSafeDictionary<V: Hashable, T>: Collection {
+    public init(dict: [V: T] = [V: T]()) {
         mutableDictionary = dict
     }
 
-    let accessQueue = DispatchQueue(
+    public let accessQueue = DispatchQueue(
         label: "Dictionary Barrier Queue",
         attributes: .concurrent
     )
 
-    var dictionary: [V: T] {
+    public var dictionary: [V: T] {
         accessQueue.sync {
             let dict = Dictionary(uniqueKeysWithValues: mutableDictionary.map { ($0.key, $0.value) })
             return dict
         }
     }
 
-    var startIndex: Dictionary<V, T>.Index {
+    public var startIndex: Dictionary<V, T>.Index {
         mutableDictionary.startIndex
     }
 
-    var endIndex: Dictionary<V, T>.Index {
+    public var endIndex: Dictionary<V, T>.Index {
         mutableDictionary.endIndex
     }
 
-    func index(after i: Dictionary<V, T>.Index) -> Dictionary<V, T>.Index {
+    public func index(after i: Dictionary<V, T>.Index) -> Dictionary<V, T>.Index {
         mutableDictionary.index(after: i)
     }
 
-    subscript(key: V) -> T? {
+    public subscript(key: V) -> T? {
         set(newValue) {
             accessQueue.async(flags: .barrier) { [weak self] in
                 self?.mutableDictionary[key] = newValue
@@ -43,19 +43,19 @@ final class ThreadSafeDictionary<V: Hashable, T>: Collection {
     }
 
     // has implicity get
-    subscript(index: Dictionary<V, T>.Index) -> Dictionary<V, T>.Element {
+    public subscript(index: Dictionary<V, T>.Index) -> Dictionary<V, T>.Element {
         accessQueue.sync {
             self.mutableDictionary[index]
         }
     }
 
-    func removeAll() {
+    public func removeAll() {
         accessQueue.async(flags: .barrier) { [weak self] in
             self?.mutableDictionary.removeAll()
         }
     }
 
-    func removeValue(forKey key: V) {
+    public func removeValue(forKey key: V) {
         accessQueue.async(flags: .barrier) { [weak self] in
             self?.mutableDictionary.removeValue(forKey: key)
         }
