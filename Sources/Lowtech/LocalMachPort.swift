@@ -11,8 +11,8 @@ import System
 
 // MARK: - LocalMachPort
 
-class LocalMachPort {
-    init(portLocation: String) {
+public final class LocalMachPort {
+    public init(portLocation: String) {
         self.portLocation = portLocation as CFString
         NotificationCenter.default.addObserver(forName: NSApplication.willTerminateNotification, object: nil, queue: .main) { _ in
             if let port = self.port {
@@ -21,15 +21,7 @@ class LocalMachPort {
         }
     }
 
-    var portLocation: CFString!
-    var port: CFMessagePort!
-    var portRunLoop: CFRunLoopSource!
-    var action: ((Data?) -> Unmanaged<CFData>?)?
-    var context: CFMessagePortContext!
-
-    var semaphore = DispatchSemaphore(value: 1)
-
-    func listen(_ action: @escaping ((Data?) -> Unmanaged<CFData>?)) {
+    public func listen(_ action: @escaping ((Data?) -> Unmanaged<CFData>?)) {
         self.action = action
 
         let selfPointer = UnsafeMutablePointer<LocalMachPort>.allocate(capacity: 1)
@@ -47,13 +39,21 @@ class LocalMachPort {
         CFRunLoopAddSource(CFRunLoopGetCurrent(), portRunLoop, .defaultMode)
     }
 
-    func sendAndWait(data: Data? = nil, sendTimeout: TimeInterval = 5, recvTimeout: TimeInterval = 600) throws -> Data? {
+    public func sendAndWait(data: Data? = nil, sendTimeout: TimeInterval = 5, recvTimeout: TimeInterval = 600) throws -> Data? {
         try send(data: data, sendTimeout: sendTimeout, recvTimeout: recvTimeout, wait: true)
     }
 
-    func sendAndForget(data: Data? = nil, sendTimeout: TimeInterval = 5, recvTimeout: TimeInterval = 600) throws {
+    public func sendAndForget(data: Data? = nil, sendTimeout: TimeInterval = 5, recvTimeout: TimeInterval = 600) throws {
         try send(data: data, sendTimeout: sendTimeout, recvTimeout: recvTimeout, wait: false)
     }
+
+    var portLocation: CFString!
+    var port: CFMessagePort!
+    var portRunLoop: CFRunLoopSource!
+    var action: ((Data?) -> Unmanaged<CFData>?)?
+    var context: CFMessagePortContext!
+
+    var semaphore = DispatchSemaphore(value: 1)
 
     @discardableResult
     private func send(data: Data? = nil, sendTimeout: TimeInterval = 5, recvTimeout: TimeInterval = 600, wait: Bool = true) throws -> Data? {
@@ -84,7 +84,7 @@ class LocalMachPort {
     }
 }
 
-extension String {
+public extension String {
     var err: NSError {
         NSError(domain: self, code: 1)
     }
