@@ -1794,3 +1794,30 @@ public func focus() {
         NSApp.activate(ignoringOtherApps: true)
     }
 }
+
+extension NSRect: Hashable {
+    public func hash(into hasher: inout Hasher) {
+        hasher.combine(origin)
+        hasher.combine(size)
+    }
+}
+
+extension NSPoint: Hashable {
+    public func hash(into hasher: inout Hasher) {
+        hasher.combine(x)
+        hasher.combine(y)
+    }
+}
+
+public extension NSSize {
+    var aspectRatio: Double {
+        width / height
+    }
+}
+
+extension NSSize: Hashable {
+    public func hash(into hasher: inout Hasher) {
+        hasher.combine(width)
+        hasher.combine(height)
+    }
+}
