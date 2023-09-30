@@ -1769,6 +1769,11 @@ public extension FilePath {
         try fm.removeItem(atPath: string)
     }
 
+    func ls() -> [FilePath] {
+        guard isDir else { return [] }
+        return (try? fm.contentsOfDirectory(atPath: string))?.map { appending($0) } ?? []
+    }
+
     var shellString: String { string.replacingFirstOccurrence(of: NSHomeDirectory(), with: "~") }
 }
 
