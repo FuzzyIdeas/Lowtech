@@ -326,6 +326,29 @@ public enum ScreenCorner: Int, Codable, Defaults.Serializable {
         }
     }
 
+    public var alignment: Alignment {
+        switch self {
+        case .bottomLeft:
+            return .bottomLeading
+        case .bottomRight:
+            return .bottomTrailing
+        case .topLeft:
+            return .topLeading
+        case .topRight:
+            return .topTrailing
+        case .top:
+            return .top
+        case .bottom:
+            return .bottom
+        case .left:
+            return .leading
+        case .right:
+            return .trailing
+        case .center:
+            return .center
+        }
+    }
+
 }
 
 extension NSWindow {
