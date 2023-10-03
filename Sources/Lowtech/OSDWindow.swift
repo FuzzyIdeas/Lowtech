@@ -317,6 +317,15 @@ public enum ScreenCorner: Int, Codable, Defaults.Serializable {
         }
     }
 
+    public var isTop: Bool {
+        switch self {
+        case .topRight, .topLeft, .top:
+            true
+        default:
+            false
+        }
+    }
+
 }
 
 extension NSWindow {
