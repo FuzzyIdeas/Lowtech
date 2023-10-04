@@ -10,7 +10,7 @@ import SystemColors
     import UIKit
 #endif
 
-extension Color {
+public extension Color {
     init(light: Color, dark: Color) {
         #if canImport(UIKit)
             self.init(light: UIColor(light), dark: UIColor(dark))
