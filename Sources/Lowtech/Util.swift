@@ -713,13 +713,15 @@ public func restart() {
         exit(1)
     }
 
-    var args = CommandLine.arguments.dropFirst().arr
-    let restarts = CommandLine.arguments[1].split(separator: "=")[1].split(separator: ":").map { TimeInterval($0)! }
-    let now = Date().timeIntervalSince1970
-    if restarts.filter({ now - $0 < 10 }).count > 3 {
-        exit(1)
-    } else {
-        args.append("\(CommandLine.arguments[1]):\(now)")
+    var args: [String] = []
+    if CommandLine.arguments.count == 2 {
+        let restarts = CommandLine.arguments[1].split(separator: "=")[1].split(separator: ":").map { TimeInterval($0)! }
+        let now = Date().timeIntervalSince1970
+        if restarts.filter({ now - $0 < 10 }).count > 3 {
+            exit(1)
+        } else {
+            args.append("\(CommandLine.arguments[1]):\(now)")
+        }
     }
 
     do {
