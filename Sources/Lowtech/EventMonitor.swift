@@ -14,7 +14,16 @@ open class GlobalEventMonitor {
     }
 
     public func start() {
-        monitor = NSEvent.addGlobalMonitorForEvents(matching: mask, handler: handler) as! NSObject
+        #if DEBUG
+            monitor = NSEvent.addGlobalMonitorForEvents(matching: mask, handler: { event in
+                if let event {
+                    print("[GLOBAL] Handling mask \(self.mask) on event: \(event)")
+                }
+                self.handler(event)
+            }) as! NSObject
+        #else
+            monitor = NSEvent.addGlobalMonitorForEvents(matching: mask, handler: handler) as! NSObject
+        #endif
     }
 
     public func stop() {
@@ -45,7 +54,7 @@ open class LocalEventMonitor {
     public func start() {
         #if DEBUG
             monitor = NSEvent.addLocalMonitorForEvents(matching: mask, handler: { event in
-                print("Handling mask \(self.mask) on event: \(event)")
+                print("[LOCAL] Handling mask \(self.mask) on event: \(event)")
                 return self.handler(event)
             }) as! NSObject
         #else

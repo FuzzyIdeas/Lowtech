@@ -707,7 +707,11 @@ public func restart() {
     guard CommandLine.arguments.count == 1 else {
         exit(1)
     }
-    _ = shell("/usr/bin/open", args: ["-n", Bundle.main.bundlePath], wait: true)
+    do {
+        try exec(arg0: Bundle.main.executablePath!, args: [])
+    } catch {
+        err("Failed to restart: \(error)")
+    }
     exit(0)
 }
 
@@ -720,4 +724,67 @@ public func restartOnCrash() {
     signal(SIGBUS) { _ in restart() }
     signal(SIGPIPE) { _ in restart() }
     signal(SIGTRAP) { _ in restart() }
+}
+
+
+import var Darwin.EINVAL
+import var Darwin.ERANGE
+import func Darwin.strerror_r
+
+public func strerror(_ code: Int32) -> String {
+    var cap = 64
+    while cap <= 16 * 1024 {
+        var buf = [Int8](repeating: 0, count: cap)
+        let err = strerror_r(code, &buf, buf.count)
+        if err == EINVAL {
+            return "unknown error \(code)"
+        }
+        if err == ERANGE {
+            cap *= 2
+            continue
+        }
+        if err != 0 {
+            return "fatal: strerror_r: \(err)"
+        }
+        return "\(String(cString: buf)) (\(code))"
+    }
+    return "fatal: strerror_r: ERANGE"
+}
+
+public func exec(arg0: String, args: [String]) throws -> Never {
+    let args = CStringArray([arg0] + args)
+
+    guard execv(arg0, args.cArray) != -1 else {
+        throw POSIXError.execv(executable: arg0, errno: errno)
+    }
+
+    fatalError("Impossible if execv succeeded")
+}
+
+public enum POSIXError: LocalizedError {
+    case execv(executable: String, errno: Int32)
+
+    public var errorDescription: String? {
+        switch self {
+        case let .execv(executablePath, errno):
+            "execv failed: \(strerror(errno)): \(executablePath)"
+        }
+    }
+}
+
+private final class CStringArray {
+    /// Creates an instance from an array of strings.
+    public init(_ array: [String]) {
+        cArray = array.map { $0.withCString { strdup($0) } } + [nil]
+    }
+
+    deinit {
+        for case let element? in cArray {
+            free(element)
+        }
+    }
+
+    /// The null-terminated array of C string pointers.
+    public let cArray: [UnsafeMutablePointer<Int8>?]
+
 }

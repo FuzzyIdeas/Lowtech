@@ -461,8 +461,6 @@ public class LowtechPro: ObservableObject {
                 case .verified:
                     print("\(product.productName ?? "Product") verified")
                     enablePro()
-                case PADVerificationState(rawValue: 2):
-                    log.error("\(product.productName ?? "Product") verification failed because of network connection: \(state)")
                 default:
                     print("\(product.productName ?? "Product") verification unknown state: \(state)")
                 }
