@@ -272,8 +272,8 @@ open class StatusBarController: NSObject, NSWindowDelegate, ObservableObject {
         return ev
     }
 
-    func mouseEventHandler(_ event: NSEvent?) {
-        guard let window, event?.window == nil else { return }
+    func mouseEventHandler(_ event: NSEvent) {
+        guard let window, event.window == nil else { return }
         if window.isVisible, statusItem.isVisible, !shouldLeavePopoverOpen {
             hidePopover(LowtechAppDelegate.instance)
         }

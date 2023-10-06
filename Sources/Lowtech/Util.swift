@@ -731,7 +731,7 @@ import var Darwin.EINVAL
 import var Darwin.ERANGE
 import func Darwin.strerror_r
 
-public func strerror(_ code: Int32) -> String {
+public func stringerror(_ code: Int32) -> String {
     var cap = 64
     while cap <= 16 * 1024 {
         var buf = [Int8](repeating: 0, count: cap)
@@ -767,7 +767,7 @@ public enum POSIXError: LocalizedError {
     public var errorDescription: String? {
         switch self {
         case let .execv(executablePath, errno):
-            "execv failed: \(strerror(errno)): \(executablePath)"
+            "execv failed: \(stringerror(errno)): \(executablePath)"
         }
     }
 }

@@ -4,7 +4,7 @@ import Cocoa
 
 @MainActor
 open class GlobalEventMonitor {
-    public init(mask: NSEvent.EventTypeMask, handler: @escaping (NSEvent?) -> Void) {
+    public init(mask: NSEvent.EventTypeMask, handler: @escaping (NSEvent) -> Void) {
         self.mask = mask
         self.handler = handler
     }
@@ -16,9 +16,7 @@ open class GlobalEventMonitor {
     public func start() {
         #if DEBUG
             monitor = NSEvent.addGlobalMonitorForEvents(matching: mask, handler: { event in
-                if let event {
-                    print("[GLOBAL] Handling mask \(self.mask) on event: \(event)")
-                }
+                print("[GLOBAL] Handling mask \(self.mask) on event: \(event)")
                 self.handler(event)
             }) as! NSObject
         #else
@@ -35,7 +33,7 @@ open class GlobalEventMonitor {
 
     private var monitor: Any?
     private let mask: NSEvent.EventTypeMask
-    private let handler: (NSEvent?) -> Void
+    private let handler: (NSEvent) -> Void
 }
 
 // MARK: - LocalEventMonitor

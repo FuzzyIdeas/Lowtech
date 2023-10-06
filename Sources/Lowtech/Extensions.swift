@@ -1481,7 +1481,7 @@ public extension URL {
         NSError(
             domain: NSPOSIXErrorDomain,
             code: Int(err),
-            userInfo: [NSLocalizedDescriptionKey: String(cString: strerror(err))]
+            userInfo: [NSLocalizedDescriptionKey: stringerror(err)]
         )
     }
 }

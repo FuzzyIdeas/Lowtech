@@ -738,7 +738,6 @@ public class KeysManager: ObservableObject {
     @MainActor
     public func initFlagsListener() {
         globalEventMonitor = GlobalEventMonitor(mask: .flagsChanged) { [self] event in
-            guard let event else { return }
             flagsChanged(modifierFlags: event.modifierFlags.filterUnsupportModifiers())
         }
         globalEventMonitor.start()
