@@ -329,23 +329,23 @@ public enum ScreenCorner: Int, Codable, Defaults.Serializable {
     public var alignment: Alignment {
         switch self {
         case .bottomLeft:
-            return .bottomLeading
+            .bottomLeading
         case .bottomRight:
-            return .bottomTrailing
+            .bottomTrailing
         case .topLeft:
-            return .topLeading
+            .topLeading
         case .topRight:
-            return .topTrailing
+            .topTrailing
         case .top:
-            return .top
+            .top
         case .bottom:
-            return .bottom
+            .bottom
         case .left:
-            return .leading
+            .leading
         case .right:
-            return .trailing
+            .trailing
         case .center:
-            return .center
+            .center
         }
     }
 

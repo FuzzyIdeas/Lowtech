@@ -621,9 +621,9 @@ public extension UInt8 {
         if (0x20 ... 0x7E).contains(self),
            let value = NSString(bytes: [self], length: 1, encoding: String.Encoding.nonLossyASCII.rawValue) as String?
         {
-            return value
+            value
         } else {
-            return String(format: "%02x", self)
+            String(format: "%02x", self)
         }
     }
 }
@@ -1800,12 +1800,16 @@ public func focus() {
     }
 }
 
+// MARK: - NSRect + Hashable
+
 extension NSRect: Hashable {
     public func hash(into hasher: inout Hasher) {
         hasher.combine(origin)
         hasher.combine(size)
     }
 }
+
+// MARK: - NSPoint + Hashable
 
 extension NSPoint: Hashable {
     public func hash(into hasher: inout Hasher) {
@@ -1819,6 +1823,8 @@ public extension NSSize {
         width / height
     }
 }
+
+// MARK: - NSSize + Hashable
 
 extension NSSize: Hashable {
     public func hash(into hasher: inout Hasher) {

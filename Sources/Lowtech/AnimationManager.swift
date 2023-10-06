@@ -51,9 +51,9 @@ public class AnimationManager: ObservableObject, ObservableSettings {
 
     public static var isLowPowerModeEnabled: Bool {
         if #available(macOS 12.0, *) {
-            return ProcessInfo.processInfo.isLowPowerModeEnabled
+            ProcessInfo.processInfo.isLowPowerModeEnabled
         } else {
-            return false
+            false
         }
     }
 

@@ -726,7 +726,6 @@ public func restartOnCrash() {
     signal(SIGTRAP) { _ in restart() }
 }
 
-
 import var Darwin.EINVAL
 import var Darwin.ERANGE
 import func Darwin.strerror_r
@@ -761,6 +760,8 @@ public func exec(arg0: String, args: [String]) throws -> Never {
     fatalError("Impossible if execv succeeded")
 }
 
+// MARK: - POSIXError
+
 public enum POSIXError: LocalizedError {
     case execv(executable: String, errno: Int32)
 
@@ -771,6 +772,8 @@ public enum POSIXError: LocalizedError {
         }
     }
 }
+
+// MARK: - CStringArray
 
 private final class CStringArray {
     /// Creates an instance from an array of strings.
