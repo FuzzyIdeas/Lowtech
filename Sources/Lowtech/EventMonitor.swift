@@ -2,6 +2,10 @@ import Cocoa
 
 // MARK: - GlobalEventMonitor
 
+#if DEBUG
+var logGlobalEvents = false
+#endif
+
 @MainActor
 open class GlobalEventMonitor {
     public init(mask: NSEvent.EventTypeMask, handler: @escaping (NSEvent) -> Void) {
@@ -16,7 +20,12 @@ open class GlobalEventMonitor {
     public func start() {
         #if DEBUG
             monitor = NSEvent.addGlobalMonitorForEvents(matching: mask, handler: { event in
-                print("[GLOBAL] Handling mask \(self.mask) on event: \(event)")
+                if event.type == .keyDown, event.modifierFlags.intersection(.deviceIndependentFlagsMask) == [.control, .option, .shift] {
+                    logGlobalEvents.toggle()
+                }
+                if logGlobalEvents {
+                    print("[GLOBAL] Handling mask \(self.mask) on event: \(event)")
+                }
                 self.handler(event)
             }) as! NSObject
         #else
