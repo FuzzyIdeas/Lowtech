@@ -20,7 +20,7 @@ open class GlobalEventMonitor {
     public func start() {
         #if DEBUG
             monitor = NSEvent.addGlobalMonitorForEvents(matching: mask, handler: { event in
-                if event.type == .keyDown, event.modifierFlags.intersection(.deviceIndependentFlagsMask) == [.control, .option, .shift] {
+                if event.type == .keyDown || event.type == .flagsChanged, event.modifierFlags.intersection(.deviceIndependentFlagsMask) == [.control, .option, .shift] {
                     logGlobalEvents.toggle()
                 }
                 if logGlobalEvents {
