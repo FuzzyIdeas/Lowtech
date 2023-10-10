@@ -254,15 +254,15 @@ public extension Text {
         font(.system(size: size, weight: .black, design: .default))
     }
 
-    func roundbg(size: CGFloat = 2.5, color: Color = .primary, colorBinding: Binding<Color>? = nil, shadowSize: CGFloat = 0, noFG: Bool = false) -> some View {
+    func roundbg(size: CGFloat = 2.5, color: Color = .inverted, colorBinding: Binding<Color>? = nil, shadowSize: CGFloat = 0, noFG: Bool = false) -> some View {
         modifier(RoundBG(radius: size, color: colorBinding ?? .constant(color), shadowSize: shadowSize, noFG: noFG))
     }
 
-    func roundbg(radius: CGFloat = 5, padding: CGFloat = 2.5, color: Color = .primary, colorBinding: Binding<Color>? = nil, shadowSize: CGFloat = 0, noFG: Bool = false) -> some View {
+    func roundbg(radius: CGFloat = 5, padding: CGFloat = 2.5, color: Color = .inverted, colorBinding: Binding<Color>? = nil, shadowSize: CGFloat = 0, noFG: Bool = false) -> some View {
         modifier(RoundBG(radius: radius, verticalPadding: padding, horizontalPadding: padding * 2.2, color: colorBinding ?? .constant(color), shadowSize: shadowSize, noFG: noFG))
     }
 
-    func roundbg(radius: CGFloat = 5, verticalPadding: CGFloat = 2.5, horizontalPadding: CGFloat = 6, color: Color = .primary, colorBinding: Binding<Color>? = nil, shadowSize: CGFloat = 0, noFG: Bool = false) -> some View {
+    func roundbg(radius: CGFloat = 5, verticalPadding: CGFloat = 2.5, horizontalPadding: CGFloat = 6, color: Color = .inverted, colorBinding: Binding<Color>? = nil, shadowSize: CGFloat = 0, noFG: Bool = false) -> some View {
         modifier(RoundBG(radius: radius, verticalPadding: verticalPadding, horizontalPadding: horizontalPadding, color: colorBinding ?? .constant(color), shadowSize: shadowSize, noFG: noFG))
     }
 }
@@ -279,7 +279,7 @@ public struct RoundBG: ViewModifier {
                 roundRect(radius, fill: color)
                     .shadow(color: .black.opacity(colorScheme == .dark ? 0.75 : 0.25), radius: shadowSize, x: 0, y: shadowSize / 2)
             )
-            .if(!noFG) { $0.foregroundColor(color.textColor()) }
+            .if(!noFG) { $0.foregroundColor(.primary) }
     }
 
     @Environment(\.colorScheme) var colorScheme
@@ -716,5 +716,31 @@ public struct ShakeEffect: GeometryEffect {
 
     public func effectValue(size: CGSize) -> ProjectionTransform {
         ProjectionTransform(CGAffineTransform(translationX: -5 * sin(position * 2 * .pi), y: 0))
+    }
+}
+
+public struct HelpTag: View {
+    @Binding var isPresented: Bool
+
+    var text: String
+    var offset: CGSize
+
+    public var body: some View {
+        if isPresented {
+            Text(text)
+                .round(9)
+                .roundbg(radius: 4)
+                .fixedSize()
+                .offset(offset)
+                .zIndex(100)
+        }
+    }
+}
+
+public extension View {
+    func helpTag(isPresented: Binding<Bool>, alignment: Alignment = .center, offset: CGSize = .zero, _ text: String) -> some View {
+        overlay(alignment: alignment) {
+            HelpTag(isPresented: isPresented, text: text, offset: offset)
+        }
     }
 }

@@ -316,7 +316,7 @@ public extension Bool {
         public var s: String { "\(width.i)×\(height.i)" }
         public var area: CGFloat { width * height }
         public static func < (lhs: CGSize, rhs: CGSize) -> Bool {
-            lhs.area < rhs.area
+            lhs.width < rhs.width && lhs.height < rhs.height
         }
 
         public func scaled(by factor: Double) -> CGSize {

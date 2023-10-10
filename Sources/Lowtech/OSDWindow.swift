@@ -40,9 +40,10 @@ open class OSDWindow: LowtechWindow {
         contentView?.bg = .clear
         isOpaque = false
         hasShadow = false
-        styleMask = [.fullSizeContentView, .nonactivatingPanel, .utilityWindow]
+        styleMask = [.fullSizeContentView, .nonactivatingPanel, .utilityWindow, .borderless]
         hidesOnDeactivate = false
         isReleasedWhenClosed = releaseWhenClosed
+        isMovableByWindowBackground = false
         delegate = self
     }
 
