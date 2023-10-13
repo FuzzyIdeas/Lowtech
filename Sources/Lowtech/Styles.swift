@@ -719,12 +719,9 @@ public struct ShakeEffect: GeometryEffect {
     }
 }
 
+// MARK: - HelpTag
+
 public struct HelpTag: View {
-    @Binding var isPresented: Bool
-
-    var text: String
-    var offset: CGSize
-
     public var body: some View {
         if isPresented {
             Text(text)
@@ -735,6 +732,12 @@ public struct HelpTag: View {
                 .zIndex(100)
         }
     }
+
+    @Binding var isPresented: Bool
+
+    var text: String
+    var offset: CGSize
+
 }
 
 public extension View {

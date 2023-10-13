@@ -3,8 +3,10 @@ import Cocoa
 // MARK: - GlobalEventMonitor
 
 #if DEBUG
-var logGlobalEvents = false
+    var logGlobalEvents = false
 #endif
+
+// MARK: - GlobalEventMonitor
 
 @MainActor
 open class GlobalEventMonitor {

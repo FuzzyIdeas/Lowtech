@@ -31,17 +31,16 @@ let package = Package(
         // Dependencies declare other packages that this package depends on.
         .package(url: "https://github.com/sindresorhus/Defaults", from: "7.0.0"),
         .package(url: "https://github.com/apple/swift-atomics", from: "1.0.2"),
-        .package(url: "https://github.com/sindresorhus/LaunchAtLogin-Modern", branch: "main"),
-        .package(url: "https://github.com/alin23/Magnet", branch: "dev"),
+        .package(url: "https://github.com/sindresorhus/LaunchAtLogin-Modern", from: "1.0.0"),
+        .package(url: "https://github.com/alin23/Magnet", from: "4.0.1"),
         .package(url: "https://github.com/Clipy/Sauce", from: "2.2.0"),
         .package(url: "https://github.com/eonil/FSEvents", from: "0.1.7"),
         .package(url: "https://github.com/yannickl/DynamicColor", from: "5.0.1"),
         .package(url: "https://github.com/diniska/swiftui-system-colors", from: "1.1.0"),
         .package(url: "https://github.com/malcommac/SwiftDate", from: "7.0.0"),
-        .package(url: "https://github.com/alin23/AppReceiptValidator.git", branch: "main"),
-        .package(url: "https://github.com/Kitura/BlueECC", branch: "master"),
+        .package(url: "https://github.com/alin23/AppReceiptValidator.git", from: "1.1.4"),
 
-        .package(url: "https://github.com/alin23/PaddleSPM", branch: "main"),
+        .package(url: "https://github.com/alin23/PaddleSPM", from: "4.4.1"),
         .package(url: "https://github.com/sparkle-project/Sparkle", from: "2.2.0"),
         .package(url: "https://github.com/getsentry/sentry-cocoa", from: "8.9.3"),
     ],
@@ -67,7 +66,6 @@ let package = Package(
                 "Lowtech",
                 .product(name: "SwiftDate", package: "SwiftDate"),
                 .product(name: "AppReceiptValidator", package: "AppReceiptValidator"),
-                .product(name: "CryptorECC", package: "BlueECC"),
             ],
             exclude: ["Numbers.swift.secret"]
 
