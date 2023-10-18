@@ -1789,6 +1789,9 @@ infix operator /: MultiplicationPrecedence
 public func / (_ path: FilePath, _ str: String) -> FilePath {
     path.appending(str)
 }
+public func / (_ path: FilePath, _ component: FilePath.Component) -> FilePath {
+    path.appending(component)
+}
 
 public func focus() {
     if #available(macOS 14.0, *) {
