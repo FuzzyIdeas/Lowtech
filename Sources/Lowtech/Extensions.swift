@@ -714,6 +714,15 @@ public extension BinaryInteger {
 
 import System
 public extension String {
+    var ns: NSString {
+        self as NSString
+    }
+
+    var filePath: FilePath? {
+        guard !isEmpty, count <= 4096 else { return nil }
+        return FilePath(trimmedPath.ns.expandingTildeInPath)
+    }
+
     var trimmedPath: String {
         trimmingCharacters(in: ["\"", "'", "\n", "\t", " ", "(", ")", "[", "]", "{", "}", ","])
     }
@@ -732,9 +741,8 @@ public extension String {
     }
 
     var existingFilePath: FilePath? {
-        guard count <= 4096 else { return nil }
-        let str = trimmedPath
-        return FileManager.default.fileExists(atPath: str) ? FilePath(str) : nil
+        guard let path = filePath, path.exists else { return nil }
+        return path
     }
 
     func parseHex(strict: Bool = false) -> Int? {
