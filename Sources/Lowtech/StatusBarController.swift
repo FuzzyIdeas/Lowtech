@@ -48,6 +48,13 @@ open class StatusBarController: NSObject, NSWindowDelegate, ObservableObject {
             .debounce(for: .milliseconds(10), scheduler: RunLoop.main)
             .sink { _ in self.showPopover(LowtechAppDelegate.instance) }
             .store(in: &observers)
+        NSWorkspace.shared.notificationCenter.publisher(for: NSWorkspace.activeSpaceDidChangeNotification)
+            .debounce(for: .milliseconds(10), scheduler: RunLoop.main)
+            .sink { _ in
+                guard self.statusItem.isVisible else { return }
+                self.hidePopover(LowtechAppDelegate.instance)
+            }
+            .store(in: &observers)
 
         if let statusBarButton = statusItem.button {
             statusBarButton.image = NSImage(named: image)
@@ -216,11 +223,11 @@ open class StatusBarController: NSObject, NSWindowDelegate, ObservableObject {
         popoverShownAtLeastOnce = true
 
         if window == nil {
-            window = PanelWindow(swiftuiView: view())
+            window = PanelWindow(swiftuiView: view(), styleMask: [.fullSizeContentView, .nonactivatingPanel, .utilityWindow], collectionBehavior: [.canJoinAllSpaces, .fullScreenDisallowsTiling, .transient])
         }
         guard statusItem.isVisible else {
             if allowPopover {
-                window!.show(at: centerOnScreen ? nil : .mouseLocation(centeredOn: window), corner: screenCorner, margin: margin)
+                window!.show(at: centerOnScreen ? nil : .mouseLocation(centeredOn: window), activate: true, corner: screenCorner, margin: margin)
             } else {
                 LowtechAppDelegate.instance.onPopoverNotAllowed()
             }
@@ -228,7 +235,7 @@ open class StatusBarController: NSObject, NSWindowDelegate, ObservableObject {
         }
 
         if allowPopover {
-            window!.show(at: position, corner: screenCorner, margin: margin)
+            window!.show(at: position, activate: true, corner: screenCorner, margin: margin)
         } else {
             LowtechAppDelegate.instance.onPopoverNotAllowed()
         }

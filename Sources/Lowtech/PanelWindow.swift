@@ -5,7 +5,7 @@ import SwiftUI
 // MARK: - PanelWindow
 
 open class PanelWindow: LowtechWindow {
-    public convenience init(swiftuiView: AnyView, screen: NSScreen? = nil, corner: ScreenCorner? = nil) {
+    public convenience init(swiftuiView: AnyView, screen: NSScreen? = nil, corner: ScreenCorner? = nil, styleMask: NSWindow.StyleMask? = nil, collectionBehavior: NSWindow.CollectionBehavior? = nil) {
         self.init(contentViewController: NSHostingController(rootView: swiftuiView))
 
         screenPlacement = screen
@@ -19,12 +19,14 @@ open class PanelWindow: LowtechWindow {
         contentView?.bg = .clear
         isOpaque = false
         hasShadow = false
-        styleMask = [.fullSizeContentView]
+        self.styleMask = styleMask ?? [.fullSizeContentView]
+        if let collectionBehavior {
+            self.collectionBehavior = collectionBehavior
+        }
         hidesOnDeactivate = false
         isMovableByWindowBackground = true
+        becomesKeyOnlyIfNeeded = true
     }
-
-    override open var canBecomeKey: Bool { true }
 
     open func show(at point: NSPoint? = nil, animate: Bool = false, activate: Bool = true, corner: ScreenCorner? = nil, margin: CGFloat? = nil, marginHorizontal: CGFloat? = nil, screen: NSScreen? = nil) {
         if let corner {

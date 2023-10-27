@@ -325,7 +325,9 @@ public func createWindow(
                     window.setAccessibilitySubrole(.unknown)
                 }
                 if show {
-                    wc.showWindow(nil)
+                    if window.canBecomeKey {
+                        wc.showWindow(nil)
+                    }
                     window.orderFrontRegardless()
                 }
             }

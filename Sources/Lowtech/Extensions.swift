@@ -1792,8 +1792,6 @@ public extension URL {
 
 public let HOME = URL.homeDirectory.filePath
 
-infix operator /: MultiplicationPrecedence
-
 public func / (_ path: FilePath, _ str: String) -> FilePath {
     path.appending(str)
 }

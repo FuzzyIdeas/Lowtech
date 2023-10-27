@@ -44,6 +44,7 @@ open class OSDWindow: LowtechWindow {
         hidesOnDeactivate = false
         isReleasedWhenClosed = releaseWhenClosed
         isMovableByWindowBackground = false
+        becomesKeyOnlyIfNeeded = true
         delegate = self
     }
 
