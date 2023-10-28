@@ -37,6 +37,10 @@ public struct Formatting: Hashable {
     let padding: Int
 }
 
+func mainActor(_ action: @escaping @MainActor () -> Void) {
+    Task.init { await MainActor.run { action() }}
+}
+
 // MARK: - ObservableSettings
 
 @MainActor
@@ -809,5 +813,4 @@ private final class CStringArray {
 
     /// The null-terminated array of C string pointers.
     public let cArray: [UnsafeMutablePointer<Int8>?]
-
 }
