@@ -37,7 +37,7 @@ public struct Formatting: Hashable {
     let padding: Int
 }
 
-func mainActor(_ action: @escaping @MainActor () -> Void) {
+public func mainActor(_ action: @escaping @MainActor () -> Void) {
     Task.init { await MainActor.run { action() }}
 }
 
