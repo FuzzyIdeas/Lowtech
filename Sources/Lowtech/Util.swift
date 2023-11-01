@@ -710,8 +710,8 @@ func getSerialNumberHash() -> String? {
 public let SERIAL_NUMBER_HASH = getSerialNumberHash() ?? generateAPIKey()
 
 public func restart() {
-    // check if the app was started fresh or if was restarted with arg `restarts=timestamp:timestamp:timestamp`
-    // if it was restarted more than 3 times in 10 seconds, exit
+    // Check if the app was started fresh or if was restarted with arg `restarts=timestamp:timestamp:...`
+    // If the app was restarted more than 3 times in 10 seconds, exit with status 1
 
     guard CommandLine.arguments.count == 1 || (
         CommandLine.arguments.count == 2 && CommandLine.arguments[1].starts(with: "restarts=")
@@ -748,6 +748,7 @@ public func restartOnCrash() {
     signal(SIGPIPE) { _ in restart() }
     signal(SIGTRAP) { _ in restart() }
     signal(SIGHUP) { _ in restart() }
+    signal(SIGINT) { _ in NSApp.terminate(nil) }
 }
 
 import var Darwin.EINVAL
