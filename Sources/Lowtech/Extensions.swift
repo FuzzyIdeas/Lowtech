@@ -1357,6 +1357,10 @@ public extension SetAlgebra {
 }
 
 public extension Bundle {
+    var version: String {
+        (infoDictionary?["CFBundleShortVersionString"] as? String) ?? "1.0.0"
+    }
+
     var icon: NSImage {
         NSWorkspace.shared.icon(forFile: bundlePath)
     }

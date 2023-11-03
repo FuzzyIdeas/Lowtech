@@ -101,12 +101,6 @@ public struct VersionView: View {
     @ObservedObject var updater: SPUUpdater
 }
 
-public extension Bundle {
-    var version: String {
-        (infoDictionary?["CFBundleShortVersionString"] as? String) ?? "1.0.0"
-    }
-}
-
 // MARK: - SPUUpdater + ObservableObject
 
 extension SPUUpdater: ObservableObject {}
