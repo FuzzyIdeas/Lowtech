@@ -334,7 +334,6 @@ public struct ToggleButton: ButtonStyle {
     public init(
         isOn: Binding<Bool>,
         color: Color = Color.primary,
-        textColor: Color = Color.primary,
         scale: CGFloat = 1,
         radius: CGFloat? = nil,
         width: CGFloat? = nil,
@@ -359,11 +358,11 @@ public struct ToggleButton: ButtonStyle {
     public func makeBody(configuration: Configuration) -> some View {
         configuration
             .label
-            .if(!noFG) { $0.foregroundColor(fgColor(configuration)) }
+            .if(!noFG) { $0.foregroundColor(isOn ? .inverted : .primary) }
             .padding(.vertical, verticalPadding)
             .padding(.horizontal, horizontalPadding)
             .background(
-                roundRect(radius, fill: bgColor(configuration))
+                roundRect(radius, fill: bgColor)
                     .frame(width: width, height: height, alignment: .center)
             )
             .brightness(hovering ? 0.05 : 0.0)
@@ -386,7 +385,6 @@ public struct ToggleButton: ButtonStyle {
     }
 
     @State var color: Color = .primary
-    @State var textColor: Color = .primary
     @State var scale: CGFloat = 1
     @State var width: CGFloat? = nil
     @State var height: CGFloat? = nil
@@ -398,13 +396,8 @@ public struct ToggleButton: ButtonStyle {
 
     @Binding var isOn: Bool
 
-    func bgColor(_ configuration: Configuration) -> Color {
+    var bgColor: Color {
         hovering ? (isOn ? color.opacity(0.8) : color.opacity(0.2)) : (isOn ? color.opacity(0.75) : color.opacity(0.15))
-    }
-
-    func fgColor(_ configuration: Configuration) -> Color {
-        guard isOn else { return .primary }
-        return color.textColor()
     }
 }
 

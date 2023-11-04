@@ -319,11 +319,19 @@ private extension Zephyr {
 // MARK: - Synchronizers
 
 extension Zephyr {
-    static func forceSyncToCloud(keys: Defaults._AnyKey...) {
+    public static func forceSyncToCloud(keys: Defaults._AnyKey...) {
         shared.syncSpecificKeys(keys: keys.map(\.name), dataStore: .local)
     }
 
-    static func forceSyncFromCloud(keys: Defaults._AnyKey...) {
+    public static func forceSyncFromCloud(keys: Defaults._AnyKey...) {
+        shared.syncSpecificKeys(keys: keys.map(\.name), dataStore: .remote)
+    }
+    
+    public static func forceSyncToCloud(keys: [Defaults._AnyKey]) {
+        shared.syncSpecificKeys(keys: keys.map(\.name), dataStore: .local)
+    }
+
+    public static func forceSyncFromCloud(keys: [Defaults._AnyKey]) {
         shared.syncSpecificKeys(keys: keys.map(\.name), dataStore: .remote)
     }
 
