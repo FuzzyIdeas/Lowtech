@@ -26,6 +26,10 @@ let package = Package(
             name: "LowtechPro",
             targets: ["LowtechPro"]
         ),
+        .library(
+            name: "LowtechSetapp",
+            targets: ["LowtechSetapp"]
+        ),
     ],
     dependencies: [
         // Dependencies declare other packages that this package depends on.
@@ -40,9 +44,10 @@ let package = Package(
         .package(url: "https://github.com/malcommac/SwiftDate", from: "7.0.0"),
         .package(url: "https://github.com/alin23/AppReceiptValidator.git", from: "1.1.4"),
 
-        .package(url: "https://github.com/alin23/PaddleSPM", from: "4.4.1"),
+        .package(url: "https://github.com/alin23/PaddleSPM", from: "4.4.2"),
         .package(url: "https://github.com/sparkle-project/Sparkle", from: "2.2.0"),
         .package(url: "https://github.com/getsentry/sentry-cocoa", from: "8.9.3"),
+        .package(url: "https://github.com/MacPaw/Setapp-framework", from: "4.0.0"),
     ],
     targets: [
         // Targets are the basic building blocks of a package. A target can define a module or a test suite.
@@ -69,6 +74,14 @@ let package = Package(
             ],
             exclude: ["Numbers.swift.secret"]
 
+        ),
+        .target(
+            name: "LowtechSetapp",
+            dependencies: [
+                "Lowtech",
+                .product(name: "Sentry", package: "sentry-cocoa"),
+                .product(name: "Setapp", package: "Setapp-framework"),
+            ]
         ),
         .target(
             name: "LowtechIndie",

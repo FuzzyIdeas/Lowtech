@@ -68,8 +68,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/alin23/PaddleSPM",
       "state" : {
-        "revision" : "de273d843db477a7e2aaeb5971996b118f410f9f",
-        "version" : "4.4.1"
+        "revision" : "ac54c91d9cdc9d552aa33745b39d6d3feb06330a",
+        "version" : "4.4.2"
       }
     },
     {
@@ -86,8 +86,17 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/getsentry/sentry-cocoa",
       "state" : {
-        "revision" : "7b0d185631a6d4b7756468efa464a68725c061d2",
-        "version" : "8.13.1"
+        "revision" : "c60f232c96264c3bea75bc0b81e6126b2f7475ee",
+        "version" : "8.15.2"
+      }
+    },
+    {
+      "identity" : "setapp-framework",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/MacPaw/Setapp-framework",
+      "state" : {
+        "revision" : "ccf16df5367638a9775d804c9ba789d59bee9fe5",
+        "version" : "4.0.0"
       }
     },
     {
@@ -95,8 +104,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/sparkle-project/Sparkle",
       "state" : {
-        "revision" : "f0ceaf5cc9f3f23daa0ccb6dcebd79fc96ccc7d9",
-        "version" : "2.5.0"
+        "revision" : "1f07f4096e52f19b5e7abaa697b7fc592b7ff57c",
+        "version" : "2.5.1"
       }
     },
     {

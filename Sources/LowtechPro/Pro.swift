@@ -38,8 +38,6 @@ open class LowtechProAppDelegate: LowtechIndieAppDelegate, PADProductDelegate, P
         return instance as? LowtechProAppDelegate
     }
 
-    public var sentryDSN: String? = nil
-
     public var paddleVendorID = ""
     public var paddleAPIKey = ""
     public var paddleProductID = ""
@@ -107,8 +105,6 @@ open class LowtechProAppDelegate: LowtechIndieAppDelegate, PADProductDelegate, P
             pro.verifyLicense()
         }
     #endif
-
-    public static var enableSentry: Bool = Defaults[.enableSentry]
 
     @IBAction public func activateLicense(_: Any) {
         pro.showLicenseActivation()
@@ -190,70 +186,6 @@ open class LowtechProAppDelegate: LowtechIndieAppDelegate, PADProductDelegate, P
             break
         }
     }
-
-    public func configureSentry(restartOnHang: Bool) {
-        guard let dsn = sentryDSN else { return }
-        enableSentryObserver = enableSentryObserver ?? pub(.enableSentry)
-            .debounce(for: .seconds(1), scheduler: RunLoop.main)
-            .sink { change in
-                LowtechProAppDelegate.enableSentry = change.newValue
-                if change.newValue {
-                    self.configureSentry(restartOnHang: restartOnHang)
-                } else {
-                    SentrySDK.close()
-                }
-            }
-
-        guard LowtechProAppDelegate.enableSentry else { return }
-        UserDefaults.standard.register(defaults: ["NSApplicationCrashOnExceptions": true])
-
-        let release = (Bundle.main.infoDictionary?["CFBundleVersion"] as? String) ?? "1"
-
-        SentrySDK.start { options in
-            options.dsn = dsn
-            options.releaseName = "v\(release)"
-            options.dist = release
-            options.appHangTimeoutInterval = 30
-            options.swiftAsyncStacktraces = true
-            if restartOnHang {
-                options.beforeSend = { event in
-                    if let exc = event.exceptions?.first, let mech = exc.mechanism, mech.type == "AppHang", let stack = exc.stacktrace {
-                        log.warning("App Hanging: \(stack)")
-                        asyncAfter(ms: 5000) { restart() }
-                        if event.tags == nil {
-                            event.tags = ["restarted": "true"]
-                        } else {
-                            event.tags!["restarted"] = "true"
-                        }
-                    }
-                    return event
-                }
-            }
-        }
-
-        SentrySDK.configureScope { scope in
-            scope.setUser(self.getSentryUser())
-        }
-
-        guard sentryLaunchEvent == nil, Defaults[.lastLaunchVersion] != release else { return }
-        sentryLaunchEvent = mainAsyncAfter(ms: 5000) {
-            guard LowtechProAppDelegate.enableSentry else { return }
-
-            SentrySDK.capture(message: "Launch")
-            Defaults[.lastLaunchVersion] = release
-        }
-    }
-
-    var enableSentryObserver: Cancellable?
-    var sentryLaunchEvent: DispatchWorkItem?
-}
-
-public func crumb(_ msg: String, level: SentryLevel = .info, category: String) {
-    guard LowtechProAppDelegate.enableSentry else { return }
-
-    let crumb = Breadcrumb(level: level, category: category)
-    crumb.message = msg
-    SentrySDK.addBreadcrumb(crumb)
 }
 
 public var paddle: Paddle?

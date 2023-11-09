@@ -103,8 +103,8 @@ public extension Color {
 
     static let blackTurqoise = Color(hex: 0x1D2E32)
     static let burntSienna = Color(hex: 0xE48659)
-    static let scarlet = Color(NSColor(hue: 0.98, saturation: 0.82, brightness: 1.00, alpha: 1.00))
-    static let saffron = Color(NSColor(hue: 0.11, saturation: 0.82, brightness: 1.00, alpha: 1.00))
+    static let scarlet = Color(hue: 0.98, saturation: 0.82, brightness: 1.00)
+    static let saffron = Color(hue: 0.11, saturation: 0.82, brightness: 1.00)
 
     static let lightMauve = Color(hue: 0.95, saturation: 0.39, brightness: 0.93)
     static let grayMauve = Color(hue: 252 / 360, saturation: 0.29, brightness: 0.43)

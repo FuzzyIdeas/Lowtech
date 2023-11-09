@@ -218,6 +218,7 @@ open class StatusBarController: NSObject, NSWindowDelegate, ObservableObject {
 
     public func showPopover(_: AnyObject) {
         LowtechAppDelegate.instance.env.menuHideTask = nil
+        postBeginMenuTrackingNotification()
 
         Defaults[.popoverClosed] = false
         popoverShownAtLeastOnce = true
@@ -244,6 +245,7 @@ open class StatusBarController: NSObject, NSWindowDelegate, ObservableObject {
 
     @objc public func hidePopover(_: AnyObject) {
         LowtechAppDelegate.instance.env.menuHideTask = nil
+        postEndMenuTrackingNotification()
 
         guard let window else { return }
         window.close()
@@ -288,4 +290,14 @@ open class StatusBarController: NSObject, NSWindowDelegate, ObservableObject {
 
     private var statusBar: NSStatusBar
     private var eventMonitor: GlobalEventMonitor?
+}
+
+/// Posting this notification causes the system Menu Bar to stay put when the cursor leaves its area while over a full screen app.
+func postBeginMenuTrackingNotification() {
+    DistributedNotificationCenter.default().post(name: .init("com.apple.HIToolbox.beginMenuTrackingNotification"), object: nil)
+}
+
+/// Posting this notification reverses the effect of the notification above.
+func postEndMenuTrackingNotification() {
+    DistributedNotificationCenter.default().post(name: .init("com.apple.HIToolbox.endMenuTrackingNotification"), object: nil)
 }

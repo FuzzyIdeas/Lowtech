@@ -326,7 +326,7 @@ extension Zephyr {
     public static func forceSyncFromCloud(keys: Defaults._AnyKey...) {
         shared.syncSpecificKeys(keys: keys.map(\.name), dataStore: .remote)
     }
-    
+
     public static func forceSyncToCloud(keys: [Defaults._AnyKey]) {
         shared.syncSpecificKeys(keys: keys.map(\.name), dataStore: .local)
     }
