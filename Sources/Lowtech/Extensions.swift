@@ -1674,16 +1674,16 @@ public extension FilePath {
     }
 
     static var tmp = FilePath("/tmp")
-    static var backups = FilePath.dir("/tmp/backups")
+    static var backups = FilePath.dir("/tmp/backups", permissions: 0o777)
 
-    static func dir(_ string: String) -> FilePath {
+    static func dir(_ string: String, permissions: Int = 0o755) -> FilePath {
         let path = FilePath(string)
-        path.mkdir(withIntermediateDirectories: true)
+        path.mkdir(withIntermediateDirectories: true, permissions: permissions)
         return path
     }
 
-    func mkdir(withIntermediateDirectories: Bool) {
-        try? fm.createDirectory(atPath: string, withIntermediateDirectories: withIntermediateDirectories)
+    func mkdir(withIntermediateDirectories: Bool, permissions: Int = 0o755) {
+        try? fm.createDirectory(atPath: string, withIntermediateDirectories: withIntermediateDirectories, attributes: [.posixPermissions: permissions])
     }
 
     var dir: FilePath { removingLastComponent() }
