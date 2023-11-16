@@ -996,6 +996,7 @@ public struct SharingsPicker: NSViewRepresentable {
     public init(isPresented: Binding<Bool>, sharingItems: [Any]) {
         _isPresented = isPresented
         self.sharingItems = sharingItems
+        picker = NSSharingServicePicker(items: sharingItems)
     }
 
     public class Coordinator: NSObject, NSSharingServicePickerDelegate {
@@ -1003,13 +1004,14 @@ public struct SharingsPicker: NSViewRepresentable {
             self.owner = owner
         }
 
+        public var shown = false
+
         public func sharingServicePicker(_ sharingServicePicker: NSSharingServicePicker, didChoose service: NSSharingService?) {
             sharingServicePicker.delegate = nil
             mainActor { self.owner.isPresented = false }
         }
 
         let owner: SharingsPicker
-
     }
 
     @Binding public var isPresented: Bool
@@ -1021,18 +1023,25 @@ public struct SharingsPicker: NSViewRepresentable {
     }
 
     public func updateNSView(_ nsView: NSView, context: Context) {
-        if isPresented {
-            let picker = NSSharingServicePicker(items: sharingItems)
+        if isPresented, !context.coordinator.shown, let picker {
             picker.delegate = context.coordinator
+            context.coordinator.shown = true
 
             DispatchQueue.main.async {
+                log.warning("SHOWING PICKER")
                 picker.show(relativeTo: .zero, of: nsView, preferredEdge: .minY)
             }
+        }
+
+        if !isPresented, context.coordinator.shown {
+            context.coordinator.shown = false
         }
     }
 
     public func makeCoordinator() -> Coordinator {
         Coordinator(owner: self)
     }
+
+    private var picker: NSSharingServicePicker?
 
 }
