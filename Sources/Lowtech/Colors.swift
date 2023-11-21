@@ -71,15 +71,17 @@ public extension Color {
 // MARK: - FG
 
 public struct FG {
-    var gray = Color(light: Color.lightGray, dark: Color.darkGray)
-    var primary = Color(light: Color.black, dark: Color.white)
+    public var gray = Color(light: Color.lightGray, dark: Color.darkGray)
+    public var primary = Color(light: Color.black, dark: Color.white)
+    public var warm = Color(light: Color.warmBlack, dark: Color.warmWhite)
 }
 
 // MARK: - BG
 
 public struct BG {
-    var gray = Color(light: Color.darkGray, dark: Color.lightGray)
-    var primary = Color(light: Color.white, dark: Color.black)
+    public var gray = Color(light: Color.darkGray, dark: Color.lightGray)
+    public var primary = Color(light: Color.white, dark: Color.black)
+    public var warm = Color(light: Color.warmWhite, dark: Color.warmBlack)
 }
 
 public extension Color {
@@ -97,6 +99,11 @@ public extension Color {
     static let darkGray = Color(hue: 0, saturation: 0.01, brightness: 0.32)
     static let blackGray = Color(hue: 0.03, saturation: 0.12, brightness: 0.18)
     static let lightGray = Color(hue: 0, saturation: 0.0, brightness: 0.92)
+
+    static let warmWhite = Color(hue: 0.06, saturation: 0.04, brightness: 0.97)
+    static let warmBlack = Color(hue: 0.08, saturation: 0.15, brightness: 0.18)
+    static var translucid: Color { Color.fg.warm.opacity(0.05) }
+    static var translucidDark: Color { Color.bg.warm.opacity(0.05) }
 
     static let hotRed = Color(hue: 0.98, saturation: 0.82, brightness: 1.00)
     static let lightGold = Color(hue: 0.09, saturation: 0.28, brightness: 0.94)

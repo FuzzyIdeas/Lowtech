@@ -1290,9 +1290,9 @@ public extension Collection {
         sorted(by: { e1, e2 in
             switch order {
             case .forward:
-                return e1[keyPath: keyPath] < e2[keyPath: keyPath]
+                e1[keyPath: keyPath] < e2[keyPath: keyPath]
             case .reverse:
-                return e1[keyPath: keyPath] > e2[keyPath: keyPath]
+                e1[keyPath: keyPath] > e2[keyPath: keyPath]
             }
         })
     }
@@ -1630,7 +1630,7 @@ public extension FilePath {
     }
 
     func withSize(_ size: CGSize) -> FilePath {
-        removingLastComponent().appending("\(stem!.replacing(#/_\d+x\d+$/#, with: ""))_\(size.width.i)x\(size.height.i).\(`extension`!)")
+        removingLastComponent().appending("\(stem!.replacing(#/_\d+x\d+$/#, with: ""))_\(size.width.evenInt)x\(size.height.evenInt).\(`extension`!)")
     }
 
     func withFilters(_ filters: String...) -> FilePath {

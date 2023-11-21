@@ -720,6 +720,10 @@ public struct HelpTag: View {
             Text(text)
                 .round(9)
                 .roundbg(radius: 4)
+                .overlay(
+                    RoundedRectangle(cornerRadius: 4)
+                        .stroke(Color.black.opacity(0.1), lineWidth: 1)
+                )
                 .fixedSize()
                 .offset(offset)
                 .zIndex(100)

@@ -704,7 +704,7 @@ public struct PaddedPopoverView<Content>: View where Content: View {
             }
             .padding()
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
-        }.preferredColorScheme(.light)
+        }
     }
 
     @State var background: AnyView
@@ -1028,7 +1028,6 @@ public struct SharingsPicker: NSViewRepresentable {
             context.coordinator.shown = true
 
             DispatchQueue.main.async {
-                log.warning("SHOWING PICKER")
                 picker.show(relativeTo: .zero, of: nsView, preferredEdge: .minY)
             }
         }

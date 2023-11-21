@@ -1302,9 +1302,9 @@ public let KM = KeysManager()
     public extension SauceKey {
         var character: String {
             switch QWERTYKeyCode.i {
-            case kVK_Return: return "⏎"
-            case kVK_Space: return "⎵"
-            default: return Sauce.shared.character(for: QWERTYKeyCode.i, cocoaModifiers: [])?.uppercased() ?? rawValue.uppercased()
+            case kVK_Return: "⏎"
+            case kVK_Space: "⎵"
+            default: Sauce.shared.character(for: QWERTYKeyCode.i, cocoaModifiers: [])?.uppercased() ?? rawValue.uppercased()
             }
         }
 

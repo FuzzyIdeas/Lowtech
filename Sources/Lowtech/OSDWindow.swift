@@ -62,10 +62,34 @@ open class OSDWindow: LowtechWindow {
         screen: NSScreen? = nil,
         animate: Bool = false
     ) {
+        positionArguments = .init(
+            point: point,
+            offCenter: offCenter,
+            verticalOffset: verticalOffset,
+            centerWindow: centerWindow,
+            corner: corner,
+            margin: margin,
+            marginHorizontal: marginHorizontal,
+            screen: screen,
+            animate: animate
+        )
         position(at: point, offCenter: offCenter, verticalOffset: verticalOffset, centerWindow: centerWindow, corner: corner, margin: margin, marginHorizontal: marginHorizontal, screen: screen, animate: animate)
 
-        resizeObserver = observe(NSWindow.didResizeNotification, throttle: .milliseconds(10)) { [weak self] in
-            self?.position(at: point, offCenter: offCenter, verticalOffset: verticalOffset, centerWindow: centerWindow, corner: corner, margin: margin, marginHorizontal: marginHorizontal, screen: screen, animate: animate)
+        if resizeObserver == nil {
+            resizeObserver = observe(NSWindow.didResizeNotification, throttle: .milliseconds(10)) { [weak self] in
+                guard let p = self?.positionArguments else { return }
+                self?.position(
+                    at: p.point,
+                    offCenter: p.offCenter,
+                    verticalOffset: p.verticalOffset,
+                    centerWindow: p.centerWindow,
+                    corner: p.corner,
+                    margin: p.margin,
+                    marginHorizontal: p.marginHorizontal,
+                    screen: p.screen,
+                    animate: p.animate
+                )
+            }
         }
 
         alphaValue = 1
@@ -86,6 +110,7 @@ open class OSDWindow: LowtechWindow {
 
             closer = mainAsyncAfter(ms: closeMilliseconds) { [weak self] in
                 self?.close()
+                self?.resizeObserver = nil
             }
         }
     }
@@ -93,6 +118,7 @@ open class OSDWindow: LowtechWindow {
     public func hide() {
         fader = nil
         closer = nil
+        resizeObserver = nil
 
         if let v = contentView?.superview {
             v.alphaValue = 0.0
@@ -178,11 +204,18 @@ open class LowtechWindow: NSPanel, NSWindowDelegate {
     public var animateOnResize = false
     @Published public var screenPlacement: NSScreen?
 
-    public var screenCorner: ScreenCorner?
     public var margin: CGFloat = 0
     public var marginHorizontal: CGFloat? = nil
 
     public lazy var wc = NSWindowController(window: self)
+
+    public var screenCorner: ScreenCorner? {
+        didSet {
+            guard let screenCorner else { return }
+            print("screenCorner", screenCorner)
+            log.traceCalls()
+        }
+    }
 
     public func windowDidBecomeKey(_ notification: Notification) {
         closed = false
@@ -232,14 +265,17 @@ open class LowtechWindow: NSPanel, NSWindowDelegate {
         if let screen {
             screenPlacement = screen
         }
+        if let corner {
+            screenCorner = corner
+        }
 
+        positionArguments = positionArguments?.with(corner: corner, screen: screen)
         withAnim(animate: animate) { w in
             guard let corner else {
                 w.setFrameOrigin(screenFrame.origin)
                 return
             }
 
-            screenCorner = corner
             let o = screenFrame.origin
             let f = screenFrame
 
@@ -292,6 +328,33 @@ open class LowtechWindow: NSPanel, NSWindowDelegate {
         return true
     }
 
+    struct PositionArguments {
+        let point: NSPoint?
+        let offCenter: CGFloat?
+        let verticalOffset: CGFloat?
+        let centerWindow: Bool
+        let corner: ScreenCorner?
+        let margin: CGFloat?
+        let marginHorizontal: CGFloat?
+        let screen: NSScreen?
+        let animate: Bool
+
+        func with(corner: ScreenCorner? = nil, screen: NSScreen? = nil) -> PositionArguments {
+            .init(
+                point: point,
+                offCenter: offCenter,
+                verticalOffset: verticalOffset,
+                centerWindow: centerWindow,
+                corner: corner ?? self.corner,
+                margin: margin,
+                marginHorizontal: marginHorizontal,
+                screen: screen ?? self.screen,
+                animate: animate
+            )
+        }
+    }
+
+    var positionArguments: PositionArguments?
     @Atomic var inAnim = false
 }
 
