@@ -209,13 +209,7 @@ open class LowtechWindow: NSPanel, NSWindowDelegate {
 
     public lazy var wc = NSWindowController(window: self)
 
-    public var screenCorner: ScreenCorner? {
-        didSet {
-            guard let screenCorner else { return }
-            print("screenCorner", screenCorner)
-            log.traceCalls()
-        }
-    }
+    public var screenCorner: ScreenCorner?
 
     public func windowDidBecomeKey(_ notification: Notification) {
         closed = false
