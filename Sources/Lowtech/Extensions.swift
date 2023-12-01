@@ -1126,7 +1126,7 @@ public extension Published.Publisher {
 }
 
 public extension View {
-    /// Applies the given transform if the given condition evaluates to `true`.
+    /// Applies the given transform if the given condition evaluates to `true`.viv
     /// - Parameters:
     ///   - condition: The condition to evaluate.
     ///   - transform: The transform to apply to the source `View`.
@@ -1734,7 +1734,7 @@ public extension FilePath {
             let attr = try fm.attributesOfItem(atPath: string)
             return (attr[FileAttributeKey.size] as? UInt64)?.i
         } catch {
-            err("Error: \(error)")
+            log.error("Error: \(error)")
         }
         return nil
     }
@@ -1744,14 +1744,14 @@ public extension FilePath {
     @discardableResult
     func move(to path: FilePath, force: Bool = false) throws -> FilePath {
         guard path != self else {
-            err("Trying to move path to itself: \(string)")
+            log.error("Trying to move path to itself: \(string)")
             return self
         }
 
         let path = path.isDir ? path.appending(name) : path
 
         if force { try path.delete() }
-        debug("Moving path \(shellString) to \(path.shellString)")
+        log.debug("Moving path \(shellString) to \(path.shellString)")
         try fm.moveItem(atPath: string, toPath: path.string)
         return path
     }
@@ -1764,21 +1764,21 @@ public extension FilePath {
     @discardableResult
     func copy(to path: FilePath, force: Bool = false) throws -> FilePath {
         guard path != self else {
-            err("Trying to copy path to itself: \(string)")
+            log.error("Trying to copy path to itself: \(string)")
             return self
         }
 
         let path = path.isDir ? path.appending(name) : path
 
         if force { try path.delete() }
-        debug("Copying path \(shellString) to \(path.shellString)")
+        log.debug("Copying path \(shellString) to \(path.shellString)")
         try fm.copyItem(atPath: string, toPath: path.string)
         return path
     }
 
     func delete() throws {
         guard exists else { return }
-        debug("Deleting path \(shellString)")
+        log.debug("Deleting path \(shellString)")
         try fm.removeItem(atPath: string)
     }
 
