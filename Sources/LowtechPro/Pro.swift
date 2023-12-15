@@ -228,6 +228,9 @@ public class LowtechPro: ObservableObject {
             withVendorID: paddleVendorID, apiKey: paddleAPIKey, productID: paddleProductID,
             configuration: productConfig, delegate: paddleDelegate
         )
+        #if DEBUG
+            Paddle.enableDebug()
+        #endif
 
         product = PADProduct(
             productID: paddleProductID, productType: PADProductType.sdkProduct,
@@ -250,8 +253,6 @@ public class LowtechPro: ObservableObject {
 
     @Published public var onTrial = false
     @Published public var productActivated = false
-
-    public var active: Bool { productActivated || onTrial }
 
     public func manageLicence() {
         guard let paddle, let product else {
@@ -450,6 +451,8 @@ public class LowtechPro: ObservableObject {
     }()
 
     var retryUnverified = true
+
+    @inline(__always) var active: Bool { productActivated || onTrial }
 
     @inline(__always) func enoughTimeHasPassedSinceLastVerification(product: PADProduct) -> Bool {
         guard let verifyDate = product.lastVerifyDate else {

@@ -1791,11 +1791,11 @@ public extension FilePath {
 }
 
 public extension URL {
-    var filePath: FilePath { FilePath(self)! }
+    var filePath: FilePath? { FilePath(self) }
     var existingFilePath: FilePath? { fm.fileExists(atPath: path) ? FilePath(self) : nil }
 }
 
-public let HOME = URL.homeDirectory.filePath
+public let HOME = URL.homeDirectory.filePath!
 
 public func / (_ path: FilePath, _ str: String) -> FilePath {
     path.appending(str)
@@ -1845,4 +1845,8 @@ extension NSSize: Hashable {
         hasher.combine(width)
         hasher.combine(height)
     }
+}
+
+public extension String {
+    var shellString: String { replacingFirstOccurrence(of: NSHomeDirectory(), with: "~") }
 }
