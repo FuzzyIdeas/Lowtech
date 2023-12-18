@@ -8,6 +8,18 @@ public extension Defaults.Keys {
     static let lastLaunchVersion = Key<String>("lastLaunchVersion", default: "")
 }
 
+extension SentryStacktrace? {
+    var isExpectedToHang: Bool {
+        guard let stack = self else {
+            return true
+        }
+        return stack.frames.contains { frame in
+            guard let function = frame.function else { return false }
+            return function.contains("runModal") || function.contains("forTimeInterval")
+        }
+    }
+}
+
 public enum LowtechSentry {
     public static var enableSentry: Bool = Defaults[.enableSentry]
     public static var sentryDSN: String?
@@ -34,12 +46,15 @@ public enum LowtechSentry {
             options.dsn = dsn
             options.releaseName = "v\(release)"
             options.dist = release
-            options.appHangTimeoutInterval = 30
+            #if DEBUG
+                options.appHangTimeoutInterval = 3
+            #else
+                options.appHangTimeoutInterval = 30
+            #endif
             options.swiftAsyncStacktraces = true
             if restartOnHang {
                 options.beforeSend = { event in
-                    if let exc = event.exceptions?.first, let mech = exc.mechanism, mech.type == "AppHang", let stack = exc.stacktrace {
-                        log.warning("App Hanging: \(stack)")
+                    if let exc = event.exceptions?.first, let mech = exc.mechanism, mech.type == "AppHang", exc.stacktrace.isExpectedToHang {
                         asyncAfter(ms: 5000) { restart() }
                         if event.tags == nil {
                             event.tags = ["restarted": "true"]

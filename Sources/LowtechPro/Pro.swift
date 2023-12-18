@@ -5,6 +5,10 @@ import LowtechIndie
 import Paddle
 import Sentry
 
+extension Defaults.Keys {
+    static let shownPaddleTrialEnded = Key<Bool>("shownPaddleTrialEnded", default: false)
+}
+
 // MARK: - ProManager
 
 public class ProManager: ObservableObject {
@@ -276,17 +280,17 @@ public class LowtechPro: ObservableObject {
                 state, _ in
                 switch state {
                 case .abandoned:
-                    print("Checkout abandoned")
+                    log.debug("Checkout abandoned")
                 case .failed:
-                    print("Checkout failed")
+                    log.debug("Checkout failed")
                 case .flagged:
-                    print("Checkout flagged")
+                    log.debug("Checkout flagged")
                 case .purchased:
-                    print("Checkout purchased")
+                    log.debug("Checkout purchased")
                 case .slowOrderProcessing:
-                    print("Checkout slow processing")
+                    log.debug("Checkout slow processing")
                 default:
-                    print("Checkout unknown state: \(state)")
+                    log.debug("Checkout unknown state: \(state)")
                 }
             }
         )
@@ -326,7 +330,7 @@ public class LowtechPro: ObservableObject {
             (delta: [AnyHashable: Any]?, error: Error?) in
                 mainAsync { [self] in
                     if let delta, !delta.isEmpty {
-                        print("Differences in \(product.productName ?? "product") after refresh")
+                        log.warning("Differences in \(product.productName ?? "product") after refresh")
                     }
                     if let error {
                         log.error("Error on refreshing \(product.productName ?? "product") from Paddle: \(error)")
@@ -358,44 +362,47 @@ public class LowtechPro: ObservableObject {
 
                 switch state {
                 case .noActivation:
-                    print("\(product.productName ?? "") noActivation")
+                    log.debug("\(product.productName ?? "") noActivation")
 
                     if onTrial {
                         enablePro()
                     } else {
                         disablePro()
                     }
-                    if !onTrial {
+                    if !onTrial, !Defaults[.shownPaddleTrialEnded] {
                         paddle.showProductAccessDialog(with: product)
+                        Defaults[.shownPaddleTrialEnded] = true
                     }
                 case .unableToVerify where error == nil:
-                    print("\(product.productName ?? "Product") unableToVerify (network problems)")
+                    log.error("\(product.productName ?? "Product") unableToVerify (network problems)")
                 case .unverified where error?.localizedDescription == "Machine does not match activations.":
-                    print("\(product.productName ?? "Product") unableToVerify (machine does not match)")
+                    log.error("\(product.productName ?? "Product") unableToVerify (machine does not match)")
                     disablePro()
-                    if !onTrial {
+                    if !onTrial, !Defaults[.shownPaddleTrialEnded] {
                         paddle.showProductAccessDialog(with: product)
+                        Defaults[.shownPaddleTrialEnded] = true
                     }
                 case .unverified where error == nil:
                     if retryUnverified {
                         retryUnverified = false
-                        print("\(product.productName ?? "Product") unverified (revoked remotely), retrying for safe measure")
+                        log.warning("\(product.productName ?? "Product") unverified (revoked remotely), retrying for safe measure")
                         asyncAfter(ms: 3000) {
                             self.verifyLicense(force: true)
                         }
                         return
                     }
-                    print("\(product.productName ?? "Product") unverified (revoked remotely)")
+                    log.error("\(product.productName ?? "Product") unverified (revoked remotely)")
 
                     disablePro()
-                    if !onTrial {
+                    if !onTrial, !Defaults[.shownPaddleTrialEnded] {
                         paddle.showProductAccessDialog(with: product)
+                        Defaults[.shownPaddleTrialEnded] = true
                     }
                 case .verified:
-                    print("\(product.productName ?? "Product") verified")
+                    log.info("\(product.productName ?? "Product") verified")
                     enablePro()
                 default:
-                    print("\(product.productName ?? "Product") verification unknown state: \(state)")
+                    log.warning("\(product.productName ?? "Product") verification unknown state: \(state)")
                 }
             }
         }

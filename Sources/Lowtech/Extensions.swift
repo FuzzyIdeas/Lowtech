@@ -1609,8 +1609,15 @@ public extension Data {
 }
 
 public extension FilePath {
-    var sha256: String? {
+    var contentsSHA256: String? {
         guard let data = fm.contents(atPath: string) else {
+            return nil
+        }
+        return SHA256.hash(data: data).hexEncodedString()
+    }
+
+    var sha256: String? {
+        guard let data = string.data(using: .utf8, allowLossyConversion: true) else {
             return nil
         }
         return SHA256.hash(data: data).hexEncodedString()
