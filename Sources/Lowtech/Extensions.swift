@@ -1406,7 +1406,14 @@ public extension NSRunningApplication {
     }
 
     func binaryMatchesLaunchDate(path: String) -> Bool {
-        let binaryModifiedDate = (try? FileManager.default.attributesOfItem(atPath: path))?[.modificationDate] as? Date
+        let attr: [FileAttributeKey : Any]? = withTimeout(5, name: "binaryMatchesLaunchDate(\(path))") {
+            try fm.attributesOfItem(atPath: path)
+        }
+        guard let attr else {
+            return true
+        }
+
+        let binaryModifiedDate = attr[.modificationDate] as? Date
         guard let launchDate, let binaryModifiedDate else { return true }
 
         #if DEBUG
@@ -1737,13 +1744,13 @@ public extension FilePath {
     }
 
     func fileSize() -> Int? {
-        do {
-            let attr = try fm.attributesOfItem(atPath: string)
-            return (attr[FileAttributeKey.size] as? UInt64)?.i
-        } catch {
-            log.error("Error: \(error)")
+        let attr: [FileAttributeKey : Any]? = withTimeout(5, name: "fileSize(\(string))") {
+            try fm.attributesOfItem(atPath: string)
         }
-        return nil
+        guard let attr else {
+            return nil
+        }
+        return (attr[FileAttributeKey.size] as? UInt64)?.i
     }
 
     var exists: Bool { fm.fileExists(atPath: string) }

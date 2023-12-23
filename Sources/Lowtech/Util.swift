@@ -266,6 +266,26 @@ public func asyncAfter(ms: Int, _ action: @escaping () -> Void) -> DispatchWorkI
     return workItem
 }
 
+@discardableResult
+public func withTimeout<T>(_ timeout: TimeInterval, name: String, _ block: @escaping () throws -> T) -> T? {
+    var value: T?
+    let workItem = DispatchWorkItem {
+        do {
+            value = try block()
+        } catch {
+            log.error("Error: \(error)")
+        }
+    }
+    DispatchQueue.global().async(execute: workItem)
+    let result = workItem.wait(timeout: .now() + timeout)
+    if result == .timedOut {
+        log.error("\(name) timed out")
+        workItem.cancel()
+    }
+
+    return value
+}
+
 public extension DispatchWorkItem {
     func wait(for timeout: TimeInterval) -> DispatchTimeoutResult {
         let result = wait(timeout: .now() + timeout)
