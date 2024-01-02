@@ -312,17 +312,20 @@ public extension Bool {
         }
     }
 
+    public extension NSSize {
+        var s: String { "\(width.i)×\(height.i)" }
+        var area: CGFloat { width * height }
+        func scaled(by factor: Double) -> CGSize {
+            CGSize(width: (width * factor).evenInt, height: (height * factor).evenInt)
+        }
+    }
+
     extension NSSize: Comparable {
-        public var s: String { "\(width.i)×\(height.i)" }
-        public var area: CGFloat { width * height }
         public static func < (lhs: CGSize, rhs: CGSize) -> Bool {
             (lhs.width < rhs.width && lhs.height <= rhs.height)
                 || (lhs.width <= rhs.width && lhs.height < rhs.height)
         }
 
-        public func scaled(by factor: Double) -> CGSize {
-            CGSize(width: (width * factor).evenInt, height: (height * factor).evenInt)
-        }
     }
 
     public extension NSAppearance {
@@ -1406,7 +1409,7 @@ public extension NSRunningApplication {
     }
 
     func binaryMatchesLaunchDate(path: String) -> Bool {
-        let attr: [FileAttributeKey : Any]? = withTimeout(5, name: "binaryMatchesLaunchDate(\(path))") {
+        let attr: [FileAttributeKey: Any]? = withTimeout(5, name: "binaryMatchesLaunchDate(\(path))") {
             try fm.attributesOfItem(atPath: path)
         }
         guard let attr else {
@@ -1744,7 +1747,7 @@ public extension FilePath {
     }
 
     func fileSize() -> Int? {
-        let attr: [FileAttributeKey : Any]? = withTimeout(5, name: "fileSize(\(string))") {
+        let attr: [FileAttributeKey: Any]? = withTimeout(5, name: "fileSize(\(string))") {
             try fm.attributesOfItem(atPath: string)
         }
         guard let attr else {
