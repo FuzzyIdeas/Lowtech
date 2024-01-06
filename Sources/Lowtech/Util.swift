@@ -731,7 +731,7 @@ public let SERIAL_NUMBER_HASH = getSerialNumberHash() ?? generateAPIKey()
 
 public func restart() {
     // Check if the app was started fresh or if was restarted with arg `restarts=timestamp:timestamp:...`
-    // If the app was restarted more than 3 times in 10 seconds, exit with status 1
+    // If the app was restarted more than 3 times in 1 minute, exit with status 1
 
     guard CommandLine.arguments.count == 1 || (
         CommandLine.arguments.count == 2 && CommandLine.arguments[1].starts(with: "restarts=")
@@ -743,7 +743,7 @@ public func restart() {
     if CommandLine.arguments.count == 2 {
         let restarts = CommandLine.arguments[1].split(separator: "=")[1].split(separator: ":").map { TimeInterval($0)! }
         let now = Date().timeIntervalSince1970
-        if restarts.filter({ now - $0 < 10 }).count > 3 {
+        if restarts.filter({ now - $0 < 60 }).count > 3 {
             exit(1)
         } else {
             args.append("\(CommandLine.arguments[1]):\(now)")
