@@ -8,6 +8,8 @@ public extension Defaults.Keys {
     static let popoverClosed = Key<Bool>("popoverClosed", default: true)
     static let hideMenubarIcon = Key<Bool>("hideMenubarIcon", default: false)
     static let launchCount = Key<Int>("launchCount", default: 0)
+    static let autoRestartOnCrash = Key<Bool>("autoRestartOnCrash", default: true)
+    static let autoRestartOnHang = Key<Bool>("autoRestartOnHang", default: true)
 }
 
 public func first<T>(this: T, other _: T) -> T {

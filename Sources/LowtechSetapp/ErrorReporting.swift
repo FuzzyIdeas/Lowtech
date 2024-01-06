@@ -6,6 +6,7 @@ import Sentry
 public extension Defaults.Keys {
     static let enableSentry = Key<Bool>("enableSentry", default: true)
     static let lastLaunchVersion = Key<String>("lastLaunchVersion", default: "")
+    static let autoRestartOnHang = Key<Bool>("autoRestartOnHang", default: true)
 }
 
 extension SentryStacktrace? {
@@ -24,14 +25,14 @@ public enum LowtechSentry {
     public static var enableSentry: Bool = Defaults[.enableSentry]
     public static var sentryDSN: String?
 
-    public static func configureSentry(restartOnHang: Bool, getUser: @escaping () -> User) {
+    public static func configureSentry(getUser: @escaping () -> User) {
         guard let dsn = sentryDSN else { return }
         enableSentryObserver = enableSentryObserver ?? pub(.enableSentry)
             .debounce(for: .seconds(1), scheduler: RunLoop.main)
             .sink { change in
                 enableSentry = change.newValue
                 if change.newValue {
-                    configureSentry(restartOnHang: restartOnHang, getUser: getUser)
+                    configureSentry(getUser: getUser)
                 } else {
                     SentrySDK.close()
                 }
@@ -52,7 +53,7 @@ public enum LowtechSentry {
                 options.appHangTimeoutInterval = 30
             #endif
             options.swiftAsyncStacktraces = true
-            if restartOnHang {
+            if Defaults[.autoRestartOnHang] {
                 options.beforeSend = { event in
                     if let exc = event.exceptions?.first, let mech = exc.mechanism, mech.type == "AppHang", exc.stacktrace.isExpectedToHang {
                         asyncAfter(ms: 5000) { restart() }

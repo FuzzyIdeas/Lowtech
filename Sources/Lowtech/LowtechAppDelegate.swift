@@ -103,7 +103,7 @@ open class LowtechAppDelegate: NSObject, NSApplicationDelegate, ObservableObject
 
     public private(set) static var instance: LowtechAppDelegate!
 
-    public var shouldRestartOnCrash = false
+    public var shouldRestartOnCrash = Defaults[.autoRestartOnCrash]
 
     public lazy var trialMode = isTrialMode()
 
