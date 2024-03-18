@@ -108,7 +108,9 @@ public extension ObservableSettings {
 
         let onChange: (Value) -> Void = { [weak self] val in
             guard let self, self.apply else { return }
-            Defaults[key] = val
+            Defaults.withoutPropagation {
+                Defaults[key] = val
+            }
         }
 
         if let debounce {
@@ -150,7 +152,9 @@ public extension ObservableSettings {
 
         let onChange: (Transformed) -> Void = { [weak self] val in
             guard let self, self.apply, let transform = transformer.from else { return }
-            Defaults[key] = transform(val)
+            Defaults.withoutPropagation {
+                Defaults[key] = transform(val)
+            }
         }
 
         if let debounce {
