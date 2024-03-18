@@ -46,13 +46,13 @@ public class Repeater {
     }
 
     deinit {
-        debug("Deinit repeater '\(name)'")
+        debug("Deinit repeater '\(self.name)'")
         stop()
         onCancel?()
     }
 
     public func stop() {
-        debug("Stopping repeater '\(name)'")
+        debug("Stopping repeater '\(self.name)'")
         stopped = true
         task?.cancel()
         timer.connect().cancel()
