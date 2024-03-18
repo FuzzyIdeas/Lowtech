@@ -744,12 +744,12 @@ public class KeysManager: ObservableObject {
     public func initFlagsListener() {
         globalEventMonitor = GlobalEventMonitor(mask: .flagsChanged) { [self] event in
             guard let event else { return }
-            flagsChanged(modifierFlags: event.modifierFlags.filterUnsupportModifiers())
+            flagsChanged(modifierFlags: event.modifierFlags.filterUnsupportedModifiers())
         }
         globalEventMonitor.start()
 
         localEventMonitor = LocalEventMonitor(mask: .flagsChanged) { [self] event in
-            flagsChanged(modifierFlags: event.modifierFlags.filterUnsupportModifiers())
+            flagsChanged(modifierFlags: event.modifierFlags.filterUnsupportedModifiers())
             return event
         }
         localEventMonitor.start()
@@ -918,7 +918,7 @@ public class KeysManager: ObservableObject {
     func recheckFlags() {
         guard lastModifierFlags.isNotEmpty else { return }
 
-        let flags = NSEvent.modifierFlags.filterUnsupportModifiers()
+        let flags = NSEvent.modifierFlags.filterUnsupportedModifiers()
         if flags.isEmpty || !lastModifierFlags.contains(flags) {
             flagsChanged(modifierFlags: flags)
         }

@@ -3,10 +3,10 @@
     "pins": [
       {
         "package": "AppReceiptValidator",
-        "repositoryURL": "https://github.com/alin23/AppReceiptValidator.git",
+        "repositoryURL": "https://github.com/IdeasOnCanvas/AppReceiptValidator.git",
         "state": {
           "branch": "main",
-          "revision": "74e9b64756a90a801c64bf089311bd1993e86faa",
+          "revision": "f8b38f88afe31341a3efaef4bd4ad6e672a85f47",
           "version": null
         }
       },
@@ -33,8 +33,8 @@
         "repositoryURL": "https://github.com/sindresorhus/Defaults",
         "state": {
           "branch": null,
-          "revision": "d71bfd8ffbf944ef08eacbca5fb96d6f69bf7696",
-          "version": "7.1.0"
+          "revision": "3efef5a28ebdbbe922d4a2049493733ed14475a6",
+          "version": "7.3.1"
         }
       },
       {
@@ -47,7 +47,7 @@
         }
       },
       {
-        "package": "EonilFSEvents",
+        "package": "FSEvents",
         "repositoryURL": "https://github.com/eonil/FSEvents",
         "state": {
           "branch": null,
@@ -60,7 +60,7 @@
         "repositoryURL": "https://github.com/alin23/FuzzyMatcher",
         "state": {
           "branch": "main",
-          "revision": "ba9f3c5a9a77499d8cfdeda8b9c90a3d6d698349",
+          "revision": "d9d9a666bcb77b1c78fe119714faddcd788d11d1",
           "version": null
         }
       },
@@ -69,7 +69,7 @@
         "repositoryURL": "https://github.com/sindresorhus/LaunchAtLogin",
         "state": {
           "branch": "main",
-          "revision": "7ad6331f9c38953eb1ce8737758e18f7607e984a",
+          "revision": "d811817ce35d74872a1170c851cab243a2b8b559",
           "version": null
         }
       },
@@ -78,7 +78,7 @@
         "repositoryURL": "https://github.com/alin23/Magnet",
         "state": {
           "branch": "dev",
-          "revision": "fda73dc564372e98b5e5e6f5452a19f6b92a0382",
+          "revision": "a21e6c4fd0fdb0244009e7c1fce64b31a01c39ca",
           "version": null
         }
       },
@@ -87,8 +87,8 @@
         "repositoryURL": "https://github.com/marcprux/MemoZ.git",
         "state": {
           "branch": null,
-          "revision": "72593a2d515c1a7caefdd817c8704f279091710c",
-          "version": "1.5.1"
+          "revision": "473ee3559b4446fb81c7197fb01293373ddf6b4a",
+          "version": "1.5.2"
         }
       },
       {
@@ -96,7 +96,7 @@
         "repositoryURL": "https://github.com/alin23/PaddleSPM",
         "state": {
           "branch": "main",
-          "revision": "442ee896d2f75302c4b3ac83413661b7964cc766",
+          "revision": "d5446f4274ed2f01701758f40c9253b93fc43dd9",
           "version": null
         }
       },
@@ -105,8 +105,8 @@
         "repositoryURL": "https://github.com/mxcl/Path.swift",
         "state": {
           "branch": null,
-          "revision": "9c6f807b0a76be0e27aecc908bc6f173400d839e",
-          "version": "1.4.0"
+          "revision": "8e355c28e9393c42e58b18c54cace2c42c98a616",
+          "version": "1.4.1"
         }
       },
       {
@@ -132,8 +132,8 @@
         "repositoryURL": "https://github.com/sparkle-project/Sparkle",
         "state": {
           "branch": null,
-          "revision": "631846cc829f0f0cae327df9bafe5a32b7ddadce",
-          "version": "2.4.0"
+          "revision": "0a4caaf7a81eea2cece651ef4b17331fa0634dff",
+          "version": "2.6.0"
         }
       },
       {
@@ -141,8 +141,8 @@
         "repositoryURL": "https://github.com/apple/swift-atomics",
         "state": {
           "branch": null,
-          "revision": "6c89474e62719ddcc1e9614989fff2f68208fe10",
-          "version": "1.1.0"
+          "revision": "cd142fd2f64be2100422d658e7411e39489da985",
+          "version": "1.2.0"
         }
       },
       {
@@ -150,8 +150,8 @@
         "repositoryURL": "https://github.com/apple/swift-crypto",
         "state": {
           "branch": null,
-          "revision": "ddb07e896a2a8af79512543b1c7eb9797f8898a5",
-          "version": "1.1.7"
+          "revision": "60f13f60c4d093691934dc6cfdf5f508ada1f894",
+          "version": "2.6.0"
         }
       },
       {
@@ -164,7 +164,7 @@
         }
       },
       {
-        "package": "SystemColors",
+        "package": "swiftui-system-colors",
         "repositoryURL": "https://github.com/diniska/swiftui-system-colors",
         "state": {
           "branch": null,
