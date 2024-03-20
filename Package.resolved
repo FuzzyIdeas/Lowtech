@@ -5,8 +5,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/alin23/AppReceiptValidator.git",
       "state" : {
-        "revision" : "46930f601a0626e9eaa6810721d75c651b726755",
-        "version" : "1.1.4"
+        "revision" : "e35794a03103839e024f71534e263310038c930d",
+        "version" : "1.2.0"
       }
     },
     {
@@ -50,8 +50,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/sindresorhus/LaunchAtLogin-Modern",
       "state" : {
-        "revision" : "638e6c426b8d113eae255baeba59ed2d9d9a7c4d",
-        "version" : "1.0.0"
+        "revision" : "a04ec1c363be3627734f6dad757d82f5d4fa8fcc",
+        "version" : "1.1.0"
       }
     },
     {
@@ -68,8 +68,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/alin23/PaddleSPM",
       "state" : {
-        "revision" : "ac54c91d9cdc9d552aa33745b39d6d3feb06330a",
-        "version" : "4.4.2"
+        "revision" : "d5446f4274ed2f01701758f40c9253b93fc43dd9",
+        "version" : "4.4.3"
       }
     },
     {
@@ -86,8 +86,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/getsentry/sentry-cocoa",
       "state" : {
-        "revision" : "c60f232c96264c3bea75bc0b81e6126b2f7475ee",
-        "version" : "8.15.2"
+        "revision" : "38f4f70d07117b9f958a76b1bff278c2f29ffe0e",
+        "version" : "8.21.0"
       }
     },
     {
@@ -95,8 +95,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/MacPaw/Setapp-framework",
       "state" : {
-        "revision" : "ccf16df5367638a9775d804c9ba789d59bee9fe5",
-        "version" : "4.0.0"
+        "revision" : "b029b50cd1901a36ee4d553b6dac2a25191d7b6f",
+        "version" : "4.2.0"
       }
     },
     {
@@ -104,8 +104,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/sparkle-project/Sparkle",
       "state" : {
-        "revision" : "1f07f4096e52f19b5e7abaa697b7fc592b7ff57c",
-        "version" : "2.5.1"
+        "revision" : "0a4caaf7a81eea2cece651ef4b17331fa0634dff",
+        "version" : "2.6.0"
       }
     },
     {
@@ -122,8 +122,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/apple/swift-crypto",
       "state" : {
-        "revision" : "ddb07e896a2a8af79512543b1c7eb9797f8898a5",
-        "version" : "1.1.7"
+        "revision" : "60f13f60c4d093691934dc6cfdf5f508ada1f894",
+        "version" : "2.6.0"
       }
     },
     {
