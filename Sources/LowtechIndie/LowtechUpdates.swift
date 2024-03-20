@@ -19,11 +19,7 @@ extension Defaults.Keys {
 // MARK: - LowtechIndieAppDelegate
 
 open class LowtechIndieAppDelegate: LowtechAppDelegate, SPUUpdaterDelegate, SPUStandardUserDriverDelegate {
-    // MARK: Public
-
     public lazy var updateController = initUpdater()
-
-    // MARK: Internal
 
     func initUpdater() -> SPUStandardUpdaterController {
         SPUStandardUpdaterController(startingUpdater: false, updaterDelegate: self, userDriverDelegate: self)

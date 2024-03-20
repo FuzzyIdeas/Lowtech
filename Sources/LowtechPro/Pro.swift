@@ -164,8 +164,6 @@ public var product: PADProduct?
 // MARK: - LowtechPro
 
 public class LowtechPro: ObservableObject {
-    // MARK: Lifecycle
-
     public init(
         paddleVendorID: String,
         paddleAPIKey: String,
@@ -218,8 +216,6 @@ public class LowtechPro: ObservableObject {
             enablePro()
         }
     }
-
-    // MARK: Public
 
     @Published public var onTrial = false
     @Published public var productActivated = false
@@ -301,10 +297,10 @@ public class LowtechPro: ObservableObject {
                     }
 
                     if trialActive(product: product) || product.activated {
-                        self.enablePro()
+                        enablePro()
                     }
 
-                    self.verifyLicense()
+                    verifyLicense()
                 }
         }
     }
@@ -329,9 +325,9 @@ public class LowtechPro: ObservableObject {
                     print("\(product.productName ?? "") noActivation")
 
                     if onTrial {
-                        self.enablePro()
+                        enablePro()
                     } else {
-                        self.disablePro()
+                        disablePro()
                     }
                     if !onTrial {
                         paddle.showProductAccessDialog(with: product)
@@ -355,7 +351,7 @@ public class LowtechPro: ObservableObject {
                     }
                 case .verified:
                     print("\(product.productName ?? "Product") verified")
-                    self.enablePro()
+                    enablePro()
                 case PADVerificationState(rawValue: 2):
                     log.error("\(product.productName ?? "Product") verification failed because of network connection: \(state)")
                 default:
@@ -380,8 +376,6 @@ public class LowtechPro: ObservableObject {
         productActivated = false
         onTrial = trialActive(product: product)
     }
-
-    // MARK: Internal
 
     let paddleVendorID: String
     let paddleAPIKey: String

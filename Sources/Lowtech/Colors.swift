@@ -5,8 +5,6 @@ import SystemColors
 // MARK: - Colors
 
 public struct Colors {
-    // MARK: Lifecycle
-
     public init(_ colorScheme: SwiftUI.ColorScheme = .light, accent: Color) {
         self.accent = accent
         self.colorScheme = colorScheme
@@ -14,31 +12,21 @@ public struct Colors {
         fg = FG(colorScheme: colorScheme)
     }
 
-    // MARK: Public
-
     public struct FG {
-        // MARK: Public
-
         public var colorScheme: SwiftUI.ColorScheme
 
         public var isDark: Bool { colorScheme == .dark }
         public var isLight: Bool { colorScheme == .light }
-
-        // MARK: Internal
 
         var gray: Color { isDark ? Colors.lightGray : Colors.darkGray }
         var primary: Color { isDark ? .white : .black }
     }
 
     public struct BG {
-        // MARK: Public
-
         public var colorScheme: SwiftUI.ColorScheme
 
         public var isDark: Bool { colorScheme == .dark }
         public var isLight: Bool { colorScheme == .light }
-
-        // MARK: Internal
 
         var gray: Color { isDark ? Colors.darkGray : Colors.lightGray }
         var primary: Color { isDark ? .black : .white }

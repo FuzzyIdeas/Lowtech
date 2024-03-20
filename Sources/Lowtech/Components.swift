@@ -5,11 +5,7 @@ import SwiftUI
 // MARK: - Semaphore
 
 public struct Semaphore: View {
-    // MARK: Lifecycle
-
     public init() {}
-
-    // MARK: Public
 
     @State public var xVisible = false
 
@@ -39,11 +35,7 @@ public struct Semaphore: View {
 // MARK: - VScrollView
 
 public struct VScrollView<Content>: View where Content: View {
-    // MARK: Lifecycle
-
     public init(@ViewBuilder content: () -> Content) { self.content = content() }
-
-    // MARK: Public
 
     @ViewBuilder public let content: Content
 
@@ -91,8 +83,6 @@ struct HorizontalScrollViewWidthPreferenceKey: PreferenceKey {
 // MARK: - HScrollView
 
 public struct HScrollView<Content: View>: View {
-    // MARK: Lifecycle
-
     public init(
         @ViewBuilder content: () -> Content,
         gradientOpacity: CGFloat = 1.0,
@@ -110,8 +100,6 @@ public struct HScrollView<Content: View>: View {
         _gradientColor = gradientColor.state
         _gradientRadius = gradientRadius.state
     }
-
-    // MARK: Public
 
     @ViewBuilder public let content: Content
 
@@ -160,8 +148,6 @@ public struct HScrollView<Content: View>: View {
         }
     }
 
-    // MARK: Internal
-
     @State var gradientOpacity: CGFloat = 1.0
     @State var scrollViewFullWidth: CGFloat = 0
     @State var scrollViewWidth: CGFloat = 0
@@ -177,8 +163,6 @@ public struct HScrollView<Content: View>: View {
 // MARK: - HomekitSlider
 
 public struct HomekitSlider: View {
-    // MARK: Lifecycle
-
     public init(
         percentage: Binding<Float>,
         sliderWidth: CGFloat = 80,
@@ -200,8 +184,6 @@ public struct HomekitSlider: View {
         _hoverColor = hoverColor.state
         _backgroundColor = backgroundColor.state
     }
-
-    // MARK: Public
 
     public var body: some View {
         GeometryReader { geometry in
@@ -267,8 +249,6 @@ public struct HomekitSlider: View {
         }.frame(width: sliderWidth, height: sliderHeight)
     }
 
-    // MARK: Internal
-
     @Atomic static var sliderTouched = false
 
     @Environment(\.colorScheme) var colorScheme
@@ -306,7 +286,7 @@ public struct HomekitSlider: View {
                             scale = 1.0
                             colorMultiply = .white
                         }
-                        self.percentage = cap(self.percentage, minVal: 0, maxVal: 1)
+                        percentage = cap(percentage, minVal: 0, maxVal: 1)
                         return
                     }
                     if scale == 1 {
@@ -317,7 +297,7 @@ public struct HomekitSlider: View {
                         }
                     }
                     let delta = Float(event.scrollingDeltaY) * (event.isDirectionInvertedFromDevice ? 1 : -1)
-                    self.percentage = cap(self.percentage - (delta / 100), minVal: 0, maxVal: 1)
+                    percentage = cap(percentage - (delta / 100), minVal: 0, maxVal: 1)
                 }
                 .store(in: &subs)
         }
@@ -327,8 +307,6 @@ public struct HomekitSlider: View {
 // MARK: - BigSurSlider
 
 public struct BigSurSlider: View {
-    // MARK: Lifecycle
-
     public init(
         percentage: Binding<Float>,
         sliderWidth: CGFloat = 200,
@@ -371,13 +349,11 @@ public struct BigSurSlider: View {
         self.enable = enable
     }
 
-    // MARK: Public
-
     @Environment(\.isEnabled) public var isEnabled
 
     public var body: some View {
         GeometryReader { geometry in
-            let w = geometry.size.width - self.sliderHeight
+            let w = geometry.size.width - sliderHeight
             let cgPercentage = cap(percentage, minVal: 0, maxVal: 1).cg
 
             ZStack(alignment: .leading) {
@@ -457,12 +433,12 @@ public struct BigSurSlider: View {
                             }
                         }
 
-                        self.percentage = cap(Float(value.location.x / geometry.size.width), minVal: 0, maxVal: 1)
+                        percentage = cap(Float(value.location.x / geometry.size.width), minVal: 0, maxVal: 1)
                     }
                     .onEnded { value in
                         guard acceptsMouseEvents, isEnabled else { return }
                         draggingSliderSetter = nil
-                        self.percentage = cap(Float(value.location.x / geometry.size.width), minVal: 0, maxVal: 1)
+                        percentage = cap(Float(value.location.x / geometry.size.width), minVal: 0, maxVal: 1)
                         env.draggingSlider = false
                     }
             )
@@ -487,8 +463,6 @@ public struct BigSurSlider: View {
         }
         .frame(width: sliderWidth, height: sliderHeight)
     }
-
-    // MARK: Internal
 
     @Environment(\.colorScheme) var colorScheme
     @Environment(\.colors) var colors
@@ -548,7 +522,7 @@ public struct BigSurSlider: View {
                             env.draggingSlider = false
                         }
                     }
-                    self.percentage = cap(self.percentage - (delta / 100), minVal: 0, maxVal: 1)
+                    percentage = cap(percentage - (delta / 100), minVal: 0, maxVal: 1)
                 }
         }
     #endif
@@ -557,14 +531,14 @@ public struct BigSurSlider: View {
 extension NSEvent.Phase {
     var str: String {
         switch self {
-        case .mayBegin: return "mayBegin"
-        case .began: return "began"
-        case .changed: return "changed"
-        case .stationary: return "stationary"
-        case .cancelled: return "cancelled"
-        case .ended: return "ended"
+        case .mayBegin: "mayBegin"
+        case .began: "began"
+        case .changed: "changed"
+        case .stationary: "stationary"
+        case .cancelled: "cancelled"
+        case .ended: "ended"
         default:
-            return "phase(\(rawValue))"
+            "phase(\(rawValue))"
         }
     }
 }
@@ -580,8 +554,6 @@ var draggingSliderSetter: DispatchWorkItem? {
 // MARK: - UpDownButtons
 
 public struct UpDownButtons: View {
-    // MARK: Lifecycle
-
     public init(
         radius: CGFloat = 24,
         size: CGFloat = 80,
@@ -595,8 +567,6 @@ public struct UpDownButtons: View {
         _textColor = textColor.state
         _onPress = st(onPress)
     }
-
-    // MARK: Public
 
     public enum ButtonDirection {
         case down
@@ -650,8 +620,6 @@ public struct UpDownButtons: View {
         }
     }
 
-    // MARK: Internal
-
     @Environment(\.colors) var colors
 
     @State var radius: CGFloat = 24
@@ -667,8 +635,6 @@ public struct UpDownButtons: View {
 // MARK: - TextInputView
 
 public struct TextInputView: View {
-    // MARK: Lifecycle
-
     public init(
         label: String,
         placeholder: String,
@@ -681,8 +647,6 @@ public struct TextInputView: View {
         _size = size.state
     }
 
-    // MARK: Public
-
     public var body: some View {
         VStack(alignment: .leading, spacing: 4) {
             Text(label).font(.system(size: size, weight: .semibold))
@@ -690,8 +654,6 @@ public struct TextInputView: View {
                 .textFieldStyle(PaddedTextFieldStyle())
         }
     }
-
-    // MARK: Internal
 
     @State var label: String
     @State var placeholder: String
@@ -703,8 +665,6 @@ public struct TextInputView: View {
 // MARK: - ValueInputView
 
 public struct ValueInputView<T>: View {
-    // MARK: Lifecycle
-
     public init(
         label: String,
         placeholder: String,
@@ -719,8 +679,6 @@ public struct ValueInputView<T>: View {
         _formatter = st(formatter)
     }
 
-    // MARK: Public
-
     public var body: some View {
         VStack(alignment: .leading, spacing: 4) {
             Text(label).font(.system(size: size, weight: .semibold))
@@ -728,8 +686,6 @@ public struct ValueInputView<T>: View {
                 .textFieldStyle(PaddedTextFieldStyle())
         }
     }
-
-    // MARK: Internal
 
     @State var label: String
     @State var placeholder: String

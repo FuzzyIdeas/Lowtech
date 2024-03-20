@@ -13,8 +13,6 @@ import VisualEffects
 // MARK: - LowtechAppStoreDelegate
 
 open class LowtechAppStoreDelegate: LowtechAppDelegate {
-    // MARK: Open
-
     @MainActor
     @inline(__always)
     open func trialExpired() -> Bool {
@@ -51,8 +49,6 @@ open class LowtechAppStoreDelegate: LowtechAppDelegate {
         trialOSD.show(closeAfter: 0, fadeAfter: 0, offCenter: 0, centerWindow: false, corner: .bottomRight, screen: .main)
     }
 
-    // MARK: Public
-
     public lazy var trialOSD = {
         let w = OSDWindow(swiftuiView: TrialOSDContainer().any)
         w.alphaValue = 0
@@ -63,11 +59,7 @@ open class LowtechAppStoreDelegate: LowtechAppDelegate {
 // MARK: - TrialOSDContainer
 
 public struct TrialOSDContainer: View {
-    // MARK: Lifecycle
-
     public init() {}
-
-    // MARK: Public
 
     public var body: some View {
         HStack {

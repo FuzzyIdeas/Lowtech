@@ -1,5 +1,5 @@
 //
-//  HashIds.swift
+//  Hashids.swift
 //  http://hashids.org
 //
 //  Author https://github.com/malczak
@@ -41,8 +41,6 @@ public typealias Hashids = Hashids_<UInt32>
 // MARK: - Hashids_
 
 open class Hashids_<T>: HashidsGenerator where T: UnsignedInteger {
-    // MARK: Lifecycle
-
     public init(salt: String!, minHashLength: UInt = 0, alphabet: String? = nil) {
         let _alphabet = (alphabet != nil) ? alphabet! : HashidsOptions.ALPHABET
         let _seps = HashidsOptions.SEPARATORS
@@ -100,8 +98,6 @@ open class Hashids_<T>: HashidsGenerator where T: UnsignedInteger {
         }
     }
 
-    // MARK: Open
-
     // MARK: public api
 
     open func encode(_ value: Int64...) -> String? {
@@ -148,11 +144,7 @@ open class Hashids_<T>: HashidsGenerator where T: UnsignedInteger {
         decode(value).map { Int64($0) }
     }
 
-    // MARK: Public
-
     public typealias Char = T
-
-    // MARK: Fileprivate
 
     fileprivate var minHashLength: UInt
     fileprivate var alphabet: [Char]
@@ -297,11 +289,11 @@ open class Hashids_<T>: HashidsGenerator where T: UnsignedInteger {
 
 // MARK: Internal functions
 
-internal func contains<T: Collection>(_ a: T, _ e: T.Iterator.Element) -> Bool where T.Iterator.Element: Equatable {
+func contains<T: Collection>(_ a: T, _ e: T.Iterator.Element) -> Bool where T.Iterator.Element: Equatable {
     a.firstIndex(of: e) != nil
 }
 
-internal func transform<T: Collection>(_ a: T, _ b: T, _ cmpr: (inout [T.Iterator.Element], T, T, T.Iterator.Element) -> Void) -> [T.Iterator.Element] where T.Iterator.Element: Equatable {
+func transform<T: Collection>(_ a: T, _ b: T, _ cmpr: (inout [T.Iterator.Element], T, T, T.Iterator.Element) -> Void) -> [T.Iterator.Element] where T.Iterator.Element: Equatable {
     typealias U = T.Iterator.Element
     var c = [U]()
     for i in a {
@@ -310,7 +302,7 @@ internal func transform<T: Collection>(_ a: T, _ b: T, _ cmpr: (inout [T.Iterato
     return c
 }
 
-internal func unique<T: Collection>(_ a: T) -> [T.Iterator.Element] where T.Iterator.Element: Equatable {
+func unique<T: Collection>(_ a: T) -> [T.Iterator.Element] where T.Iterator.Element: Equatable {
     transform(a, a) {
         c, _, _, e in
         if !contains(c, e) {
@@ -319,7 +311,7 @@ internal func unique<T: Collection>(_ a: T) -> [T.Iterator.Element] where T.Iter
     }
 }
 
-internal func intersection<T: Collection>(_ a: T, _ b: T) -> [T.Iterator.Element] where T.Iterator.Element: Equatable {
+func intersection<T: Collection>(_ a: T, _ b: T) -> [T.Iterator.Element] where T.Iterator.Element: Equatable {
     transform(a, b) {
         c, _, b, e in
         if contains(b, e) {
@@ -328,7 +320,7 @@ internal func intersection<T: Collection>(_ a: T, _ b: T) -> [T.Iterator.Element
     }
 }
 
-internal func difference<T: Collection>(_ a: T, _ b: T) -> [T.Iterator.Element] where T.Iterator.Element: Equatable {
+func difference<T: Collection>(_ a: T, _ b: T) -> [T.Iterator.Element] where T.Iterator.Element: Equatable {
     transform(a, b) {
         c, _, b, e in
         if !contains(b, e) {
@@ -337,12 +329,12 @@ internal func difference<T: Collection>(_ a: T, _ b: T) -> [T.Iterator.Element] 
     }
 }
 
-internal func shuffle<T: MutableCollection, U: Collection>(_ source: inout T, _ salt: U) where T.Index == Int, T.Iterator.Element: UnsignedInteger, T.Iterator.Element == U.Iterator.Element, T.Index == U.Index {
+func shuffle<T: MutableCollection, U: Collection>(_ source: inout T, _ salt: U) where T.Index == Int, T.Iterator.Element: UnsignedInteger, T.Iterator.Element == U.Iterator.Element, T.Index == U.Index {
     let saltCount: Int = numericCast(salt.count)
     shuffle(&source, salt, 0 ..< saltCount)
 }
 
-internal func shuffle<T: MutableCollection, U: Collection>(_ source: inout T, _ salt: U, _ saltRange: Range<Int>) where T.Index == Int, T.Iterator.Element: UnsignedInteger, T.Iterator.Element == U.Iterator.Element, T.Index == U.Index {
+func shuffle<T: MutableCollection, U: Collection>(_ source: inout T, _ salt: U, _ saltRange: Range<Int>) where T.Index == Int, T.Iterator.Element: UnsignedInteger, T.Iterator.Element == U.Iterator.Element, T.Index == U.Index {
     let sidx0 = saltRange.lowerBound, scnt = (saltRange.upperBound - saltRange.lowerBound)
     guard scnt != 0 else { return }
 

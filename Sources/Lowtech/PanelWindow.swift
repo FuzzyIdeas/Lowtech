@@ -5,8 +5,6 @@ import SwiftUI
 // MARK: - PanelWindow
 
 open class PanelWindow: LowtechWindow {
-    // MARK: Lifecycle
-
     public convenience init(swiftuiView: AnyView, screen: NSScreen? = nil, corner: ScreenCorner? = nil) {
         self.init(contentViewController: NSHostingController(rootView: swiftuiView))
 
@@ -25,8 +23,6 @@ open class PanelWindow: LowtechWindow {
         hidesOnDeactivate = false
         isMovableByWindowBackground = true
     }
-
-    // MARK: Open
 
     override open var canBecomeKey: Bool { true }
 

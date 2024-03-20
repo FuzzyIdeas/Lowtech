@@ -27,14 +27,10 @@ public func cap<T: Comparable>(_ number: T, minVal: T, maxVal: T) -> T {
 // MARK: - Formatting
 
 public struct Formatting: Hashable {
-    // MARK: Public
-
     public func hash(into hasher: inout Hasher) {
         hasher.combine(padding)
         hasher.combine(decimals)
     }
-
-    // MARK: Internal
 
     let decimals: Int
     let padding: Int
@@ -53,8 +49,6 @@ public protocol ObservableSettings: AnyObject {
 // MARK: - SettingTransformer
 
 public struct SettingTransformer<Value, Transformed> {
-    // MARK: Lifecycle
-
     public init(to: @escaping (Value) -> Transformed, from: ((Transformed) -> Value)? = nil) {
         self.to = to
         self.from = from
@@ -68,8 +62,6 @@ public struct SettingTransformer<Value, Transformed> {
             self.from = nil
         }
     }
-
-    // MARK: Public
 
     public let to: (Value) -> Transformed
     public let from: ((Transformed) -> Value)?
@@ -89,7 +81,7 @@ public extension ObservableSettings {
     func bind<Value>(_ key: Defaults.Key<Value>, property: ReferenceWritableKeyPath<Self, Value>, publisher: KeyPath<Self, Published<Value>.Publisher>? = nil, debounce: RunLoop.SchedulerTimeType.Stride? = nil) {
         let onSettingChange: (Defaults.KeyChange<Value>) -> Void = { [weak self] change in
             guard let self else { return }
-            self.withoutApply {
+            withoutApply {
                 self[keyPath: property] = change.newValue
             }
         }
@@ -107,7 +99,7 @@ public extension ObservableSettings {
         guard let publisher else { return }
 
         let onChange: (Value) -> Void = { [weak self] val in
-            guard let self, self.apply else { return }
+            guard let self, apply else { return }
             Defaults.withoutPropagation {
                 Defaults[key] = val
             }
@@ -133,7 +125,7 @@ public extension ObservableSettings {
     ) {
         let onSettingChange: (Defaults.KeyChange<Value>) -> Void = { [weak self] change in
             guard let self else { return }
-            self.withoutApply {
+            withoutApply {
                 self[keyPath: property] = transformer.to(change.newValue)
             }
         }
@@ -151,7 +143,7 @@ public extension ObservableSettings {
         guard let publisher else { return }
 
         let onChange: (Transformed) -> Void = { [weak self] val in
-            guard let self, self.apply, let transform = transformer.from else { return }
+            guard let self, apply, let transform = transformer.from else { return }
             Defaults.withoutPropagation {
                 Defaults[key] = transform(val)
             }
@@ -174,8 +166,6 @@ public extension ObservableSettings {
 @available(macOS 10.15, iOS 13.0, tvOS 13.0, watchOS 6.0, *)
 @propertyWrapper
 public class Setting<Value: Defaults.Serializable> {
-    // MARK: Lifecycle
-
     public init(_ key: Defaults.Key<Value>) {
         self.key = key
         storage = Storage(initialValue: Defaults[key])
@@ -183,12 +173,10 @@ public class Setting<Value: Defaults.Serializable> {
             .debounce(for: .milliseconds(10), scheduler: RunLoop.main)
             .sink { [weak self] in
                 guard let self else { return }
-                self.storage.value = $0.newValue
-                self.storage.oldValue = $0.oldValue
+                storage.value = $0.newValue
+                storage.oldValue = $0.oldValue
             }
     }
-
-    // MARK: Public
 
     public typealias Publisher = AnyPublisher<Defaults.KeyChange<Value>, Never>
 
@@ -203,16 +191,10 @@ public class Setting<Value: Defaults.Serializable> {
         }
     }
 
-    // MARK: Private
-
     private class Storage {
-        // MARK: Lifecycle
-
         init(initialValue: Value) {
             value = initialValue
         }
-
-        // MARK: Internal
 
         var value: Value
         var oldValue: Value?
@@ -228,7 +210,7 @@ public class Setting<Value: Defaults.Serializable> {
     guard !Thread.isMainThread else {
         return action()
     }
-    return DispatchQueue.main.sync { return action() }
+    return DispatchQueue.main.sync { action() }
 }
 
 @inline(__always) public func mainAsync(_ action: @escaping () -> Void) {
@@ -464,8 +446,6 @@ public let NO_SHADOW: NSShadow = {
 // MARK: - IndexedCollection
 
 public struct IndexedCollection<Base: RandomAccessCollection>: RandomAccessCollection where Base.Element: Hashable {
-    // MARK: Public
-
     public typealias Index = Base.Index
     public typealias Element = (index: Index, element: Base.Element) where Base.Element: Hashable
 
@@ -487,8 +467,6 @@ public struct IndexedCollection<Base: RandomAccessCollection>: RandomAccessColle
     public subscript(position: Index) -> Element {
         (index: position, element: base[position])
     }
-
-    // MARK: Internal
 
     let base: Base
 }

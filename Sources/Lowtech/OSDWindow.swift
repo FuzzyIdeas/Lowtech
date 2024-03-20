@@ -7,8 +7,6 @@ import SwiftUI
 // MARK: - OSDWindow
 
 open class OSDWindow: LowtechWindow {
-    // MARK: Lifecycle
-
     public convenience init(
         swiftuiView: AnyView,
         releaseWhenClosed: Bool = true,
@@ -47,8 +45,6 @@ open class OSDWindow: LowtechWindow {
         isReleasedWhenClosed = releaseWhenClosed
         delegate = self
     }
-
-    // MARK: Open
 
     open func show(
         at point: NSPoint? = nil,
@@ -92,19 +88,17 @@ open class OSDWindow: LowtechWindow {
         closer?.cancel()
         guard closeMilliseconds > 0 else { return }
         fader = mainAsyncAfter(ms: fadeMilliseconds) { [weak self] in
-            guard let self, self.isVisible else { return }
+            guard let self, isVisible else { return }
             NSAnimationContext.runAnimationGroup { ctx in
                 ctx.duration = 1
                 self.animator().alphaValue = 0.01
             }
 
-            self.closer = mainAsyncAfter(ms: closeMilliseconds) { [weak self] in
+            closer = mainAsyncAfter(ms: closeMilliseconds) { [weak self] in
                 self?.close()
             }
         }
     }
-
-    // MARK: Public
 
     public func hide() {
         fader = nil
@@ -116,8 +110,6 @@ open class OSDWindow: LowtechWindow {
         close()
         windowController?.close()
     }
-
-    // MARK: Internal
 
     var closer: DispatchWorkItem? {
         didSet {
@@ -135,8 +127,6 @@ open class OSDWindow: LowtechWindow {
 // MARK: - LowtechWindow
 
 open class LowtechWindow: NSWindow, NSWindowDelegate {
-    // MARK: Open
-
     open var onMouseUp: ((NSEvent) -> Void)?
     open var onMouseDown: ((NSEvent) -> Void)?
     open var onMouseDrag: ((NSEvent) -> Void)?
@@ -155,8 +145,6 @@ open class LowtechWindow: NSWindow, NSWindowDelegate {
         guard !ignoresMouseEvents, let onMouseUp else { return }
         onMouseUp(event)
     }
-
-    // MARK: Public
 
     public var closed = true
     public var animateOnResize = false
@@ -221,28 +209,74 @@ open class LowtechWindow: NSWindow, NSWindowDelegate {
             }
 
             screenCorner = corner
-            let o = screenFrame.origin
-            let f = screenFrame
+            let scrO = screenFrame.origin
+            let scrF = screenFrame
 
             switch corner {
             case .bottomLeft:
-                w.setFrameOrigin(o.applying(.init(translationX: self.margin, y: self.margin)))
+                w.setFrameOrigin(scrO.applying(.init(translationX: self.margin, y: self.margin)))
             case .bottomRight:
-                w.setFrameOrigin(NSPoint(x: (o.x + f.width) - frame.width, y: o.y).applying(.init(translationX: -self.margin, y: self.margin)))
+                w.setFrameOrigin(
+                    NSPoint(
+                        x: (scrO.x + scrF.width) - frame.width,
+                        y: scrO.y
+                    )
+                    .applying(.init(translationX: -self.margin, y: self.margin))
+                )
             case .topLeft:
-                w.setFrameOrigin(NSPoint(x: o.x, y: (o.y + f.height) - frame.height).applying(.init(translationX: self.margin, y: -self.margin)))
+                w.setFrameOrigin(
+                    NSPoint(
+                        x: scrO.x,
+                        y: frame.height > scrF.height ? scrO.y : (scrO.y + scrF.height) - frame.height
+                    )
+                    .applying(.init(translationX: self.margin, y: -self.margin))
+                )
             case .topRight:
-                w.setFrameOrigin(NSPoint(x: (o.x + f.width) - frame.width, y: (o.y + f.height) - frame.height).applying(.init(translationX: -self.margin, y: -self.margin)))
+                w.setFrameOrigin(
+                    NSPoint(
+                        x: (scrO.x + scrF.width) - frame.width,
+                        y: frame.height > scrF.height ? scrO.y : (scrO.y + scrF.height) - frame.height
+                    )
+                    .applying(.init(translationX: -self.margin, y: -self.margin))
+                )
             case .top:
-                w.setFrameOrigin(NSPoint(x: o.x + (f.width - frame.width) / 2, y: (o.y + f.height) - frame.height).applying(.init(translationX: 0, y: -self.margin)))
+                w.setFrameOrigin(
+                    NSPoint(
+                        x: scrO.x + (scrF.width - frame.width) / 2,
+                        y: (scrO.y + scrF.height) - frame.height
+                    )
+                    .applying(.init(translationX: 0, y: -self.margin))
+                )
             case .bottom:
-                w.setFrameOrigin(NSPoint(x: o.x + (f.width - frame.width) / 2, y: o.y).applying(.init(translationX: 0, y: self.margin)))
+                w.setFrameOrigin(
+                    NSPoint(
+                        x: scrO.x + (scrF.width - frame.width) / 2,
+                        y: scrO.y
+                    )
+                    .applying(.init(translationX: 0, y: self.margin))
+                )
             case .left:
-                w.setFrameOrigin(NSPoint(x: o.x, y: o.y + (f.height - frame.height) / 2).applying(.init(translationX: self.margin, y: 0)))
+                w.setFrameOrigin(
+                    NSPoint(
+                        x: scrO.x,
+                        y: frame.height > scrF.height ? scrO.y : scrO.y + (scrF.height - frame.height) / 2
+                    )
+                    .applying(.init(translationX: self.margin, y: 0))
+                )
             case .right:
-                w.setFrameOrigin(NSPoint(x: (o.x + f.width) - frame.width, y: o.y + (f.height - frame.height) / 2).applying(.init(translationX: -self.margin, y: 0)))
+                w.setFrameOrigin(
+                    NSPoint(
+                        x: (scrO.x + scrF.width) - frame.width,
+                        y: frame.height > scrF.height ? scrO.y : scrO.y + (scrF.height - frame.height) / 2
+                    )
+                    .applying(.init(translationX: -self.margin, y: 0))
+                )
             case .center:
-                w.center()
+                w.setFrameOrigin(NSPoint(
+                    x: scrO.x + (scrF.width - frame.width) / 2,
+                    y: frame.height > scrF.height ? scrO.y : scrO.y + (scrF.height - frame.height) / 2
+                ))
+//                w.center()
             }
         }
     }
@@ -272,8 +306,6 @@ open class LowtechWindow: NSWindow, NSWindowDelegate {
         windowController = nil
         return true
     }
-
-    // MARK: Internal
 
     @Atomic var inAnim = false
 }

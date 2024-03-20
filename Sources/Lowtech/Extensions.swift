@@ -165,8 +165,9 @@ public extension Bool {
             }
             let area = NSTrackingArea(
                 rect: rect ?? bounds,
-                options: cursor ? [.mouseEnteredAndExited, .cursorUpdate, .activeInActiveApp] :
-                    [.mouseEnteredAndExited, .activeInActiveApp],
+                options: cursor
+                    ? [.mouseEnteredAndExited, .cursorUpdate, .activeInActiveApp]
+                    : [.mouseEnteredAndExited, .activeInActiveApp],
                 owner: owner ?? self,
                 userInfo: nil
             )
@@ -529,9 +530,9 @@ public extension UInt8 {
         if (0x20 ... 0x7E).contains(self),
            let value = NSString(bytes: [self], length: 1, encoding: String.Encoding.nonLossyASCII.rawValue) as String?
         {
-            return value
+            value
         } else {
-            return String(format: "%02x", self)
+            String(format: "%02x", self)
         }
     }
 }
@@ -1049,9 +1050,9 @@ public extension Collection {
         sorted(by: { e1, e2 in
             switch order {
             case .forward:
-                return e1[keyPath: keyPath] < e2[keyPath: keyPath]
+                e1[keyPath: keyPath] < e2[keyPath: keyPath]
             case .reverse:
-                return e1[keyPath: keyPath] > e2[keyPath: keyPath]
+                e1[keyPath: keyPath] > e2[keyPath: keyPath]
             }
         })
     }
@@ -1301,13 +1302,13 @@ public extension String {
     subscript(_ idx: Int) -> String {
         switch idx {
         case 0:
-            return String(first!)
+            String(first!)
         case (count - 1) ... Int.max:
-            return String(last!)
+            String(last!)
         case Int.min ..< 0:
-            return String(suffix(-idx).first!)
+            String(suffix(-idx).first!)
         default:
-            return String(prefix(idx + 1).last!)
+            String(prefix(idx + 1).last!)
         }
     }
 

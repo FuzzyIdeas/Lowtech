@@ -23,8 +23,6 @@ extension NSSegmentedControl {
 // MARK: - NotificationView
 
 public struct NotificationView: View {
-    // MARK: Lifecycle
-
     public init(
         notificationLines: [String] = [],
         yesButtonText: String? = nil,
@@ -36,8 +34,6 @@ public struct NotificationView: View {
         _noButtonText = State(initialValue: noButtonText)
         _buttonAction = State(initialValue: buttonAction)
     }
-
-    // MARK: Public
 
     public var body: some View {
         let hasButtons = noButtonText != nil || yesButtonText != nil
@@ -96,8 +92,6 @@ public struct NotificationView: View {
         .padding(20)
     }
 
-    // MARK: Internal
-
     @State var notificationLines: [String] = []
     @State var yesButtonText: String? = nil
     @State var noButtonText: String? = nil
@@ -155,13 +149,9 @@ public protocol Nameable {
     import Sauce
 
     public struct ScreenPlacementView: View {
-        // MARK: Lifecycle
-
         public init(screenPlacement: Binding<ScreenCorner?>) {
             _screenPlacement = screenPlacement
         }
-
-        // MARK: Public
 
         public var body: some View {
             VStack(alignment: .leading, spacing: 10) {
@@ -192,14 +182,10 @@ public protocol Nameable {
             }
         }
 
-        // MARK: Internal
-
         @Binding var screenPlacement: ScreenCorner?
     }
 
     open class SizedPopUpButton: NSPopUpButton {
-        // MARK: Public
-
         override public var intrinsicContentSize: NSSize {
             guard let width, let height else {
                 return super.intrinsicContentSize
@@ -208,8 +194,6 @@ public protocol Nameable {
             return NSSize(width: width, height: height)
         }
 
-        // MARK: Internal
-
         var width: CGFloat?
         var height: CGFloat?
     }
@@ -217,16 +201,10 @@ public protocol Nameable {
     // MARK: - PopUpButton
 
     public struct PopUpButton<T: Nameable>: NSViewRepresentable {
-        // MARK: Open
-
         open class Coordinator: NSObject {
-            // MARK: Lifecycle
-
             init(_ popUpButton: PopUpButton) {
                 button = popUpButton
             }
-
-            // MARK: Internal
 
             var button: PopUpButton
             var observer: Cancellable?
@@ -239,8 +217,6 @@ public protocol Nameable {
                 return m
             }()
         }
-
-        // MARK: Public
 
         public func makeCoordinator() -> Coordinator {
             Coordinator(self)
@@ -290,8 +266,6 @@ public protocol Nameable {
             button.height = height
         }
 
-        // MARK: Internal
-
         @Binding var selection: T
         @State var width: CGFloat?
         @State var height: CGFloat?
@@ -301,8 +275,6 @@ public protocol Nameable {
     }
 
     public struct DynamicKey: View {
-        // MARK: Lifecycle
-
         public init(
             key: Binding<String>,
             keyCode: Binding<Int>,
@@ -329,8 +301,6 @@ public protocol Nameable {
             _width = State(wrappedValue: width)
         }
 
-        // MARK: Public
-
         @Environment(\.isEnabled) public var isEnabled
 
         public var body: some View {
@@ -350,13 +320,17 @@ public protocol Nameable {
             )
             .font(.system(size: fontSize, weight: .bold, design: .monospaced))
             .colorMultiply(multiplyColor)
-            .background(recording ? KeyEventHandling(
-                recording: $recording,
-                key: $key,
-                keyCode: $keyCode,
-                allowedKeys: allowedKeys,
-                allowedKeyCodes: allowedKeyCodes
-            ) : nil)
+            .background(
+                recording
+                    ? KeyEventHandling(
+                        recording: $recording,
+                        key: $key,
+                        keyCode: $keyCode,
+                        allowedKeys: allowedKeys,
+                        allowedKeyCodes: allowedKeyCodes
+                    )
+                    : nil
+            )
             .cornerRadius(6)
             .onHover { hovering in
                 guard !recording, isEnabled else { return }
@@ -390,8 +364,6 @@ public protocol Nameable {
             Sauce.shared.character(for: keyCode, cocoaModifiers: []) ?? SauceKey(QWERTYKeyCode: keyCode)?.character ?? ""
         }
 
-        // MARK: Internal
-
         var darkHoverColor = Colors.red
         var lightHoverColor = Colors.lunarYellow
         var recordingColor = Color.red
@@ -418,8 +390,6 @@ public protocol Nameable {
     // MARK: - KeyEventHandling
 
     public struct KeyEventHandling: NSViewRepresentable {
-        // MARK: Lifecycle
-
         public init(
             recording: Binding<Bool>,
             key: Binding<String>,
@@ -437,23 +407,15 @@ public protocol Nameable {
             self.onCancel = onCancel
         }
 
-        // MARK: Open
-
         open class Coordinator: NSObject {
-            // MARK: Lifecycle
-
             init(_ handler: KeyEventHandling) {
                 eventHandler = handler
             }
-
-            // MARK: Internal
 
             var eventHandler: KeyEventHandling
         }
 
         open class KeyView: NSView {
-            // MARK: Public
-
             override public var acceptsFirstResponder: Bool { true }
 
             override public func keyDown(with event: NSEvent) {
@@ -490,12 +452,8 @@ public protocol Nameable {
                 context.coordinator.eventHandler.keyCode = event.keyCode.i
             }
 
-            // MARK: Internal
-
             dynamic var context: Context?
         }
-
-        // MARK: Public
 
         public func makeCoordinator() -> Coordinator {
             Coordinator(self)
@@ -526,8 +484,6 @@ public protocol Nameable {
                 }
             }
         }
-
-        // MARK: Internal
 
         @Binding var recording: Bool
         @Binding var key: String
@@ -573,14 +529,10 @@ public protocol Nameable {
     }
 
     public struct MenuHotkeyView: View {
-        // MARK: Lifecycle
-
         public init(modifiers: Binding<[TriggerKey]>, key: Binding<String>) {
             _modifiers = modifiers
             _key = key
         }
-
-        // MARK: Public
 
         @Environment(\.colors) public var colors
 
@@ -617,13 +569,9 @@ public protocol Nameable {
 // MARK: - NamespaceWrapper
 
 public class NamespaceWrapper: ObservableObject {
-    // MARK: Lifecycle
-
     public init(_ namespace: Namespace.ID) {
         self.namespace = namespace
     }
-
-    // MARK: Public
 
     public var namespace: Namespace.ID
 }
@@ -631,14 +579,10 @@ public class NamespaceWrapper: ObservableObject {
 // MARK: - EnvState
 
 open class EnvState: ObservableObject {
-    // MARK: Lifecycle
-
     public init(recording: Bool = false, closed: Bool = true) {
         self.recording = recording
         self.closed = closed
     }
-
-    // MARK: Public
 
     @Published public var recording = false
     @Published public var closed = true
@@ -647,8 +591,6 @@ open class EnvState: ObservableObject {
         didSet { oldValue?.cancel() }
     }
 
-    // MARK: Internal
-
     @Published var hoveringSlider = false
     @Published var draggingSlider = false
 }
@@ -656,15 +598,11 @@ open class EnvState: ObservableObject {
 // MARK: - PopoverView
 
 public struct PopoverView<Content: View>: View {
-    // MARK: Lifecycle
-
     public init(name: String, visible: Binding<Bool>, @ViewBuilder content: @escaping () -> Content) {
         _name = name.state
         _visible = visible
         self.content = content
     }
-
-    // MARK: Public
 
     public var body: some View {
         VStack {
@@ -677,8 +615,6 @@ public struct PopoverView<Content: View>: View {
         .onAppear { setup(visible) }
         .onChange(of: visible) { setup($0) }
     }
-
-    // MARK: Internal
 
     let content: () -> Content
 
@@ -705,14 +641,10 @@ public struct PopoverView<Content: View>: View {
 // MARK: - LowtechView
 
 public struct LowtechView<Content: View>: View {
-    // MARK: Lifecycle
-
     public init(accentColor: Color, @ViewBuilder content: () -> Content) {
         self.content = content()
         _accentColor = accentColor.state
     }
-
-    // MARK: Public
 
     @Environment(\.colorScheme) public var colorScheme
     @State public var accentColor: Color = .red
@@ -733,14 +665,10 @@ public extension View {
 // MARK: - PaddedPopoverView
 
 public struct PaddedPopoverView<Content>: View where Content: View {
-    // MARK: Lifecycle
-
     public init(background: AnyView, @ViewBuilder content: () -> Content) {
         self.content = content()
         _background = background.state
     }
-
-    // MARK: Public
 
     public var body: some View {
         ZStack {
@@ -753,8 +681,6 @@ public struct PaddedPopoverView<Content>: View where Content: View {
         }.preferredColorScheme(.light)
     }
 
-    // MARK: Internal
-
     @State var background: AnyView
     @ViewBuilder let content: Content
 }
@@ -762,13 +688,9 @@ public struct PaddedPopoverView<Content>: View where Content: View {
 // MARK: - ErrorPopoverView
 
 public struct ErrorPopoverView: View {
-    // MARK: Lifecycle
-
     public init(error: Binding<String>) {
         _error = error
     }
-
-    // MARK: Public
 
     public var body: some View {
         ZStack {
@@ -792,29 +714,21 @@ public struct ErrorPopoverView: View {
         .onDisappear { error = "" }
     }
 
-    // MARK: Internal
-
     @Binding var error: String
 }
 
 // MARK: - ErrorTextView
 
 public struct ErrorTextView: View {
-    // MARK: Lifecycle
-
     public init(error: String) {
         _error = error.state
     }
-
-    // MARK: Public
 
     public var body: some View {
         Text(error).font(.system(size: 16, weight: .medium))
             .foregroundColor(.black)
             .frame(width: 340, alignment: .topLeading)
     }
-
-    // MARK: Internal
 
     @State var error: String
 }
@@ -830,29 +744,29 @@ public struct EdgeBorder: Shape {
         for edge in edges {
             var x: CGFloat {
                 switch edge {
-                case .top, .bottom, .leading: return rect.minX - 0.5
-                case .trailing: return rect.maxX - width + 0.5
+                case .top, .bottom, .leading: rect.minX - 0.5
+                case .trailing: rect.maxX - width + 0.5
                 }
             }
 
             var y: CGFloat {
                 switch edge {
-                case .top, .leading, .trailing: return rect.minY - 0.5
-                case .bottom: return rect.maxY - width + 0.5
+                case .top, .leading, .trailing: rect.minY - 0.5
+                case .bottom: rect.maxY - width + 0.5
                 }
             }
 
             var w: CGFloat {
                 switch edge {
-                case .top, .bottom: return rect.width
-                case .leading, .trailing: return width
+                case .top, .bottom: rect.width
+                case .leading, .trailing: width
                 }
             }
 
             var h: CGFloat {
                 switch edge {
-                case .top, .bottom: return self.width
-                case .leading, .trailing: return rect.height
+                case .top, .bottom: width
+                case .leading, .trailing: rect.height
                 }
             }
             path.addPath(Path(CGRect(x: x, y: y, width: w, height: h)))
@@ -875,15 +789,11 @@ public extension View {
 
 // An animatable modifier that is used for observing animations for a given animatable value.
 public struct AnimationCompletionObserverModifier<Value>: AnimatableModifier where Value: VectorArithmetic {
-    // MARK: Lifecycle
-
     public init(observedValue: Value, completion: @escaping () -> Void) {
         self.completion = completion
         animatableData = observedValue
         targetValue = observedValue
     }
-
-    // MARK: Public
 
     /// While animating, SwiftUI changes the old input value to the new target value using this property. This value is set to the old value until the animation completes.
     public var animatableData: Value {
@@ -896,8 +806,6 @@ public struct AnimationCompletionObserverModifier<Value>: AnimatableModifier whe
         /// We're not really modifying the view so we can directly return the original input value.
         content
     }
-
-    // MARK: Private
 
     /// The target value for which we're observing. This value is directly set once the animation starts. During animation, `animatableData` will hold the oldValue and is only updated to the target value once the animation completes.
     private var targetValue: Value
@@ -912,7 +820,7 @@ public struct AnimationCompletionObserverModifier<Value>: AnimatableModifier whe
         /// Dispatching is needed to take the next runloop for the completion callback.
         /// This prevents errors like "Modifying state during view update, this will cause undefined behavior."
         DispatchQueue.main.async {
-            self.completion()
+            completion()
         }
     }
 }
@@ -920,15 +828,11 @@ public struct AnimationCompletionObserverModifier<Value>: AnimatableModifier whe
 // MARK: - HighlightedText
 
 public struct HighlightedText: View {
-    // MARK: Lifecycle
-
     public init(text: String, indices: [Int], highlightColor: Color) {
         _text = State(initialValue: text)
         _indices = State(initialValue: indices)
         _highlightColor = State(initialValue: highlightColor)
     }
-
-    // MARK: Public
 
     public var body: some View {
         let indices = indices.filter { $0 < text.count }.sorted()
@@ -969,8 +873,6 @@ public struct HighlightedText: View {
             }.sum()
         }
     }
-
-    // MARK: Internal
 
     @State var text: String
     @State var indices: [Int]

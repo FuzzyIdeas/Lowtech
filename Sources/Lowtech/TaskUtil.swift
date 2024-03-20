@@ -2,8 +2,6 @@ import Combine
 import Foundation
 
 public class Repeater {
-    // MARK: Lifecycle
-
     public init(
         every interval: TimeInterval,
         times: Int = 0,
@@ -53,16 +51,12 @@ public class Repeater {
         onCancel?()
     }
 
-    // MARK: Public
-
     public func stop() {
         debug("Stopping repeater '\(name)'")
         stopped = true
         task?.cancel()
         timer.connect().cancel()
     }
-
-    // MARK: Internal
 
     var task: Cancellable?
     var onCancel: (() -> Void)?

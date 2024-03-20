@@ -14,27 +14,21 @@ import SwiftUI
 // import SystemColors
 
 public struct CheckboxToggleStyle: ToggleStyle {
-    // MARK: Lifecycle
-
     public init(style: Style = .circle, scale: Image.Scale = .large, color: Color? = nil) {
         self.style = style
         self.scale = scale
         self.color = color
     }
 
-    // MARK: Public
-
     public enum Style {
         case square, circle
-
-        // MARK: Public
 
         public var sfSymbolName: String {
             switch self {
             case .square:
-                return "square"
+                "square"
             case .circle:
-                return "circle"
+                "circle"
             }
         }
     }
@@ -63,27 +57,21 @@ public struct CheckboxToggleStyle: ToggleStyle {
 // MARK: - DetailToggleStyle
 
 public struct DetailToggleStyle: ToggleStyle {
-    // MARK: Lifecycle
-
     public init(style: Style = .circle) {
         self.style = style
     }
 
-    // MARK: Public
-
     public enum Style {
         case square, circle, empty
-
-        // MARK: Public
 
         public var sfSymbolName: String {
             switch self {
             case .empty:
-                return ""
+                ""
             case .square:
-                return ".square"
+                ".square"
             case .circle:
-                return ".circle"
+                ".circle"
             }
         }
     }
@@ -113,8 +101,6 @@ public struct DetailToggleStyle: ToggleStyle {
 // MARK: - OutlineButton
 
 public struct OutlineButton: ButtonStyle {
-    // MARK: Lifecycle
-
     public init(
         color: Color = Color.primary.opacity(0.8),
         hoverColor: Color = Color.primary,
@@ -128,8 +114,6 @@ public struct OutlineButton: ButtonStyle {
         _scale = State(initialValue: scale)
         _font = State(initialValue: font)
     }
-
-    // MARK: Public
 
     @Environment(\.isEnabled) public var isEnabled
 
@@ -163,8 +147,6 @@ public struct OutlineButton: ButtonStyle {
                 }
             }
     }
-
-    // MARK: Internal
 
     @State var color = Color.primary.opacity(0.8)
     @State var hoverColor: Color = .primary
@@ -288,8 +270,6 @@ public extension Text {
 // MARK: - RoundBG
 
 public struct RoundBG: ViewModifier {
-    // MARK: Public
-
     public func body(content: Content) -> some View {
         let verticalPadding = verticalPadding ?? radius / 2
         content
@@ -301,8 +281,6 @@ public struct RoundBG: ViewModifier {
             )
             .if(!noFG) { $0.foregroundColor(color.textColor(colors: colors)) }
     }
-
-    // MARK: Internal
 
     @Environment(\.colorScheme) var colorScheme
     @Environment(\.colors) var colors
@@ -354,8 +332,6 @@ public func roundRect(_ radius: CGFloat, stroke: Color) -> some View {
 // MARK: - ToggleButton
 
 public struct ToggleButton: ButtonStyle {
-    // MARK: Lifecycle
-
     public init(
         isOn: Binding<Bool>,
         color: Color = Color.primary,
@@ -378,8 +354,6 @@ public struct ToggleButton: ButtonStyle {
         _isOn = isOn
         _noFG = State(initialValue: noFG)
     }
-
-    // MARK: Public
 
     @Environment(\.isEnabled) public var isEnabled
 
@@ -411,8 +385,6 @@ public struct ToggleButton: ButtonStyle {
             }
             .opacity(isEnabled ? 1 : 0.6)
     }
-
-    // MARK: Internal
 
     @Environment(\.colors) var colors
 
@@ -448,8 +420,6 @@ extension Color {
 // MARK: - PickerButton
 
 public struct PickerButton<T: Equatable>: ButtonStyle {
-    // MARK: Lifecycle
-
     public init(
         color: Color = Color.primary.opacity(0.15),
         onColor: Color = .primary,
@@ -483,8 +453,6 @@ public struct PickerButton<T: Equatable>: ButtonStyle {
         _hoverTextColor = State(initialValue: hoverColor.ns.isLight() ? Color.black : Color.white)
     }
 
-    // MARK: Public
-
     @Environment(\.isEnabled) public var isEnabled
 
     public func makeBody(configuration: Configuration) -> some View {
@@ -510,8 +478,8 @@ public struct PickerButton<T: Equatable>: ButtonStyle {
                         ? onColor
                         : (
                             hovering
-                                ? hoverColor :
-                                (offColor ?? color.opacity(colorScheme == .dark ? 0.5 : 0.8))
+                                ? hoverColor
+                                : (offColor ?? color.opacity(colorScheme == .dark ? 0.5 : 0.8))
                         )
                 )
             )
@@ -544,8 +512,6 @@ public struct PickerButton<T: Equatable>: ButtonStyle {
             .opacity(isEnabled ? 1 : 0.6)
     }
 
-    // MARK: Internal
-
     @Environment(\.colors) var colors
     @Environment(\.colorScheme) var colorScheme
 
@@ -569,8 +535,6 @@ public struct PickerButton<T: Equatable>: ButtonStyle {
 // MARK: - FlatButton
 
 public struct FlatButton: ButtonStyle {
-    // MARK: Lifecycle
-
     public init(
         color: Color? = nil,
         textColor: Color? = nil,
@@ -605,8 +569,6 @@ public struct FlatButton: ButtonStyle {
         _hoverColorEffects = State(initialValue: hoverColorEffects)
         _hoverScaleEffects = State(initialValue: hoverScaleEffects)
     }
-
-    // MARK: Public
 
     @Environment(\.isEnabled) public var isEnabled
 
@@ -657,8 +619,6 @@ public struct FlatButton: ButtonStyle {
             }
             .opacity(isEnabled ? 1 : 0.6)
     }
-
-    // MARK: Internal
 
     @Environment(\.colors) var colors
 
@@ -714,8 +674,6 @@ public struct FlatButton: ButtonStyle {
 // MARK: - PaddedTextFieldStyle
 
 public struct PaddedTextFieldStyle: TextFieldStyle {
-    // MARK: Lifecycle
-
     public init(
         size: CGFloat = 13,
         verticalPadding: CGFloat = 4,
@@ -725,8 +683,6 @@ public struct PaddedTextFieldStyle: TextFieldStyle {
         _size = State(initialValue: size)
         _shake = shake ?? .constant(false)
     }
-
-    // MARK: Public
 
     public func _body(configuration: TextField<Self._Label>) -> some View {
         configuration
@@ -743,8 +699,6 @@ public struct PaddedTextFieldStyle: TextFieldStyle {
             .animation(Animation.default.repeatCount(2).speed(1.5), value: shake)
     }
 
-    // MARK: Internal
-
     @Environment(\.colorScheme) var colorScheme
     @State var size: CGFloat = 13
     @State var verticalPadding: CGFloat = 4
@@ -755,13 +709,9 @@ public struct PaddedTextFieldStyle: TextFieldStyle {
 // MARK: - ShakeEffect
 
 public struct ShakeEffect: GeometryEffect {
-    // MARK: Lifecycle
-
     public init(shakes: Int) {
         position = CGFloat(shakes)
     }
-
-    // MARK: Public
 
     public var position: CGFloat
 

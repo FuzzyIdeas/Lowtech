@@ -6,13 +6,9 @@ import SwiftUI
 // MARK: - VersionView
 
 public struct VersionView: View {
-    // MARK: Lifecycle
-
     public init(updater: SPUUpdater) {
         self.updater = updater
     }
-
-    // MARK: Public
 
     public var body: some View {
         VStack(alignment: .leading) {
@@ -69,8 +65,6 @@ public struct VersionView: View {
         .background(RoundedRectangle(cornerRadius: 8, style: .continuous).fill(Color.primary.opacity(0.1)))
         .padding(.top, 10)
     }
-
-    // MARK: Internal
 
     @Default(.checkForUpdates) var checkForUpdates
     @Default(.updateCheckInterval) var updateCheckInterval

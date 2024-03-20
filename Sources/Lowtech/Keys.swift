@@ -15,8 +15,6 @@ import SwiftUI
 // MARK: - KeysManager
 
 public class KeysManager: ObservableObject {
-    // MARK: Lifecycle
-
     init() {
         if !primaryKeyModifiers.isEmpty, !primaryKeyModifiers.sideIndependentModifiers.contains(.option) {
             altKeyModifiers = primaryKeyModifiers + [.ralt]
@@ -75,14 +73,12 @@ public class KeysManager: ObservableObject {
                 Set<Int>.ALL_KEYS = Set(Set<CGKeyCode>.ALL_KEYS.map { Int($0) })
 
                 if keepSpecialKeyPosition, let specialKeyCode {
-                    self.specialKey = Sauce.shared.key(for: specialKeyCode.i)
+                    specialKey = Sauce.shared.key(for: specialKeyCode.i)
                 }
 
                 reinitHotkeys()
             }.store(in: &observers)
     }
-
-    // MARK: Open
 
     @Published open var primaryHotkeysRegistered = false
     @Published open var secondaryHotkeysRegistered = false
@@ -328,8 +324,6 @@ public class KeysManager: ObservableObject {
         secondaryAltHotkeys.forEach { $0.unregister() }
         secondaryAltHotkeysRegistered = false
     }
-
-    // MARK: Public
 
     public var onFlagsChanged: ((NSEvent.ModifierFlags) -> Void)?
     public var onSpecialHotkey: (() -> Void)?
@@ -911,8 +905,6 @@ public class KeysManager: ObservableObject {
         onSecondaryLeftShiftHotkey?(hotkey.identifier.suffix(1).s)
     }
 
-    // MARK: Internal
-
     static var MULTI_TAP_THRESHOLD_INTERVAL: TimeInterval = 0.4
 
     func recheckFlags() {
@@ -940,166 +932,164 @@ public let KM = KeysManager()
         case rctrl
         case rshift
 
-        // MARK: Public
-
         public var id: Int { rawValue }
         public var modifier: NSEvent.ModifierFlags {
             switch self {
             case .rcmd:
-                return .rightCommand
+                .rightCommand
             case .ralt:
-                return .rightOption
+                .rightOption
             case .lcmd:
-                return .leftCommand
+                .leftCommand
             case .lalt:
-                return .leftOption
+                .leftOption
             case .lctrl:
-                return .leftControl
+                .leftControl
             case .lshift:
-                return .leftShift
+                .leftShift
             case .rshift:
-                return .rightShift
+                .rightShift
             case .rctrl:
-                return .rightControl
+                .rightControl
             }
         }
 
         public var sideIndependentModifier: NSEvent.ModifierFlags {
             switch self {
             case .rcmd:
-                return .command
+                .command
             case .ralt:
-                return .option
+                .option
             case .lcmd:
-                return .command
+                .command
             case .lalt:
-                return .option
+                .option
             case .lctrl:
-                return .control
+                .control
             case .lshift:
-                return .shift
+                .shift
             case .rshift:
-                return .shift
+                .shift
             case .rctrl:
-                return .control
+                .control
             }
         }
 
         public var directionalStr: String {
             switch self {
             case .rcmd:
-                return "⌘⃗"
+                "⌘⃗"
             case .ralt:
-                return "⌥⃗"
+                "⌥⃗"
             case .lcmd:
-                return "⌘⃖"
+                "⌘⃖"
             case .lalt:
-                return "⌥⃖"
+                "⌥⃖"
             case .lctrl:
-                return "^⃖"
+                "^⃖"
             case .lshift:
-                return "⇧⃖"
+                "⇧⃖"
             case .rshift:
-                return "⇧⃗"
+                "⇧⃗"
             case .rctrl:
-                return "^⃗"
+                "^⃗"
             }
         }
 
         public var str: String {
             switch self {
             case .rcmd:
-                return "⌘"
+                "⌘"
             case .ralt:
-                return "⌥"
+                "⌥"
             case .lcmd:
-                return "⌘"
+                "⌘"
             case .lalt:
-                return "⌥"
+                "⌥"
             case .lctrl:
-                return "^"
+                "^"
             case .lshift:
-                return "⇧"
+                "⇧"
             case .rshift:
-                return "⇧"
+                "⇧"
             case .rctrl:
-                return "^"
+                "^"
             }
         }
 
         public var readableStr: String {
             switch self {
             case .rcmd:
-                return "Right Command"
+                "Right Command"
             case .ralt:
-                return "Right Option"
+                "Right Option"
             case .lcmd:
-                return "Left Command"
+                "Left Command"
             case .lalt:
-                return "Left Option"
+                "Left Option"
             case .lctrl:
-                return "Left Control"
+                "Left Control"
             case .lshift:
-                return "Left Shift"
+                "Left Shift"
             case .rshift:
-                return "Right Shift"
+                "Right Shift"
             case .rctrl:
-                return "Right Control"
+                "Right Control"
             }
         }
 
         public var sideIndependentReadableStr: String {
             switch self {
             case .rcmd, .lcmd:
-                return "Command"
+                "Command"
             case .ralt, .lalt:
-                return "Option"
+                "Option"
             case .lctrl, .rctrl:
-                return "Control"
+                "Control"
             case .lshift, .rshift:
-                return "Shift"
+                "Shift"
             }
         }
 
         public var shortReadableStr: String {
             switch self {
             case .rcmd:
-                return "rcmd"
+                "rcmd"
             case .ralt:
-                return "ralt"
+                "ralt"
             case .lcmd:
-                return "lcmd"
+                "lcmd"
             case .lalt:
-                return "lalt"
+                "lalt"
             case .lctrl:
-                return "lctrl"
+                "lctrl"
             case .lshift:
-                return "lshift"
+                "lshift"
             case .rshift:
-                return "rshift"
+                "rshift"
             case .rctrl:
-                return "rctrl"
+                "rctrl"
             }
         }
 
         public var pressed: Bool {
             switch self {
             case .rcmd:
-                return KM.rcmd
+                KM.rcmd
             case .ralt:
-                return KM.ralt
+                KM.ralt
             case .lcmd:
-                return KM.lcmd
+                KM.lcmd
             case .lalt:
-                return KM.lalt
+                KM.lalt
             case .lctrl:
-                return KM.lctrl
+                KM.lctrl
             case .lshift:
-                return KM.lshift
+                KM.lshift
             case .rshift:
-                return KM.rshift
+                KM.rshift
             case .rctrl:
-                return KM.rctrl
+                KM.rctrl
             }
         }
 
@@ -1177,8 +1167,6 @@ public let KM = KeysManager()
     }
 
     public struct DirectionalModifierView: View {
-        // MARK: Lifecycle
-
         public init(triggerKeys: Binding<[TriggerKey]>, disabled: Binding<Bool>, spacing: CGFloat = 3, noFG: Bool = false, disabledOpacity: CGFloat = 0.6) {
             _triggerKeys = triggerKeys
             _disabled = disabled
@@ -1187,57 +1175,55 @@ public let KM = KeysManager()
             _disabledOpacity = State(initialValue: disabledOpacity)
         }
 
-        // MARK: Public
-
         @Environment(\.isEnabled) public var isEnabled
 
         public var body: some View {
             let rcmdTrigger = Binding<Bool>(
-                get: { self.triggerKeys.contains(.rcmd) },
+                get: { triggerKeys.contains(.rcmd) },
                 set: {
                     triggerKeys = triggerKeys.toggling(key: TriggerKey.rcmd, on: $0)
                 }
             )
             let raltTrigger = Binding<Bool>(
-                get: { self.triggerKeys.contains(.ralt) },
+                get: { triggerKeys.contains(.ralt) },
                 set: {
                     triggerKeys = triggerKeys.toggling(key: TriggerKey.ralt, on: $0)
                 }
             )
 
             let lcmdTrigger = Binding<Bool>(
-                get: { self.triggerKeys.contains(.lcmd) },
+                get: { triggerKeys.contains(.lcmd) },
                 set: {
                     triggerKeys = triggerKeys.toggling(key: TriggerKey.lcmd, on: $0)
                 }
             )
             let laltTrigger = Binding<Bool>(
-                get: { self.triggerKeys.contains(.lalt) },
+                get: { triggerKeys.contains(.lalt) },
                 set: {
                     triggerKeys = triggerKeys.toggling(key: TriggerKey.lalt, on: $0)
                 }
             )
             let lctrlTrigger = Binding<Bool>(
-                get: { self.triggerKeys.contains(.lctrl) },
+                get: { triggerKeys.contains(.lctrl) },
                 set: {
                     triggerKeys = triggerKeys.toggling(key: TriggerKey.lctrl, on: $0)
                 }
             )
 
             let lshiftTrigger = Binding<Bool>(
-                get: { self.triggerKeys.contains(.lshift) },
+                get: { triggerKeys.contains(.lshift) },
                 set: {
                     triggerKeys = triggerKeys.toggling(key: TriggerKey.lshift, on: $0)
                 }
             )
             let rshiftTrigger = Binding<Bool>(
-                get: { self.triggerKeys.contains(.rshift) },
+                get: { triggerKeys.contains(.rshift) },
                 set: {
                     triggerKeys = triggerKeys.toggling(key: TriggerKey.rshift, on: $0)
                 }
             )
             let rctrlTrigger = Binding<Bool>(
-                get: { self.triggerKeys.contains(.rctrl) },
+                get: { triggerKeys.contains(.rctrl) },
                 set: {
                     triggerKeys = triggerKeys.toggling(key: TriggerKey.rctrl, on: $0)
                 }
@@ -1275,8 +1261,6 @@ public let KM = KeysManager()
             }.disabled(disabled).opacity(isEnabled ? 1 : disabledOpacity)
         }
 
-        // MARK: Internal
-
         @Binding var triggerKeys: [TriggerKey]
         @Binding var disabled: Bool
         @State var spacing: CGFloat = 3
@@ -1285,42 +1269,43 @@ public let KM = KeysManager()
     }
 
     import Carbon
+
     public extension SauceKey {
         var character: String {
             switch QWERTYKeyCode.i {
-            case kVK_Return: return "⏎"
-            case kVK_Space: return "⎵"
-            default: return Sauce.shared.character(for: QWERTYKeyCode.i, cocoaModifiers: [])?.uppercased() ?? rawValue.uppercased()
+            case kVK_Return: "⏎"
+            case kVK_Space: "⎵"
+            default: Sauce.shared.character(for: QWERTYKeyCode.i, cocoaModifiers: [])?.uppercased() ?? rawValue.uppercased()
             }
         }
 
         var QWERTYCharacter: String {
             switch QWERTYKeyCode.i {
-            case kVK_ANSI_0: return "0"
-            case kVK_ANSI_1: return "1"
-            case kVK_ANSI_2: return "2"
-            case kVK_ANSI_3: return "3"
-            case kVK_ANSI_4: return "4"
-            case kVK_ANSI_5: return "5"
-            case kVK_ANSI_6: return "6"
-            case kVK_ANSI_7: return "7"
-            case kVK_ANSI_8: return "8"
-            case kVK_ANSI_9: return "9"
-            case kVK_ISO_Section: return "§"
-            case kVK_ANSI_Equal: return "="
-            case kVK_ANSI_Minus: return "-"
-            case kVK_ANSI_RightBracket: return "]"
-            case kVK_ANSI_LeftBracket: return "["
-            case kVK_ANSI_Quote: return "'"
-            case kVK_ANSI_Semicolon: return ";"
-            case kVK_ANSI_Backslash: return "\\"
-            case kVK_ANSI_Comma: return ","
-            case kVK_ANSI_Slash: return "/"
-            case kVK_ANSI_Period: return "."
-            case kVK_ANSI_Grave: return "`"
-            case kVK_Return: return "⏎"
-            case kVK_Space: return "⎵"
-            default: return rawValue.uppercased()
+            case kVK_ANSI_0: "0"
+            case kVK_ANSI_1: "1"
+            case kVK_ANSI_2: "2"
+            case kVK_ANSI_3: "3"
+            case kVK_ANSI_4: "4"
+            case kVK_ANSI_5: "5"
+            case kVK_ANSI_6: "6"
+            case kVK_ANSI_7: "7"
+            case kVK_ANSI_8: "8"
+            case kVK_ANSI_9: "9"
+            case kVK_ISO_Section: "§"
+            case kVK_ANSI_Equal: "="
+            case kVK_ANSI_Minus: "-"
+            case kVK_ANSI_RightBracket: "]"
+            case kVK_ANSI_LeftBracket: "["
+            case kVK_ANSI_Quote: "'"
+            case kVK_ANSI_Semicolon: ";"
+            case kVK_ANSI_Backslash: "\\"
+            case kVK_ANSI_Comma: ","
+            case kVK_ANSI_Slash: "/"
+            case kVK_ANSI_Period: "."
+            case kVK_ANSI_Grave: "`"
+            case kVK_Return: "⏎"
+            case kVK_Space: "⎵"
+            default: rawValue.uppercased()
             }
         }
     }
