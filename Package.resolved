@@ -3,11 +3,11 @@
     "pins": [
       {
         "package": "AppReceiptValidator",
-        "repositoryURL": "https://github.com/IdeasOnCanvas/AppReceiptValidator.git",
+        "repositoryURL": "https://github.com/alin23/AppReceiptValidator",
         "state": {
-          "branch": "main",
-          "revision": "f8b38f88afe31341a3efaef4bd4ad6e672a85f47",
-          "version": null
+          "branch": null,
+          "revision": "e35794a03103839e024f71534e263310038c930d",
+          "version": "1.2.0"
         }
       },
       {
@@ -132,8 +132,8 @@
         "repositoryURL": "https://github.com/sparkle-project/Sparkle",
         "state": {
           "branch": null,
-          "revision": "1f07f4096e52f19b5e7abaa697b7fc592b7ff57c",
-          "version": "2.5.1"
+          "revision": "0a4caaf7a81eea2cece651ef4b17331fa0634dff",
+          "version": "2.6.0"
         }
       },
       {
@@ -164,7 +164,7 @@
         }
       },
       {
-        "package": "swiftui-system-colors",
+        "package": "SystemColors",
         "repositoryURL": "https://github.com/diniska/swiftui-system-colors",
         "state": {
           "branch": null,
