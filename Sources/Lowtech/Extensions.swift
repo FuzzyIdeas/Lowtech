@@ -717,6 +717,7 @@ public extension BinaryInteger {
 }
 
 import System
+
 public extension String {
     var ns: NSString {
         self as NSString
@@ -1692,10 +1693,12 @@ public extension FilePath {
     }
 
     static var tmp = FilePath("/tmp")
-    static var backups = FilePath.dir("/tmp/backups", permissions: 0o777)
+    static var backups = FilePath.dir(URL.cachesDirectory.appendingPathComponent(Bundle.main.name, conformingTo: .directory).appendingPathComponent("backups", conformingTo: .directory).path, permissions: 0o777)
 
     static func dir(_ string: String, permissions: Int = 0o755) -> FilePath {
-        let path = FilePath(string)
+        dir(FilePath(string), permissions: permissions)
+    }
+    static func dir(_ path: FilePath, permissions: Int = 0o755) -> FilePath {
         path.mkdir(withIntermediateDirectories: true, permissions: permissions)
         return path
     }

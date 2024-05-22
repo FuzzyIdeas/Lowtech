@@ -1294,6 +1294,7 @@ public let KM = KeysManager()
     }
 
     import Carbon
+
     public extension KeyCombo {
         var modifierFlags: NSEvent.ModifierFlags {
             keyEquivalentModifierMask.subtracting(.uselessModifier)

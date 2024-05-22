@@ -52,7 +52,7 @@ public class Repeater {
     }
 
     public func stop() {
-        debug("Stopping repeater '\(self.name)'")
+        debug("Stopping repeater '\(name)'")
         stopped = true
         task?.cancel()
         timer.connect().cancel()

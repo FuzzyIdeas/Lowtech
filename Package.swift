@@ -46,7 +46,7 @@ let package = Package(
 
         .package(url: "https://github.com/alin23/PaddleSPM", from: "4.4.2"),
         .package(url: "https://github.com/sparkle-project/Sparkle", from: "2.2.0"),
-        .package(url: "https://github.com/getsentry/sentry-cocoa", exact: "8.21.0"),
+        .package(url: "https://github.com/getsentry/sentry-cocoa", from: "8.23.0"),
         .package(url: "https://github.com/MacPaw/Setapp-framework", from: "4.0.0"),
     ],
     targets: [

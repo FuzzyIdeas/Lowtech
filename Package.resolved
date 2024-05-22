@@ -3,7 +3,7 @@
     {
       "identity" : "appreceiptvalidator",
       "kind" : "remoteSourceControl",
-      "location" : "https://github.com/alin23/AppReceiptValidator.git",
+      "location" : "https://github.com/alin23/AppReceiptValidator",
       "state" : {
         "revision" : "e35794a03103839e024f71534e263310038c930d",
         "version" : "1.2.0"
@@ -86,8 +86,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/getsentry/sentry-cocoa",
       "state" : {
-        "revision" : "38f4f70d07117b9f958a76b1bff278c2f29ffe0e",
-        "version" : "8.21.0"
+        "revision" : "937dce13c2600cc42112c480d04f84899e08e9cc",
+        "version" : "8.23.0"
       }
     },
     {

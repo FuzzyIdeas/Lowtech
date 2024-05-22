@@ -425,22 +425,20 @@ public struct PickerButton<T: Equatable>: ButtonStyle {
         enumValue: Binding<T>,
         onValue: T
     ) {
-        _color = color.state
-        _onColor = onColor.state
-        _offColor = offColor.state
-        _offTextColor = offTextColor.state
-        _horizontalPadding = horizontalPadding.state
-        _verticalPadding = verticalPadding.state
-        _brightness = brightness.state
-        _scale = scale.state
-        _radius = radius.state
+        self.color = color
+        self.onColor = onColor
+        self.offColor = offColor
+        self.offTextColor = offTextColor
+        self.horizontalPadding = horizontalPadding
+        self.verticalPadding = verticalPadding
+        self.radius = radius
         _enumValue = enumValue
-        _onValue = st(onValue)
+        self.onValue = onValue
 
-        _onTextColor = onTextColor.state
+        self.onTextColor = onTextColor
 
-        _hoverColor = State(initialValue: hoverColor)
-        _hoverTextColor = State(initialValue: hoverColor.ns.isLight() ? Color.black : Color.white)
+        self.hoverColor = hoverColor
+        hoverTextColor = hoverColor.ns.isLight() ? Color.black : Color.white
     }
 
     @Environment(\.isEnabled) public var isEnabled
@@ -504,21 +502,19 @@ public struct PickerButton<T: Equatable>: ButtonStyle {
 
     @Environment(\.colorScheme) var colorScheme
 
-    @State var color = Color.primary.opacity(0.15)
+    var color = Color.primary.opacity(0.15)
+    var onColor: Color = .primary
+    var offColor: Color? = nil
+    var onTextColor: Color? = nil
+    var offTextColor = Color.secondary
+    var horizontalPadding: CGFloat = 8
+    var verticalPadding: CGFloat = 4
+    var radius: CGFloat
+    var hoverColor: Color
+    var hoverTextColor: Color
     @State var hovering = false
-    @State var onColor: Color = .primary
-    @State var offColor: Color? = nil
-    @State var onTextColor: Color? = nil
-    @State var offTextColor = Color.secondary
-    @State var horizontalPadding: CGFloat = 8
-    @State var verticalPadding: CGFloat = 4
-    @State var brightness = 0.0
-    @State var scale: CGFloat = 1
-    @State var radius: CGFloat
-    @State var hoverColor: Color
-    @State var hoverTextColor: Color
     @Binding var enumValue: T
-    @State var onValue: T
+    var onValue: T
 }
 
 // MARK: - FlatButton
