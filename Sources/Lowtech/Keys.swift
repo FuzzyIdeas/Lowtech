@@ -1192,12 +1192,11 @@ public let KM = KeysManager()
     }
 
     public struct DirectionalModifierView: View {
-        public init(triggerKeys: Binding<[TriggerKey]>, disabled: Binding<Bool>, spacing: CGFloat = 3, noFG: Bool = false, disabledOpacity: CGFloat = 0.6) {
+        public init(triggerKeys: Binding<[TriggerKey]>, spacing: CGFloat = 3, noFG: Bool = false, disabledOpacity: CGFloat = 0.6) {
             _triggerKeys = triggerKeys
-            _disabled = disabled
-            _spacing = spacing.state
-            _noFG = State(initialValue: noFG)
-            _disabledOpacity = State(initialValue: disabledOpacity)
+            self.spacing = spacing
+            self.noFG = noFG
+            self.disabledOpacity = disabledOpacity
         }
 
         @Environment(\.isEnabled) public var isEnabled
@@ -1283,14 +1282,13 @@ public let KM = KeysManager()
                 Button("⇧") {
                     triggerKeys = triggerKeys.toggling(key: .rshift)
                 }.buttonStyle(ToggleButton(isOn: rshiftTrigger, noFG: noFG))
-            }.disabled(disabled).opacity(isEnabled ? 1 : disabledOpacity)
+            }.disabled(!isEnabled).opacity(isEnabled ? 1 : disabledOpacity)
         }
 
         @Binding var triggerKeys: [TriggerKey]
-        @Binding var disabled: Bool
-        @State var spacing: CGFloat = 3
-        @State var noFG = false
-        @State var disabledOpacity: CGFloat = 0.6
+        var spacing: CGFloat = 3
+        var noFG = false
+        var disabledOpacity: CGFloat = 0.6
     }
 
     import Carbon
