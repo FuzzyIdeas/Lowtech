@@ -56,7 +56,7 @@ public class Repeater {
 
     public func stop() {
         #if DEBUG
-            debug("Stopping repeater '\(self.name)'")
+            debug("Stopping repeater '\(name)'")
         #endif
 
         stopped = true
