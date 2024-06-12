@@ -46,13 +46,21 @@ public class Repeater {
     }
 
     deinit {
-        debug("Deinit repeater '\(self.name)'")
+        #if DEBUG
+            debug("Deinit repeater '\(self.name)'")
+        #endif
+
         stop()
         onCancel?()
     }
 
     public func stop() {
-        debug("Stopping repeater '\(name)'")
+        // swiftformat:disable:next redundantSelf
+        #if DEBUG
+            debug("Stopping repeater '\(name)'")
+        #endif
+        // swiftformat:enable:next redundantSelf
+
         stopped = true
         task?.cancel()
         timer.connect().cancel()
