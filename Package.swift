@@ -95,9 +95,5 @@ let package = Package(
                 .product(name: "Paddle", package: "PaddleSPM"),
             ]
         ),
-        .testTarget(
-            name: "LowtechTests",
-            dependencies: ["Lowtech"]
-        ),
     ]
 )

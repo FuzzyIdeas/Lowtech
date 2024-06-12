@@ -17,7 +17,7 @@ import SwiftUI
 public class KeysManager: ObservableObject {
     init() {
         if !primaryKeyModifiers.isEmpty, !primaryKeyModifiers.sideIndependentModifiers.contains(.option) {
-            altKeyModifiers = primaryKeyModifiers + [.ralt]
+            altKeyModifiers = primaryKeyModifiers + [.alt]
         }
 
         if !primaryKeyModifiers.isEmpty, !primaryKeyModifiers.sideIndependentModifiers.contains(.shift) {
@@ -564,7 +564,7 @@ public class KeysManager: ObservableObject {
 
     public func computeKeyModifiers() {
         if !primaryKeyModifiers.isEmpty, !primaryKeyModifiers.sideIndependentModifiers.contains(.option) {
-            altKeyModifiers = primaryKeyModifiers + [.ralt]
+            altKeyModifiers = primaryKeyModifiers + [.alt]
         } else {
             altKeyModifiers = []
         }
@@ -932,6 +932,11 @@ public let KM = KeysManager()
         case rctrl
         case rshift
 
+        case cmd
+        case alt
+        case ctrl
+        case shift
+
         public var id: Int { rawValue }
         public var modifier: NSEvent.ModifierFlags {
             switch self {
@@ -951,27 +956,27 @@ public let KM = KeysManager()
                 .rightShift
             case .rctrl:
                 .rightControl
+            case .cmd:
+                .command
+            case .alt:
+                .option
+            case .ctrl:
+                .control
+            case .shift:
+                .shift
             }
         }
 
         public var sideIndependentModifier: NSEvent.ModifierFlags {
             switch self {
-            case .rcmd:
+            case .rcmd, .lcmd, .cmd:
                 .command
-            case .ralt:
+            case .ralt, .lalt, .alt:
                 .option
-            case .lcmd:
-                .command
-            case .lalt:
-                .option
-            case .lctrl:
+            case .lctrl, .rctrl, .ctrl:
                 .control
-            case .lshift:
+            case .rshift, .lshift, .shift:
                 .shift
-            case .rshift:
-                .shift
-            case .rctrl:
-                .control
             }
         }
 
@@ -993,6 +998,14 @@ public let KM = KeysManager()
                 "⇧⃗"
             case .rctrl:
                 "^⃗"
+            case .cmd:
+                "⌘"
+            case .alt:
+                "⌥"
+            case .ctrl:
+                "^"
+            case .shift:
+                "⇧"
             }
         }
 
@@ -1014,6 +1027,14 @@ public let KM = KeysManager()
                 "⇧"
             case .rctrl:
                 "^"
+            case .cmd:
+                "⌘"
+            case .alt:
+                "⌥"
+            case .ctrl:
+                "^"
+            case .shift:
+                "⇧"
             }
         }
 
@@ -1035,18 +1056,26 @@ public let KM = KeysManager()
                 "Right Shift"
             case .rctrl:
                 "Right Control"
+            case .cmd:
+                "Command"
+            case .alt:
+                "Option"
+            case .ctrl:
+                "Control"
+            case .shift:
+                "Shift"
             }
         }
 
         public var sideIndependentReadableStr: String {
             switch self {
-            case .rcmd, .lcmd:
+            case .rcmd, .lcmd, .cmd:
                 "Command"
-            case .ralt, .lalt:
+            case .ralt, .lalt, .alt:
                 "Option"
-            case .lctrl, .rctrl:
+            case .lctrl, .rctrl, .ctrl:
                 "Control"
-            case .lshift, .rshift:
+            case .lshift, .rshift, .shift:
                 "Shift"
             }
         }
@@ -1069,6 +1098,14 @@ public let KM = KeysManager()
                 "rshift"
             case .rctrl:
                 "rctrl"
+            case .cmd:
+                "cmd"
+            case .alt:
+                "alt"
+            case .ctrl:
+                "ctrl"
+            case .shift:
+                "shift"
             }
         }
 
@@ -1090,6 +1127,14 @@ public let KM = KeysManager()
                 KM.rshift
             case .rctrl:
                 KM.rctrl
+            case .cmd:
+                KM.rcmd || KM.lcmd
+            case .alt:
+                KM.ralt || KM.lalt
+            case .ctrl:
+                KM.rctrl || KM.lctrl
+            case .shift:
+                KM.rshift || KM.lshift
             }
         }
 
@@ -1142,6 +1187,14 @@ public let KM = KeysManager()
                     return keys.toggling(key: TriggerKey.lctrl, on: false)
                 case .lctrl:
                     return keys.toggling(key: TriggerKey.rctrl, on: false)
+                case .cmd:
+                    return keys.toggling(key: TriggerKey.lcmd, on: false).toggling(key: TriggerKey.rcmd, on: false)
+                case .alt:
+                    return keys.toggling(key: TriggerKey.lalt, on: false).toggling(key: TriggerKey.ralt, on: false)
+                case .ctrl:
+                    return keys.toggling(key: TriggerKey.lctrl, on: false).toggling(key: TriggerKey.rctrl, on: false)
+                case .shift:
+                    return keys.toggling(key: TriggerKey.lshift, on: false).toggling(key: TriggerKey.rshift, on: false)
                 }
             } else {
                 let newTriggers = filter { $0 != key }
@@ -1167,63 +1220,61 @@ public let KM = KeysManager()
     }
 
     public struct DirectionalModifierView: View {
-        public init(triggerKeys: Binding<[TriggerKey]>, disabled: Binding<Bool>, spacing: CGFloat = 3, noFG: Bool = false, disabledOpacity: CGFloat = 0.6) {
+        public init(triggerKeys: Binding<[TriggerKey]>, spacing: CGFloat = 3, noFG: Bool = false) {
             _triggerKeys = triggerKeys
-            _disabled = disabled
-            _spacing = spacing.state
-            _noFG = State(initialValue: noFG)
-            _disabledOpacity = State(initialValue: disabledOpacity)
+            self.spacing = spacing
+            self.noFG = noFG
         }
 
         @Environment(\.isEnabled) public var isEnabled
 
         public var body: some View {
             let rcmdTrigger = Binding<Bool>(
-                get: { triggerKeys.contains(.rcmd) },
+                get: { triggerKeys.contains(.rcmd) || triggerKeys.contains(.cmd) },
                 set: {
                     triggerKeys = triggerKeys.toggling(key: TriggerKey.rcmd, on: $0)
                 }
             )
             let raltTrigger = Binding<Bool>(
-                get: { triggerKeys.contains(.ralt) },
+                get: { triggerKeys.contains(.ralt) || triggerKeys.contains(.alt) },
                 set: {
                     triggerKeys = triggerKeys.toggling(key: TriggerKey.ralt, on: $0)
                 }
             )
 
             let lcmdTrigger = Binding<Bool>(
-                get: { triggerKeys.contains(.lcmd) },
+                get: { triggerKeys.contains(.lcmd) || triggerKeys.contains(.cmd) },
                 set: {
                     triggerKeys = triggerKeys.toggling(key: TriggerKey.lcmd, on: $0)
                 }
             )
             let laltTrigger = Binding<Bool>(
-                get: { triggerKeys.contains(.lalt) },
+                get: { triggerKeys.contains(.lalt) || triggerKeys.contains(.alt) },
                 set: {
                     triggerKeys = triggerKeys.toggling(key: TriggerKey.lalt, on: $0)
                 }
             )
             let lctrlTrigger = Binding<Bool>(
-                get: { triggerKeys.contains(.lctrl) },
+                get: { triggerKeys.contains(.lctrl) || triggerKeys.contains(.ctrl) },
                 set: {
                     triggerKeys = triggerKeys.toggling(key: TriggerKey.lctrl, on: $0)
                 }
             )
 
             let lshiftTrigger = Binding<Bool>(
-                get: { triggerKeys.contains(.lshift) },
+                get: { triggerKeys.contains(.lshift) || triggerKeys.contains(.shift) },
                 set: {
                     triggerKeys = triggerKeys.toggling(key: TriggerKey.lshift, on: $0)
                 }
             )
             let rshiftTrigger = Binding<Bool>(
-                get: { triggerKeys.contains(.rshift) },
+                get: { triggerKeys.contains(.rshift) || triggerKeys.contains(.shift) },
                 set: {
                     triggerKeys = triggerKeys.toggling(key: TriggerKey.rshift, on: $0)
                 }
             )
             let rctrlTrigger = Binding<Bool>(
-                get: { triggerKeys.contains(.rctrl) },
+                get: { triggerKeys.contains(.rctrl) || triggerKeys.contains(.ctrl) },
                 set: {
                     triggerKeys = triggerKeys.toggling(key: TriggerKey.rctrl, on: $0)
                 }
@@ -1233,15 +1284,19 @@ public let KM = KeysManager()
                 Button("⇧") {
                     triggerKeys = triggerKeys.toggling(key: .lshift)
                 }.buttonStyle(ToggleButton(isOn: lshiftTrigger, noFG: noFG))
+                    .overlay(Colors.red.opacity(triggerKeys.contains(.shift) ? 0.1 : 0.0).clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous)))
                 Button("⌃") {
                     triggerKeys = triggerKeys.toggling(key: .lctrl)
                 }.buttonStyle(ToggleButton(isOn: lctrlTrigger, noFG: noFG))
+                    .overlay(Colors.red.opacity(triggerKeys.contains(.ctrl) ? 0.1 : 0.0).clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous)))
                 Button("⌥") {
                     triggerKeys = triggerKeys.toggling(key: .lalt)
                 }.buttonStyle(ToggleButton(isOn: laltTrigger, noFG: noFG))
+                    .overlay(Colors.red.opacity(triggerKeys.contains(.alt) ? 0.1 : 0.0).clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous)))
                 Button("⌘") {
                     triggerKeys = triggerKeys.toggling(key: .lcmd)
                 }.buttonStyle(ToggleButton(isOn: lcmdTrigger, noFG: noFG))
+                    .overlay(Colors.red.opacity(triggerKeys.contains(.cmd) ? 0.1 : 0.0).clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous)))
                 Button("    ⎵    ") {}
                     .buttonStyle(ToggleButton(isOn: .constant(false), noFG: noFG))
                     .opacity(0.9)
@@ -1249,23 +1304,25 @@ public let KM = KeysManager()
                 Button("⌘") {
                     triggerKeys = triggerKeys.toggling(key: .rcmd)
                 }.buttonStyle(ToggleButton(isOn: rcmdTrigger, noFG: noFG))
+                    .overlay(Colors.red.opacity(triggerKeys.contains(.cmd) ? 0.1 : 0.0).clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous)))
                 Button("⌥") {
                     triggerKeys = triggerKeys.toggling(key: .ralt)
                 }.buttonStyle(ToggleButton(isOn: raltTrigger, noFG: noFG))
+                    .overlay(Colors.red.opacity(triggerKeys.contains(.alt) ? 0.1 : 0.0).clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous)))
                 Button("⌃") {
                     triggerKeys = triggerKeys.toggling(key: .rctrl)
                 }.buttonStyle(ToggleButton(isOn: rctrlTrigger, noFG: noFG))
+                    .overlay(Colors.red.opacity(triggerKeys.contains(.ctrl) ? 0.1 : 0.0).clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous)))
                 Button("⇧") {
                     triggerKeys = triggerKeys.toggling(key: .rshift)
                 }.buttonStyle(ToggleButton(isOn: rshiftTrigger, noFG: noFG))
-            }.disabled(disabled).opacity(isEnabled ? 1 : disabledOpacity)
+                    .overlay(Colors.red.opacity(triggerKeys.contains(.shift) ? 0.1 : 0.0).clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous)))
+            }.disabled(!isEnabled)
         }
 
         @Binding var triggerKeys: [TriggerKey]
-        @Binding var disabled: Bool
-        @State var spacing: CGFloat = 3
-        @State var noFG = false
-        @State var disabledOpacity: CGFloat = 0.6
+        var spacing: CGFloat = 3
+        var noFG = false
     }
 
     import Carbon
