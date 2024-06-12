@@ -101,7 +101,6 @@ public class KeysManager: ObservableObject {
     }
 
     open func flagsChanged(modifierFlags: NSEvent.ModifierFlags) {
-        print("FLAGS: \(modifierFlags) (\(modifierFlags.triggerKeys)")
         KM.lastModifierFlags = modifierFlags
 
         KM.rcmd = modifierFlags.contains(.rightCommand)
