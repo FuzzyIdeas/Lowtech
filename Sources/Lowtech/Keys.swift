@@ -108,10 +108,10 @@ public class KeysManager: ObservableObject {
         KM.rshift = modifierFlags.contains(.rightShift)
         KM.rctrl = modifierFlags.contains(.rightControl)
 
-        KM.lcmd = modifierFlags.contains(.leftCommand)
-        KM.lalt = modifierFlags.contains(.leftOption)
-        KM.lshift = modifierFlags.contains(.leftShift)
-        KM.lctrl = modifierFlags.contains(.leftControl)
+        KM.lcmd = modifierFlags.contains(.leftCommand) || (modifierFlags.contains(.command) && !modifierFlags.contains(.rightCommand))
+        KM.lalt = modifierFlags.contains(.leftOption) || (modifierFlags.contains(.option) && !modifierFlags.contains(.rightOption))
+        KM.lshift = modifierFlags.contains(.leftShift) || (modifierFlags.contains(.shift) && !modifierFlags.contains(.rightShift))
+        KM.lctrl = modifierFlags.contains(.leftControl) || (modifierFlags.contains(.control) && !modifierFlags.contains(.rightControl))
 
         KM.fn = modifierFlags.contains(.fn)
         KM.flags = modifierFlags.triggerKeys
@@ -1178,10 +1178,10 @@ public let KM = KeysManager()
         static var uselessModifier: NSEvent.ModifierFlags { NSEvent.ModifierFlags(rawValue: 10) }
         var triggerKeys: [TriggerKey] {
             var flags = [TriggerKey]()
-            if contains(.leftShift) { flags.append(.lshift) }
-            if contains(.leftControl) { flags.append(.lctrl) }
-            if contains(.leftOption) { flags.append(.lalt) }
-            if contains(.leftCommand) { flags.append(.lcmd) }
+            if contains(.leftShift) || (contains(.shift) && !contains(.rightShift)) { flags.append(.lshift) }
+            if contains(.leftControl) || (contains(.control) && !contains(.rightControl)) { flags.append(.lctrl) }
+            if contains(.leftOption) || (contains(.option) && !contains(.rightOption)) { flags.append(.lalt) }
+            if contains(.leftCommand) || (contains(.command) && !contains(.rightCommand)) { flags.append(.lcmd) }
             if contains(.rightCommand) { flags.append(.rcmd) }
             if contains(.rightOption) { flags.append(.ralt) }
             if contains(.rightControl) { flags.append(.rctrl) }
