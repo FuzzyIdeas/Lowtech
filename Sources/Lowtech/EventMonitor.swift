@@ -1,5 +1,7 @@
 import Cocoa
 
+var logGlobalEvents = false
+
 // MARK: - GlobalEventMonitor
 
 @MainActor
@@ -14,7 +16,23 @@ open class GlobalEventMonitor {
     }
 
     public func start() {
-        monitor = NSEvent.addGlobalMonitorForEvents(matching: mask, handler: handler) as! NSObject
+        #if DEBUG
+            monitor = NSEvent.addGlobalMonitorForEvents(matching: mask, handler: { event in
+                if event.type == .keyDown || event.type == .flagsChanged {
+                    if event.modifierFlags.intersection(.deviceIndependentFlagsMask) == [.control, .option, .shift] {
+                        logGlobalEvents = true
+                    } else if event.modifierFlags.intersection(.deviceIndependentFlagsMask) == [.control, .command, .shift] {
+                        logGlobalEvents = false
+                    }
+                }
+                if logGlobalEvents {
+                    print("[GLOBAL] Handling mask \(self.mask) on event: \(event)")
+                }
+                self.handler(event)
+            }) as! NSObject
+        #else
+            monitor = NSEvent.addGlobalMonitorForEvents(matching: mask, handler: handler) as! NSObject
+        #endif
     }
 
     public func stop() {
