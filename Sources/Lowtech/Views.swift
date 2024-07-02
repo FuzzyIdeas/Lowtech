@@ -561,6 +561,8 @@ public protocol Nameable {
                 }
                 Text("Show this menu").font(.caption.bold())
             }
+            .accessibilityElement(children: .ignore)
+            .accessibilityLabel("you can hold \(modifiers.readableStr) and press \(key.uppercased()) to show/hide this menu")
         }
     }
 
