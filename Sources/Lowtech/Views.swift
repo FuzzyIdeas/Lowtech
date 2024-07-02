@@ -318,6 +318,7 @@ public protocol Nameable {
                     width: width
                 )
             )
+            .accessibilityHint("Click to change the assigned key. After clicking, press the desired key on your keyboard to assign.")
             .font(.system(size: fontSize, weight: .bold, design: .monospaced))
             .colorMultiply(multiplyColor)
             .background(

@@ -1285,38 +1285,47 @@ public let KM = KeysManager()
                     triggerKeys = triggerKeys.toggling(key: .lshift)
                 }.buttonStyle(ToggleButton(isOn: lshiftTrigger, noFG: noFG))
                     .overlay(Colors.red.opacity(triggerKeys.contains(.shift) ? 0.1 : 0.0).clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous)))
+                    .accessibilityLabel("Toggle Left Shift")
                 Button("⌃") {
                     triggerKeys = triggerKeys.toggling(key: .lctrl)
                 }.buttonStyle(ToggleButton(isOn: lctrlTrigger, noFG: noFG))
                     .overlay(Colors.red.opacity(triggerKeys.contains(.ctrl) ? 0.1 : 0.0).clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous)))
+                    .accessibilityLabel("Toggle Left Control")
                 Button("⌥") {
                     triggerKeys = triggerKeys.toggling(key: .lalt)
                 }.buttonStyle(ToggleButton(isOn: laltTrigger, noFG: noFG))
                     .overlay(Colors.red.opacity(triggerKeys.contains(.alt) ? 0.1 : 0.0).clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous)))
+                    .accessibilityLabel("Toggle Left Option")
                 Button("⌘") {
                     triggerKeys = triggerKeys.toggling(key: .lcmd)
                 }.buttonStyle(ToggleButton(isOn: lcmdTrigger, noFG: noFG))
                     .overlay(Colors.red.opacity(triggerKeys.contains(.cmd) ? 0.1 : 0.0).clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous)))
+                    .accessibilityLabel("Toggle Left Command")
                 Button("    ⎵    ") {}
                     .buttonStyle(ToggleButton(isOn: .constant(false), noFG: noFG))
                     .opacity(0.9)
                     .disabled(true)
+                    .accessibilityHidden(true)
                 Button("⌘") {
                     triggerKeys = triggerKeys.toggling(key: .rcmd)
                 }.buttonStyle(ToggleButton(isOn: rcmdTrigger, noFG: noFG))
                     .overlay(Colors.red.opacity(triggerKeys.contains(.cmd) ? 0.1 : 0.0).clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous)))
+                    .accessibilityLabel("Toggle Right Command")
                 Button("⌥") {
                     triggerKeys = triggerKeys.toggling(key: .ralt)
                 }.buttonStyle(ToggleButton(isOn: raltTrigger, noFG: noFG))
                     .overlay(Colors.red.opacity(triggerKeys.contains(.alt) ? 0.1 : 0.0).clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous)))
+                    .accessibilityLabel("Toggle Right Option")
                 Button("⌃") {
                     triggerKeys = triggerKeys.toggling(key: .rctrl)
                 }.buttonStyle(ToggleButton(isOn: rctrlTrigger, noFG: noFG))
                     .overlay(Colors.red.opacity(triggerKeys.contains(.ctrl) ? 0.1 : 0.0).clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous)))
+                    .accessibilityLabel("Toggle Right Control")
                 Button("⇧") {
                     triggerKeys = triggerKeys.toggling(key: .rshift)
                 }.buttonStyle(ToggleButton(isOn: rshiftTrigger, noFG: noFG))
                     .overlay(Colors.red.opacity(triggerKeys.contains(.shift) ? 0.1 : 0.0).clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous)))
+                    .accessibilityLabel("Toggle Right Shift")
             }.disabled(!isEnabled)
         }
 
