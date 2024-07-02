@@ -384,6 +384,7 @@ public struct ToggleButton: ButtonStyle {
                 }
             }
             .opacity(isEnabled ? 1 : 0.6)
+            .accessibilityAddTraits(.isToggle)
     }
 
     @Environment(\.colors) var colors
