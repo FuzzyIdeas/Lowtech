@@ -44,6 +44,7 @@ public enum LowtechSentry {
         let release = (Bundle.main.infoDictionary?["CFBundleVersion"] as? String) ?? "1"
 
         SentrySDK.start { options in
+            options.enableCaptureFailedRequests = false
             options.dsn = dsn
             options.releaseName = "v\(release)"
             options.dist = release

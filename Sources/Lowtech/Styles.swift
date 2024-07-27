@@ -254,8 +254,8 @@ public extension Text {
         font(.system(size: size, weight: .black, design: .default))
     }
 
-    func roundbg(size: CGFloat = 2.5, color: Color = .inverted, shadowSize: CGFloat = 0, noFG: Bool = false) -> some View {
-        modifier(RoundBG(radius: size, color: color, shadowSize: shadowSize, noFG: noFG))
+    func roundbg(size: CGFloat = 5, color: Color = .inverted, shadowSize: CGFloat = 0, noFG: Bool = false) -> some View {
+        modifier(RoundBG(radius: size, verticalPadding: size / 2, horizontalPadding: size * 1.2, color: color, shadowSize: shadowSize, noFG: noFG))
     }
 
     func roundbg(radius: CGFloat = 5, padding: CGFloat = 2.5, color: Color = .inverted, shadowSize: CGFloat = 0, noFG: Bool = false) -> some View {

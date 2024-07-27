@@ -320,7 +320,7 @@ public extension Bool {
         }
     }
 
-    extension NSSize: Comparable {
+    extension NSSize: @retroactive Comparable {
         public static func < (lhs: CGSize, rhs: CGSize) -> Bool {
             (lhs.width < rhs.width && lhs.height <= rhs.height)
                 || (lhs.width <= rhs.width && lhs.height < rhs.height)
@@ -1276,7 +1276,7 @@ public enum BackportSortOrder {
 
 // MARK: - Bool + Comparable
 
-extension Bool: Comparable {
+extension Bool: @retroactive Comparable {
     public static func < (lhs: Bool, rhs: Bool) -> Bool {
         !lhs && rhs
     }
@@ -1332,10 +1332,12 @@ public extension Binding where Value == Bool {
 }
 
 public extension Binding {
+    @MainActor
     static func oneway(getter: @escaping () -> Value) -> Binding {
         Binding(get: getter, set: { _ in })
     }
 
+    @MainActor
     var optional: Binding<Value?> {
         .oneway { self.wrappedValue }
     }
@@ -1576,7 +1578,7 @@ public extension String {
 
 // MARK: - Text + AdditiveArithmetic
 
-extension Text: AdditiveArithmetic {
+extension Text: @retroactive AdditiveArithmetic {
     public static func - (lhs: Text, rhs: Text) -> Text {
         lhs + rhs
     }
@@ -1634,6 +1636,14 @@ public extension FilePath {
         return SHA256.hash(data: data).hexEncodedString()
     }
 
+    var sha256WithTimestamp: String? {
+        let string = "\(string)\(timestamp ?? 0)"
+        guard let data = string.data(using: .utf8, allowLossyConversion: true) else {
+            return nil
+        }
+        return SHA256.hash(data: data).hexEncodedString()
+    }
+
     func hasExtension(from extensions: [String]) -> Bool {
         guard let ext = `extension`?.lowercased() else { return false }
         return extensions.contains(ext)
@@ -1684,8 +1694,17 @@ public extension FilePath {
         "\(stem!.replacing(#/_\[.+\]$/#, with: "")).\(`extension`!)"
     }
 
+    var timestamp: TimeInterval? {
+        guard let attrs = try? fm.attributesOfItem(atPath: string),
+              let date = attrs[.modificationDate] as? Date ?? attrs[.creationDate] as? Date
+        else {
+            return nil
+        }
+        return date.timeIntervalSince1970
+    }
+
     var nameWithHash: String {
-        guard let stem, let ext = `extension`, let hash = memoz.sha256 else {
+        guard let stem, let ext = `extension`, let hash = sha256WithTimestamp else {
             return name.string
         }
         let name = stem.replacingOccurrences(of: "_\(hash)", with: "")
@@ -1719,8 +1738,8 @@ public extension FilePath {
     }
 
     @discardableResult
-    func backup(force: Bool = false, operation: BackupOperation = .move) -> FilePath? {
-        guard let backupPath else {
+    func backup(path: FilePath? = nil, force: Bool = false, operation: BackupOperation = .move) -> FilePath? {
+        guard let backupPath = path ?? backupPath else {
             return nil
         }
 
@@ -1742,8 +1761,8 @@ public extension FilePath {
         return backupPath
     }
 
-    func restore(force: Bool = true) {
-        guard let backupPath else {
+    func restore(backupPath: FilePath? = nil, force: Bool = true) {
+        guard let backupPath = backupPath ?? self.backupPath else {
             return
         }
         _ = try? backupPath.move(to: self, force: force)
@@ -1807,8 +1826,22 @@ public extension FilePath {
         return (try? fm.contentsOfDirectory(atPath: string))?.map { appending($0) } ?? []
     }
 
-    var shellString: String { string.replacingFirstOccurrence(of: NSHomeDirectory(), with: "~") }
+    var shellString: String { string.shellString }
 }
+
+public extension String {
+    var shellString: String {
+        guard let homeDirRegex = HOME_DIR_REGEX else {
+            return replacingFirstOccurrence(of: NSHomeDirectory(), with: "~")
+        }
+        return replacing(homeDirRegex, with: { "~" + ($0.1 ?? "") })
+    }
+}
+public extension URL {
+    var shellString: String { isFileURL ? path.shellString : absoluteString }
+}
+
+let HOME_DIR_REGEX = (try? Regex("^/*?\(NSHomeDirectory())(/)?", as: (Substring, Substring?).self))?.ignoresCase()
 
 public extension URL {
     var filePath: FilePath? { FilePath(self) }
@@ -1836,16 +1869,16 @@ public func focus() {
 
 // MARK: - NSRect + Hashable
 
-extension NSRect: Hashable {
+extension NSRect: @retroactive Hashable {
     public func hash(into hasher: inout Hasher) {
         hasher.combine(origin)
         hasher.combine(size)
     }
 }
 
-// MARK: - NSPoint + Hashable
+// MARK: - NSPoint + @retroactive Hashable
 
-extension NSPoint: Hashable {
+extension NSPoint: @retroactive Hashable {
     public func hash(into hasher: inout Hasher) {
         hasher.combine(x)
         hasher.combine(y)
@@ -1858,15 +1891,11 @@ public extension NSSize {
     }
 }
 
-// MARK: - NSSize + Hashable
+// MARK: - NSSize + @retroactive Hashable
 
-extension NSSize: Hashable {
+extension NSSize: @retroactive Hashable {
     public func hash(into hasher: inout Hasher) {
         hasher.combine(width)
         hasher.combine(height)
     }
-}
-
-public extension String {
-    var shellString: String { replacingFirstOccurrence(of: NSHomeDirectory(), with: "~") }
 }

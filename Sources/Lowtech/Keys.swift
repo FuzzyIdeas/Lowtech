@@ -940,22 +940,14 @@ public let KM = KeysManager()
         public var id: Int { rawValue }
         public var eventModifier: SwiftUI.EventModifiers {
             switch self {
-            case .rcmd:
+            case .rcmd, .lcmd, .cmd:
                 .command
-            case .ralt:
+            case .ralt, .lalt, .alt:
                 .option
-            case .lcmd:
-                .command
-            case .lalt:
-                .option
-            case .lctrl:
+            case .lctrl, .rctrl, .ctrl:
                 .control
-            case .lshift:
+            case .lshift, .rshift, .shift:
                 .shift
-            case .rshift:
-                .shift
-            case .rctrl:
-                .control
             }
         }
         public var modifier: NSEvent.ModifierFlags {
@@ -1309,19 +1301,19 @@ public let KM = KeysManager()
                 Button("⇧") {
                     triggerKeys = triggerKeys.toggling(key: .lshift)
                 }.buttonStyle(ToggleButton(isOn: lshiftTrigger, noFG: noFG))
-                    .overlay(Colors.red.opacity(triggerKeys.contains(.shift) ? 0.1 : 0.0).clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous)))
+                    .overlay(Color.red.opacity(triggerKeys.contains(.shift) ? 0.1 : 0.0).clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous)))
                 Button("⌃") {
                     triggerKeys = triggerKeys.toggling(key: .lctrl)
                 }.buttonStyle(ToggleButton(isOn: lctrlTrigger, noFG: noFG))
-                    .overlay(Colors.red.opacity(triggerKeys.contains(.ctrl) ? 0.1 : 0.0).clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous)))
+                    .overlay(Color.red.opacity(triggerKeys.contains(.ctrl) ? 0.1 : 0.0).clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous)))
                 Button("⌥") {
                     triggerKeys = triggerKeys.toggling(key: .lalt)
                 }.buttonStyle(ToggleButton(isOn: laltTrigger, noFG: noFG))
-                    .overlay(Colors.red.opacity(triggerKeys.contains(.alt) ? 0.1 : 0.0).clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous)))
+                    .overlay(Color.red.opacity(triggerKeys.contains(.alt) ? 0.1 : 0.0).clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous)))
                 Button("⌘") {
                     triggerKeys = triggerKeys.toggling(key: .lcmd)
                 }.buttonStyle(ToggleButton(isOn: lcmdTrigger, noFG: noFG))
-                    .overlay(Colors.red.opacity(triggerKeys.contains(.cmd) ? 0.1 : 0.0).clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous)))
+                    .overlay(Color.red.opacity(triggerKeys.contains(.cmd) ? 0.1 : 0.0).clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous)))
                 Button("    ⎵    ") {}
                     .buttonStyle(ToggleButton(isOn: .constant(false), noFG: noFG))
                     .opacity(0.9)
@@ -1329,19 +1321,19 @@ public let KM = KeysManager()
                 Button("⌘") {
                     triggerKeys = triggerKeys.toggling(key: .rcmd)
                 }.buttonStyle(ToggleButton(isOn: rcmdTrigger, noFG: noFG))
-                    .overlay(Colors.red.opacity(triggerKeys.contains(.cmd) ? 0.1 : 0.0).clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous)))
+                    .overlay(Color.red.opacity(triggerKeys.contains(.cmd) ? 0.1 : 0.0).clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous)))
                 Button("⌥") {
                     triggerKeys = triggerKeys.toggling(key: .ralt)
                 }.buttonStyle(ToggleButton(isOn: raltTrigger, noFG: noFG))
-                    .overlay(Colors.red.opacity(triggerKeys.contains(.alt) ? 0.1 : 0.0).clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous)))
+                    .overlay(Color.red.opacity(triggerKeys.contains(.alt) ? 0.1 : 0.0).clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous)))
                 Button("⌃") {
                     triggerKeys = triggerKeys.toggling(key: .rctrl)
                 }.buttonStyle(ToggleButton(isOn: rctrlTrigger, noFG: noFG))
-                    .overlay(Colors.red.opacity(triggerKeys.contains(.ctrl) ? 0.1 : 0.0).clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous)))
+                    .overlay(Color.red.opacity(triggerKeys.contains(.ctrl) ? 0.1 : 0.0).clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous)))
                 Button("⇧") {
                     triggerKeys = triggerKeys.toggling(key: .rshift)
                 }.buttonStyle(ToggleButton(isOn: rshiftTrigger, noFG: noFG))
-                    .overlay(Colors.red.opacity(triggerKeys.contains(.shift) ? 0.1 : 0.0).clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous)))
+                    .overlay(Color.red.opacity(triggerKeys.contains(.shift) ? 0.1 : 0.0).clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous)))
             }.disabled(!isEnabled)
         }
 

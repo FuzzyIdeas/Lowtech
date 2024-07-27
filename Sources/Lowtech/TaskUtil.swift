@@ -55,11 +55,10 @@ public class Repeater {
     }
 
     public func stop() {
-        // swiftformat:disable:next redundantSelf
+        let name = name
         #if DEBUG
             debug("Stopping repeater '\(name)'")
         #endif
-        // swiftformat:enable:next redundantSelf
 
         stopped = true
         task?.cancel()

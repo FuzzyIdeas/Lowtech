@@ -103,4 +103,4 @@ public struct VersionView: View {
 
 // MARK: - SPUUpdater + ObservableObject
 
-extension SPUUpdater: ObservableObject {}
+extension SPUUpdater: @retroactive ObservableObject {}
