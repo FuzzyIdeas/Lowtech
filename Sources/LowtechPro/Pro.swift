@@ -21,7 +21,7 @@ public var PRO: LowtechPro? { (LowtechProAppDelegate.instance as? LowtechProAppD
 
 // MARK: - LowtechProAppDelegate
 
-open class LowtechProAppDelegate: LowtechIndieAppDelegate, PADProductDelegate, @preconcurrency PaddleDelegate {
+open class LowtechProAppDelegate: LowtechIndieAppDelegate, PADProductDelegate, PaddleDelegate {
     open func getSentryUser() -> User {
         let user = User(userId: SERIAL_NUMBER_HASH)
         guard let product else { return user }

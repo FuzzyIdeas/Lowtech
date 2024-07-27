@@ -320,7 +320,7 @@ public extension Bool {
         }
     }
 
-    extension NSSize: @retroactive Comparable {
+    extension NSSize: Comparable {  // @retroactive Comparable {
         public static func < (lhs: CGSize, rhs: CGSize) -> Bool {
             (lhs.width < rhs.width && lhs.height <= rhs.height)
                 || (lhs.width <= rhs.width && lhs.height < rhs.height)
@@ -1276,7 +1276,7 @@ public enum BackportSortOrder {
 
 // MARK: - Bool + Comparable
 
-extension Bool: @retroactive Comparable {
+extension Bool: Comparable {  // @retroactive Comparable {
     public static func < (lhs: Bool, rhs: Bool) -> Bool {
         !lhs && rhs
     }
@@ -1578,7 +1578,7 @@ public extension String {
 
 // MARK: - Text + AdditiveArithmetic
 
-extension Text: @retroactive AdditiveArithmetic {
+extension Text: AdditiveArithmetic {  // @retroactive AdditiveArithmetic {
     public static func - (lhs: Text, rhs: Text) -> Text {
         lhs + rhs
     }
@@ -1869,16 +1869,16 @@ public func focus() {
 
 // MARK: - NSRect + Hashable
 
-extension NSRect: @retroactive Hashable {
+extension NSRect: Hashable {  // @retroactive Hashable {
     public func hash(into hasher: inout Hasher) {
         hasher.combine(origin)
         hasher.combine(size)
     }
 }
 
-// MARK: - NSPoint + @retroactive Hashable
+// MARK: - NSPoint + Hashable  // @retroactive Hashable
 
-extension NSPoint: @retroactive Hashable {
+extension NSPoint: Hashable {  // @retroactive Hashable {
     public func hash(into hasher: inout Hasher) {
         hasher.combine(x)
         hasher.combine(y)
@@ -1891,9 +1891,9 @@ public extension NSSize {
     }
 }
 
-// MARK: - NSSize + @retroactive Hashable
+// MARK: - NSSize + Hashable  // @retroactive Hashable
 
-extension NSSize: @retroactive Hashable {
+extension NSSize: Hashable {  // @retroactive Hashable {
     public func hash(into hasher: inout Hasher) {
         hasher.combine(width)
         hasher.combine(height)
