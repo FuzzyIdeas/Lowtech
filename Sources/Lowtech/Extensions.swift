@@ -320,7 +320,7 @@ public extension Bool {
         }
     }
 
-    extension NSSize: Comparable {  // @retroactive Comparable {
+    extension NSSize: Comparable { // @retroactive Comparable {
         public static func < (lhs: CGSize, rhs: CGSize) -> Bool {
             (lhs.width < rhs.width && lhs.height <= rhs.height)
                 || (lhs.width <= rhs.width && lhs.height < rhs.height)
@@ -1276,7 +1276,7 @@ public enum BackportSortOrder {
 
 // MARK: - Bool + Comparable
 
-extension Bool: Comparable {  // @retroactive Comparable {
+extension Bool: Comparable { // @retroactive Comparable {
     public static func < (lhs: Bool, rhs: Bool) -> Bool {
         !lhs && rhs
     }
@@ -1578,7 +1578,7 @@ public extension String {
 
 // MARK: - Text + AdditiveArithmetic
 
-extension Text: AdditiveArithmetic {  // @retroactive AdditiveArithmetic {
+extension Text: AdditiveArithmetic { // @retroactive AdditiveArithmetic {
     public static func - (lhs: Text, rhs: Text) -> Text {
         lhs + rhs
     }
@@ -1722,8 +1722,16 @@ public extension FilePath {
         return path
     }
 
-    func mkdir(withIntermediateDirectories: Bool, permissions: Int = 0o755) {
-        try? fm.createDirectory(atPath: string, withIntermediateDirectories: withIntermediateDirectories, attributes: [.posixPermissions: permissions])
+    @discardableResult
+    func mkdir(withIntermediateDirectories: Bool, permissions: Int = 0o755) -> Bool {
+        guard !exists else { return true }
+        do {
+            try fm.createDirectory(atPath: string, withIntermediateDirectories: withIntermediateDirectories, attributes: [.posixPermissions: permissions])
+        } catch {
+            log.error("Error creating directory '\(string)': \(error)")
+            return false
+        }
+        return true
     }
 
     var dir: FilePath { removingLastComponent() }
@@ -1869,7 +1877,7 @@ public func focus() {
 
 // MARK: - NSRect + Hashable
 
-extension NSRect: Hashable {  // @retroactive Hashable {
+extension NSRect: Hashable { // @retroactive Hashable {
     public func hash(into hasher: inout Hasher) {
         hasher.combine(origin)
         hasher.combine(size)
@@ -1878,7 +1886,7 @@ extension NSRect: Hashable {  // @retroactive Hashable {
 
 // MARK: - NSPoint + Hashable  // @retroactive Hashable
 
-extension NSPoint: Hashable {  // @retroactive Hashable {
+extension NSPoint: Hashable { // @retroactive Hashable {
     public func hash(into hasher: inout Hasher) {
         hasher.combine(x)
         hasher.combine(y)
@@ -1893,9 +1901,45 @@ public extension NSSize {
 
 // MARK: - NSSize + Hashable  // @retroactive Hashable
 
-extension NSSize: Hashable {  // @retroactive Hashable {
+extension NSSize: Hashable { // @retroactive Hashable {
     public func hash(into hasher: inout Hasher) {
         hasher.combine(width)
         hasher.combine(height)
     }
 }
+
+import EonilFSEvents
+
+public enum LowtechFSEvents {
+    public static func startWatching(
+        paths: [String],
+        for id: ObjectIdentifier,
+        sinceWhen: EonilFSEventsEventID = .now,
+        latency: TimeInterval = 0,
+        flags: EonilFSEventsCreateFlags = [.noDefer, .fileEvents],
+        with handler: @escaping (EonilFSEventsEvent) -> Void
+    ) throws {
+        assert(Thread.isMainThread)
+        assert(watchers[id] == nil)
+
+        let s = try EonilFSEventStream(
+            pathsToWatch: paths,
+            sinceWhen: sinceWhen,
+            latency: latency,
+            flags: flags,
+            handler: handler
+        )
+        s.setDispatchQueue(DispatchQueue.main)
+        try s.start()
+        watchers[id] = s
+    }
+    public static func stopWatching(for id: ObjectIdentifier) {
+        assert(Thread.isMainThread)
+        assert(watchers[id] != nil)
+        guard let s = watchers[id] else { return }
+        s.stop()
+        s.invalidate()
+        watchers[id] = nil
+    }
+}
+private var watchers = [ObjectIdentifier: EonilFSEventStream]()
