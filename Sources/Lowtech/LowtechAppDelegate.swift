@@ -23,13 +23,11 @@ open class LowtechAppDelegate: NSObject, NSApplicationDelegate, ObservableObject
     }
 
     @MainActor
-    open func applicationDidResignActive(_ notification: Notification) {
-//        debug(notification)
-    }
-
-    @MainActor
     open func applicationDidBecomeActive(_ notification: Notification) {
-//        debug(notification)
+        guard didBecomeActiveAtLeastOnce else {
+            didBecomeActiveAtLeastOnce = true
+            return
+        }
         if Defaults[.hideMenubarIcon] {
             statusBar?.showPopoverIfNotVisible()
         }
@@ -178,4 +176,7 @@ open class LowtechAppDelegate: NSObject, NSApplicationDelegate, ObservableObject
             LowtechView(accentColor: color) { contentView }.any, length: statusItemLength
         )
     }
+
+    private var didBecomeActiveAtLeastOnce = false
+
 }
