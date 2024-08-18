@@ -35,7 +35,7 @@ let package = Package(
         .package(url: "https://github.com/alin23/RegexSwiftOld", from: "1.3.0"),
         .package(url: "https://github.com/alin23/FuzzyMatcher", branch: "main"),
         .package(url: "https://github.com/sindresorhus/LaunchAtLogin", branch: "main"),
-        .package(url: "https://github.com/alin23/Magnet", branch: "dev"),
+        .package(url: "https://github.com/alin23/Magnet", from: "4.1.2"),
         .package(url: "https://github.com/Clipy/Sauce", from: "2.2.0"),
         .package(url: "https://github.com/twostraws/VisualEffects", from: "1.0.3"),
         .package(url: "https://github.com/eonil/FSEvents", from: "0.1.7"),

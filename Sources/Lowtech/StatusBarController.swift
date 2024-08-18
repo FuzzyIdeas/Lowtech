@@ -19,10 +19,14 @@ class StatusBarDelegate: NSObject, NSWindowDelegate {
     var statusBarController: StatusBarController!
 
     @MainActor
-    func windowDidMove(_ notification: Notification) {
+    func reposition() {
         guard let window = statusBarController.window, window.isVisible, let position = statusBarController.position else { return }
 
         window.show(at: position, animate: true)
+    }
+
+    func windowDidMove(_ notification: Notification) {
+        mainActor { self.reposition() }
     }
 }
 
@@ -149,9 +153,11 @@ open class StatusBarController: NSObject, NSWindowDelegate, ObservableObject {
     public var position: CGPoint? {
         guard !centerOnScreen, let button = statusItem.button, let screen = NSScreen.main,
               let menuBarIconPosition = button.window?.convertPoint(toScreen: button.frame.origin),
-              let window, let viewSize = window.contentView?.frame.size
+              let window, var viewSize = window.contentView?.frame.size
         else { return nil }
 
+        viewSize.width = max(viewSize.width, 480)
+        viewSize.height = max(viewSize.height, 680)
         var middle = CGPoint(
             x: menuBarIconPosition.x - viewSize.width / 2,
             y: screen.visibleFrame.maxY - (window.frame.height + 1)

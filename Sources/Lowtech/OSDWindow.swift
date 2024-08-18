@@ -202,6 +202,109 @@ open class LowtechWindow: NSWindow, NSWindowDelegate {
             screenPlacement = screen
         }
 
+        guard let corner else {
+            setFrame(NSRect(origin: screenFrame.origin, size: frame.size), display: true, animate: animate)
+            return
+        }
+
+        screenCorner = corner
+        let scrO = screenFrame.origin
+        let scrF = screenFrame
+
+        switch corner {
+        case .bottomLeft:
+            setFrame(NSRect(origin: scrO.applying(.init(translationX: self.margin, y: self.margin)), size: frame.size), display: true, animate: animate)
+        case .bottomRight:
+            setFrame(NSRect(
+                origin:
+                NSPoint(
+                    x: (scrO.x + scrF.width) - frame.width,
+                    y: scrO.y
+                )
+                .applying(.init(translationX: -self.margin, y: self.margin)),
+                size: frame.size
+            ), display: true, animate: animate)
+        case .topLeft:
+            setFrame(NSRect(
+                origin:
+                NSPoint(
+                    x: scrO.x,
+                    y: frame.height > scrF.height ? scrO.y : (scrO.y + scrF.height) - frame.height
+                )
+                .applying(.init(translationX: self.margin, y: -self.margin)),
+                size: frame.size
+            ), display: true, animate: animate)
+        case .topRight:
+            setFrame(NSRect(
+                origin:
+                NSPoint(
+                    x: (scrO.x + scrF.width) - frame.width,
+                    y: frame.height > scrF.height ? scrO.y : (scrO.y + scrF.height) - frame.height
+                )
+                .applying(.init(translationX: -self.margin, y: -self.margin)),
+                size: frame.size
+            ), display: true, animate: animate)
+        case .top:
+            setFrame(NSRect(
+                origin:
+                NSPoint(
+                    x: scrO.x + (scrF.width - frame.width) / 2,
+                    y: (scrO.y + scrF.height) - frame.height
+                )
+                .applying(.init(translationX: 0, y: -self.margin)),
+                size: frame.size
+            ), display: true, animate: animate)
+        case .bottom:
+            setFrame(NSRect(
+                origin:
+                NSPoint(
+                    x: scrO.x + (scrF.width - frame.width) / 2,
+                    y: scrO.y
+                )
+                .applying(.init(translationX: 0, y: self.margin)),
+                size: frame.size
+            ), display: true, animate: animate)
+        case .left:
+            setFrame(NSRect(
+                origin:
+                NSPoint(
+                    x: scrO.x,
+                    y: frame.height > scrF.height ? scrO.y : scrO.y + (scrF.height - frame.height) / 2
+                )
+                .applying(.init(translationX: self.margin, y: 0)),
+                size: frame.size
+            ), display: true, animate: animate)
+        case .right:
+            setFrame(NSRect(
+                origin:
+                NSPoint(
+                    x: (scrO.x + scrF.width) - frame.width,
+                    y: frame.height > scrF.height ? scrO.y : scrO.y + (scrF.height - frame.height) / 2
+                )
+                .applying(.init(translationX: -self.margin, y: 0)),
+                size: frame.size
+            ), display: true, animate: animate)
+        case .center:
+            setFrame(NSRect(origin: NSPoint(
+                x: scrO.x + (scrF.width - frame.width) / 2,
+                y: frame.height > scrF.height ? scrO.y : scrO.y + (scrF.height - frame.height) / 2
+            ), size: frame.size), display: true, animate: animate)
+//                w.center()
+        }
+    }
+
+    public func moveToScreenOrig(_ screen: NSScreen? = nil, corner: ScreenCorner? = nil, margin: CGFloat? = nil, animate: Bool = false) {
+        guard let screenFrame = (screen ?? NSScreen.withMouse ?? NSScreen.main)?.visibleFrame else {
+            return
+        }
+
+        if let margin {
+            self.margin = margin
+        }
+        if let screen {
+            screenPlacement = screen
+        }
+
         withAnim(animate: animate) { w in
             guard let corner else {
                 w.setFrameOrigin(screenFrame.origin)

@@ -61,6 +61,7 @@ public class AnimationManager: ObservableObject, ObservableSettings {
     public var apply = true
 
     @Setting(.animationSpeed) public var animationSpeed
+    @Published public var shouldAnimate = Defaults[.allowAnimations] && !shouldReduceMotion()
     @Published public var animation = Defaults[.allowAnimations] && !shouldReduceMotion() ? Defaults[.animationSpeed].animation : .linear(duration: 0)
 
     @Published public var allowAnimationsInLPM = Defaults[.allowAnimationsInLPM] {
@@ -72,6 +73,7 @@ public class AnimationManager: ObservableObject, ObservableSettings {
     @Published public var reduceMotion = NSWorkspace.shared.accessibilityDisplayShouldReduceMotion || isLowPowerModeEnabled {
         didSet {
             animation = Defaults[.allowAnimations] && !reduceMotion ? Defaults[.animationSpeed].animation : .linear(duration: 0)
+            shouldAnimate = Defaults[.allowAnimations] && !reduceMotion
         }
     }
 
@@ -98,6 +100,11 @@ public class AnimationManager: ObservableObject, ObservableSettings {
             .allowAnimations,
             property: \.animation,
             transformer: .init(to: { $0 && !self.reduceMotion ? Defaults[.animationSpeed].animation : .linear(duration: 0) })
+        )
+        bind(
+            .allowAnimations,
+            property: \.shouldAnimate,
+            transformer: .init(to: { $0 && !self.reduceMotion })
         )
         bind(.allowAnimationsInLPM, property: \.allowAnimationsInLPM)
 

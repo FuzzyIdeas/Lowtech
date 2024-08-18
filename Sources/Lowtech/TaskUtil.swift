@@ -1,6 +1,12 @@
 import Combine
 import Foundation
 
+public func mainActor(_ action: @escaping @MainActor () -> Void) {
+    Task.init { await MainActor.run { action() }}
+}
+
+// MARK: - Repeater
+
 public class Repeater {
     public init(
         every interval: TimeInterval,

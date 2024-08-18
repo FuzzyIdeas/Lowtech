@@ -23,13 +23,12 @@ open class LowtechAppDelegate: NSObject, NSApplicationDelegate, ObservableObject
     }
 
     @MainActor
-    open func applicationDidResignActive(_ notification: Notification) {
-//        debug(notification)
-    }
-
-    @MainActor
     open func applicationDidBecomeActive(_ notification: Notification) {
-//        debug(notification)
+        guard didBecomeActiveAtLeastOnce else {
+            didBecomeActiveAtLeastOnce = true
+            return
+        }
+
         if Defaults[.hideMenubarIcon] {
             statusBar?.showPopoverIfNotVisible()
         }
@@ -147,10 +146,18 @@ open class LowtechAppDelegate: NSObject, NSApplicationDelegate, ObservableObject
             yesButtonText: yesButtonText, noButtonText: noButtonText, buttonAction: action
         ).any
         notificationPopover = PanelWindow(swiftuiView: view)
-        notificationPopover.show(at: NSPoint(
-            x: screen.visibleFrame.maxX - notificationPopover!.contentView!.frame.width,
-            y: screen.visibleFrame.maxY - notificationPopover!.contentView!.frame.height
-        ), activate: false)
+        if notificationPopover.frame.height == 0 {
+            notificationPopover.show(at: NSPoint(
+                x: screen.visibleFrame.maxX,
+                y: screen.visibleFrame.maxY - 100
+            ), activate: false)
+        }
+        mainAsyncAfter(ms: 1) {
+            self.notificationPopover.show(at: NSPoint(
+                x: screen.visibleFrame.maxX - (self.notificationPopover?.contentView!.frame.width ?? 400),
+                y: screen.visibleFrame.maxY - (self.notificationPopover?.contentView!.frame.height ?? 100)
+            ), activate: false)
+        }
         notificationCloser = mainAsyncAfter(ms: closeMilliseconds) {
             guard let notif = self.notificationPopover, notif.isVisible else { return }
             notif.forceClose()
@@ -168,4 +175,7 @@ open class LowtechAppDelegate: NSObject, NSApplicationDelegate, ObservableObject
             LowtechView(accentColor: color) { contentView }.any
         )
     }
+
+    private var didBecomeActiveAtLeastOnce = false
+
 }
