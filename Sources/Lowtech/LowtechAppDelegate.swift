@@ -119,6 +119,8 @@ open class LowtechAppDelegate: NSObject, NSApplicationDelegate, ObservableObject
 
     public var appStoreURL: URL?
 
+    public var statusItemLength = NSStatusItem.squareLength
+
     public var notificationPopover: PanelWindow! {
         didSet {
             oldValue?.forceClose()
@@ -173,7 +175,7 @@ open class LowtechAppDelegate: NSObject, NSApplicationDelegate, ObservableObject
 
         let color = accentColor ?? Color.golden
         statusBar = StatusBarController(
-            LowtechView(accentColor: color) { contentView }.any
+            LowtechView(accentColor: color) { contentView }.any, length: statusItemLength
         )
     }
 }

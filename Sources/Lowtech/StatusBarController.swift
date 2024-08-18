@@ -30,11 +30,11 @@ class StatusBarDelegate: NSObject, NSWindowDelegate {
 
 @MainActor
 open class StatusBarController: NSObject, NSWindowDelegate, ObservableObject {
-    public init(_ view: @autoclosure @escaping () -> AnyView, image: String = "MenubarIcon") {
+    public init(_ view: @autoclosure @escaping () -> AnyView, image: String = "MenubarIcon", length: CGFloat = NSStatusItem.squareLength) {
         self.view = view
 
         statusBar = NSStatusBar.system
-        statusItem = statusBar.statusItem(withLength: NSStatusItem.squareLength)
+        statusItem = statusBar.statusItem(withLength: length)
 
         super.init()
         delegate = StatusBarDelegate(statusBarController: self)

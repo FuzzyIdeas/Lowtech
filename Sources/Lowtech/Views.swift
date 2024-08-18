@@ -557,6 +557,17 @@ public protocol Nameable {
         static var ALL_KEYS: Set<CGKeyCode> = FUNCTION_KEYS.union(NUMBER_KEYS).union(ALPHANUMERIC_KEYS).union(SYMBOL_KEYS)
     }
 
+    public extension Set<SauceKey> {
+        static var NUMBER_KEYS: Set<SauceKey> = SauceKey.NUMBER_KEYS.set
+        static var FUNCTION_KEYS: Set<SauceKey> = SauceKey.FUNCTION_KEYS.set
+        static var ALPHANUMERIC_KEYS: Set<SauceKey> = SauceKey.ALPHANUMERIC_KEYS.set
+
+        static var SYMBOL_KEYS: Set<SauceKey> = SauceKey.SYMBOL_KEYS.set
+
+        static var ALPHA_KEYS: Set<SauceKey> = SauceKey.ALPHA_KEYS.set
+        static var ALL_KEYS: Set<SauceKey> = SauceKey.ALL_KEYS.set
+    }
+
     public struct MenuHotkeyView: View {
         public init(modifiers: Binding<[TriggerKey]>, key: Binding<String>) {
             _modifiers = modifiers
