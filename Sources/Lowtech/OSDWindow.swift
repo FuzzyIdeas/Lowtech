@@ -388,6 +388,8 @@ open class LowtechWindow: NSWindow, NSWindowDelegate {
         wc.close()
         wc.window = nil
         close()
+        // assign empty view 
+        contentViewController?.view = NSView()
     }
 
     public func withAnim(_ easing: CAMediaTimingFunction = .easeOutExpo, duration: Double = 0.3, animate: Bool = true, onEnd: (() -> Void)? = nil, _ action: (LowtechWindow) -> Void) {
