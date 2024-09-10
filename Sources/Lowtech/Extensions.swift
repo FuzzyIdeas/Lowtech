@@ -1621,6 +1621,19 @@ public extension Data {
     }
 }
 
+public extension NumberFormatter {
+    static var int: NumberFormatter {
+        let formatter = NumberFormatter()
+        formatter.numberStyle = .none
+        formatter.maximumFractionDigits = 0
+        formatter.localizesFormat = false
+        formatter.usesGroupingSeparator = false
+        formatter.hasThousandSeparators = false
+        
+        return formatter
+    }
+}
+
 public extension FilePath {
     var contentsSHA256: String? {
         guard let data = fm.contents(atPath: string) else {
