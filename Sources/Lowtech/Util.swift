@@ -331,10 +331,8 @@ public func createWindow(
 
         if let wc = controller {
             if let screen, let w = wc.window {
-                w.setFrameOrigin(CGPoint(x: screen.frame.minX, y: screen.frame.minY))
-                if fillScreen {
-                    w.setFrame(screen.frame, display: false)
-                }
+                let point = CGPoint(x: screen.frame.minX, y: screen.frame.minY)
+                w.setFrame(fillScreen ? screen.frame : NSRect(origin: point, size: w.frame.size), display: false)
             }
 
             if let window = wc.window {

@@ -32,7 +32,7 @@ open class PanelWindow: LowtechWindow {
         if let corner {
             moveToScreen(screen, corner: corner, margin: margin, animate: animate)
         } else if let point {
-            withAnim(animate: animate) { w in w.setFrameOrigin(point) }
+            withAnim(animate: animate) { w in w.setFrame(NSRect(origin: point, size: frame.size), display: true) }
         } else {
             withAnim(animate: animate) { w in w.center() }
         }

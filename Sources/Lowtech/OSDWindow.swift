@@ -155,16 +155,17 @@ open class OSDWindow: LowtechWindow {
         if let corner {
             moveToScreen(screen, corner: corner, margin: margin, marginHorizontal: marginHorizontal, animate: animate)
         } else if let point {
-            withAnim(animate: animate) { w in w.setFrameOrigin(point) }
+            withAnim(animate: animate) { w in w.setFrame(NSRect(origin: point, size: frame.size), display: true) }
         } else if let screenFrame = (screen ?? NSScreen.withMouse ?? NSScreen.main)?.visibleFrame {
             withAnim(animate: animate) { w in
-                w.setFrameOrigin(screenFrame.origin)
+                w.setFrame(NSRect(origin: screenFrame.origin, size: frame.size), display: true)
                 if centerWindow { w.center() }
                 if let verticalOffset {
-                    setFrameOrigin(CGPoint(
+                    let point = CGPoint(
                         x: (screenFrame.width / 2 - frame.size.width / 2) + screenFrame.origin.x,
                         y: screenFrame.origin.y + verticalOffset
-                    ))
+                    )
+                    setFrame(NSRect(origin: point, size: frame.size), display: true)
                 } else if offCenter != 0 {
                     let yOff = screenFrame.height / (offCenter ?? 2.2)
                     w.setFrame(frame.offsetBy(dx: 0, dy: -yOff), display: false)
@@ -240,7 +241,7 @@ open class LowtechWindow: NSPanel, NSWindowDelegate {
     public func centerOnScreen(_ screen: NSScreen? = nil, animate: Bool = false) {
         withAnim(animate: animate) { w in
             if let screenFrame = (screen ?? NSScreen.withMouse ?? NSScreen.main)?.visibleFrame {
-                w.setFrameOrigin(screenFrame.origin)
+                w.setFrame(NSRect(origin: screenFrame.origin, size: frame.size), display: true)
             }
             w.center()
         }
@@ -266,33 +267,37 @@ open class LowtechWindow: NSPanel, NSWindowDelegate {
         positionArguments = positionArguments?.with(corner: corner, screen: screen)
         withAnim(animate: animate) { w in
             guard let corner else {
-                w.setFrameOrigin(screenFrame.origin)
+                w.setFrame(NSRect(origin: screenFrame.origin, size: frame.size), display: true)
                 return
             }
 
             let o = screenFrame.origin
             let f = screenFrame
+            var origin = self.frame.origin
 
             switch corner {
             case .bottomLeft:
-                w.setFrameOrigin(o.applying(.init(translationX: self.marginHorizontal ?? self.margin, y: self.margin)))
+                origin = o.applying(.init(translationX: self.marginHorizontal ?? self.margin, y: self.margin))
             case .bottomRight:
-                w.setFrameOrigin(NSPoint(x: (o.x + f.width) - frame.width, y: o.y).applying(.init(translationX: -(self.marginHorizontal ?? self.margin), y: self.margin)))
+                origin = NSPoint(x: (o.x + f.width) - frame.width, y: o.y).applying(.init(translationX: -(self.marginHorizontal ?? self.margin), y: self.margin))
             case .topLeft:
-                w.setFrameOrigin(NSPoint(x: o.x, y: (o.y + f.height) - frame.height).applying(.init(translationX: self.marginHorizontal ?? self.margin, y: -self.margin)))
+                origin = NSPoint(x: o.x, y: (o.y + f.height) - frame.height).applying(.init(translationX: self.marginHorizontal ?? self.margin, y: -self.margin))
             case .topRight:
-                w.setFrameOrigin(NSPoint(x: (o.x + f.width) - frame.width, y: (o.y + f.height) - frame.height).applying(.init(translationX: -(self.marginHorizontal ?? self.margin), y: -self.margin)))
+                origin = NSPoint(x: (o.x + f.width) - frame.width, y: (o.y + f.height) - frame.height).applying(.init(translationX: -(self.marginHorizontal ?? self.margin), y: -self.margin))
             case .top:
-                w.setFrameOrigin(NSPoint(x: o.x + (f.width - frame.width) / 2, y: (o.y + f.height) - frame.height).applying(.init(translationX: 0, y: -self.margin)))
+                origin = NSPoint(x: o.x + (f.width - frame.width) / 2, y: (o.y + f.height) - frame.height).applying(.init(translationX: 0, y: -self.margin))
             case .bottom:
-                w.setFrameOrigin(NSPoint(x: o.x + (f.width - frame.width) / 2, y: o.y).applying(.init(translationX: 0, y: self.margin)))
+                origin = NSPoint(x: o.x + (f.width - frame.width) / 2, y: o.y).applying(.init(translationX: 0, y: self.margin))
             case .left:
-                w.setFrameOrigin(NSPoint(x: o.x, y: o.y + (f.height - frame.height) / 2).applying(.init(translationX: self.marginHorizontal ?? self.margin, y: 0)))
+                origin = NSPoint(x: o.x, y: o.y + (f.height - frame.height) / 2).applying(.init(translationX: self.marginHorizontal ?? self.margin, y: 0))
             case .right:
-                w.setFrameOrigin(NSPoint(x: (o.x + f.width) - frame.width, y: o.y + (f.height - frame.height) / 2).applying(.init(translationX: -(self.marginHorizontal ?? self.margin), y: 0)))
+                origin = NSPoint(x: (o.x + f.width) - frame.width, y: o.y + (f.height - frame.height) / 2).applying(.init(translationX: -(self.marginHorizontal ?? self.margin), y: 0))
             case .center:
                 w.center()
+                return
             }
+
+            w.setFrame(NSRect(origin: origin, size: frame.size), display: true)
         }
     }
 

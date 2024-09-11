@@ -255,10 +255,11 @@ public extension Bool {
         }
 
         func center(within rect: NSRect, horizontally: Bool = true, vertically: Bool = true) {
-            setFrameOrigin(CGPoint(
+            let point = CGPoint(
                 x: horizontally ? rect.midX - frame.width / 2 : frame.origin.x,
                 y: vertically ? rect.midY - frame.height / 2 : frame.origin.y
-            ))
+            )
+            setFrameOrigin(point)
         }
 
         func center(within view: NSView, horizontally: Bool = true, vertically: Bool = true) {
@@ -351,7 +352,7 @@ public extension Bool {
             shakeAnimation.duration = duration
 
             animations = [NSAnimatablePropertyKey("frameOrigin"): shakeAnimation]
-            animator().setFrameOrigin(self.frame.origin)
+            animator().setFrame(NSRect(origin: self.frame.origin, size: self.frame.size), display: true)
         }
     }
 

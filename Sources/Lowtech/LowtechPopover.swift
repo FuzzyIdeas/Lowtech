@@ -60,7 +60,7 @@ open class LowtechPopover: NSPopover {
         }
 
         if let point {
-            mockWindow.setFrameOrigin(point)
+            mockWindow.setFrame(NSRect(origin: point, size: mockWindow.frame.size), display: true)
         } else {
             mockWindow.center()
         }
