@@ -44,7 +44,7 @@ let package = Package(
         .package(url: "https://github.com/malcommac/SwiftDate", from: "7.0.0"),
         .package(url: "https://github.com/alin23/AppReceiptValidator.git", from: "1.2.0"),
 
-        .package(url: "https://github.com/alin23/PaddleSPM", from: "4.4.2"),
+        .package(url: "https://github.com/alin23/PaddleSPM", from: "4.4.3"),
         .package(url: "https://github.com/sparkle-project/Sparkle", from: "2.2.0"),
         .package(url: "https://github.com/getsentry/sentry-cocoa", from: "8.23.0"),
         .package(url: "https://github.com/MacPaw/Setapp-framework", from: "4.0.0"),
