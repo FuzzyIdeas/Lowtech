@@ -1629,7 +1629,7 @@ public extension NumberFormatter {
         formatter.localizesFormat = false
         formatter.usesGroupingSeparator = false
         formatter.hasThousandSeparators = false
-        
+
         return formatter
     }
 }

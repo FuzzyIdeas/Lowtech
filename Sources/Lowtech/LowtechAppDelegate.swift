@@ -26,7 +26,7 @@ open class LowtechAppDelegate: NSObject, NSApplicationDelegate, ObservableObject
     open func applicationDidResignActive(_ notification: Notification) {
 //        statusBar?.hidePopover(self)
     }
-    
+
     @MainActor
     open func applicationDidBecomeActive(_ notification: Notification) {
         guard didBecomeActiveAtLeastOnce else {

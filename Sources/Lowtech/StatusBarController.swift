@@ -193,6 +193,7 @@ open class StatusBarController: NSObject, NSWindowDelegate, ObservableObject {
     public func showPopoverIfNotVisible() {
         guard window == nil || !window!.isVisible else { return }
         showPopover(self)
+
     }
 
     public func fixMenu() {
@@ -229,6 +230,7 @@ open class StatusBarController: NSObject, NSWindowDelegate, ObservableObject {
         guard statusItem.isVisible else {
             if allowPopover {
                 window!.show(at: centerOnScreen ? nil : .mouseLocation(centeredOn: window), activate: true, corner: screenCorner, margin: margin)
+                focus()
             } else {
                 LowtechAppDelegate.instance.onPopoverNotAllowed()
             }
@@ -237,6 +239,7 @@ open class StatusBarController: NSObject, NSWindowDelegate, ObservableObject {
 
         if allowPopover {
             window!.show(at: position, activate: true, corner: screenCorner, margin: margin)
+            focus()
         } else {
             LowtechAppDelegate.instance.onPopoverNotAllowed()
         }
