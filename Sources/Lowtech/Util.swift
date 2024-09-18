@@ -83,7 +83,7 @@ public extension ObservableSettings {
         apply = true
     }
 
-    func bind<Value>(_ key: Defaults.Key<Value>, property: ReferenceWritableKeyPath<Self, Value>, publisher: KeyPath<Self, Published<Value>.Publisher>? = nil, debounce: RunLoop.SchedulerTimeType.Stride? = nil) {
+    func bind<Value: Equatable>(_ key: Defaults.Key<Value>, property: ReferenceWritableKeyPath<Self, Value>, publisher: KeyPath<Self, Published<Value>.Publisher>? = nil, debounce: RunLoop.SchedulerTimeType.Stride? = nil) {
         let onSettingChange: (Defaults.KeyChange<Value>) -> Void = { [weak self] change in
             guard let self else { return }
             withoutApply {
@@ -92,11 +92,11 @@ public extension ObservableSettings {
         }
 
         if let debounce {
-            Defaults.publisher(key)
+            pub(key)
                 .debounce(for: debounce, scheduler: RunLoop.main)
                 .sink(receiveValue: onSettingChange).store(in: &observers)
         } else {
-            Defaults.publisher(key)
+            pub(key)
                 .receive(on: RunLoop.main)
                 .sink(receiveValue: onSettingChange).store(in: &observers)
         }

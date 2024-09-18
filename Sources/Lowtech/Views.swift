@@ -200,27 +200,27 @@ public protocol Nameable {
             VStack(alignment: .leading, spacing: 10) {
                 HStack(alignment: .top, spacing: 10) {
                     Button("   ") { screenPlacement = .topLeft }
-                        .buttonStyle(PickerButton(enumValue: $screenPlacement, onValue: .topLeft))
+                        .buttonStyle(PickerButton(enumValue: screenPlacement, onValue: .topLeft))
                     Button("   ") { screenPlacement = .top }
-                        .buttonStyle(PickerButton(enumValue: $screenPlacement, onValue: .top))
+                        .buttonStyle(PickerButton(enumValue: screenPlacement, onValue: .top))
                     Button("   ") { screenPlacement = .topRight }
-                        .buttonStyle(PickerButton(enumValue: $screenPlacement, onValue: .topRight))
+                        .buttonStyle(PickerButton(enumValue: screenPlacement, onValue: .topRight))
                 }
                 HStack(alignment: .center, spacing: 10) {
                     Button("   ") { screenPlacement = .left }
-                        .buttonStyle(PickerButton(enumValue: $screenPlacement, onValue: .left))
+                        .buttonStyle(PickerButton(enumValue: screenPlacement, onValue: .left))
                     Button("   ") { screenPlacement = .center }
-                        .buttonStyle(PickerButton(enumValue: $screenPlacement, onValue: .center))
+                        .buttonStyle(PickerButton(enumValue: screenPlacement, onValue: .center))
                     Button("   ") { screenPlacement = .right }
-                        .buttonStyle(PickerButton(enumValue: $screenPlacement, onValue: .right))
+                        .buttonStyle(PickerButton(enumValue: screenPlacement, onValue: .right))
                 }
                 HStack(alignment: .bottom, spacing: 10) {
                     Button("   ") { screenPlacement = .bottomLeft }
-                        .buttonStyle(PickerButton(enumValue: $screenPlacement, onValue: .bottomLeft))
+                        .buttonStyle(PickerButton(enumValue: screenPlacement, onValue: .bottomLeft))
                     Button("   ") { screenPlacement = .bottom }
-                        .buttonStyle(PickerButton(enumValue: $screenPlacement, onValue: .bottom))
+                        .buttonStyle(PickerButton(enumValue: screenPlacement, onValue: .bottom))
                     Button("   ") { screenPlacement = .bottomRight }
-                        .buttonStyle(PickerButton(enumValue: $screenPlacement, onValue: .bottomRight))
+                        .buttonStyle(PickerButton(enumValue: screenPlacement, onValue: .bottomRight))
                 }
             }
         }
@@ -569,13 +569,13 @@ public protocol Nameable {
     }
 
     public struct MenuHotkeyView: View {
-        public init(modifiers: Binding<[TriggerKey]>, key: Binding<String>) {
-            _modifiers = modifiers
-            _key = key
+        public init(modifiers: [TriggerKey], key: SauceKey) {
+            self.modifiers = modifiers
+            self.key = key
         }
 
-        @Binding public var modifiers: [TriggerKey]
-        @Binding public var key: String
+        public var modifiers: [TriggerKey]
+        public var key: SauceKey
 
         public var body: some View {
             VStack(alignment: .center, spacing: 1) {
@@ -588,7 +588,7 @@ public protocol Nameable {
                         .background(Color.fg.primary)
                         .clipShape(RoundedRectangle(cornerRadius: 4, style: .continuous))
                         .shadow(color: .black.opacity(0.2), radius: 2, x: 0, y: 1)
-                    Text(key.uppercased())
+                    Text(key.character.uppercased())
                         .frame(minWidth: 16)
                         .padding(.vertical, 1)
                         .padding(.horizontal, 3)
@@ -704,7 +704,7 @@ public extension View {
 public struct PaddedPopoverView<Content>: View where Content: View {
     public init(background: AnyView, @ViewBuilder content: () -> Content) {
         self.content = content()
-        _background = background.state
+        self.background = background
     }
 
     public var body: some View {
@@ -718,7 +718,7 @@ public struct PaddedPopoverView<Content>: View where Content: View {
         }
     }
 
-    @State var background: AnyView
+    var background: AnyView
     @ViewBuilder let content: Content
 }
 

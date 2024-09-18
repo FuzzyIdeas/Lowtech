@@ -74,6 +74,9 @@ open class OSDWindow: LowtechWindow {
             animate: animate
         )
         position(at: point, offCenter: offCenter, verticalOffset: verticalOffset, centerWindow: centerWindow, corner: corner, margin: margin, marginHorizontal: marginHorizontal, screen: screen, animate: animate)
+        mainAsyncAfter(ms: 10) {
+            self.position(at: point, offCenter: offCenter, verticalOffset: verticalOffset, centerWindow: centerWindow, corner: corner, margin: margin, marginHorizontal: marginHorizontal, screen: screen, animate: animate)
+        }
 
         if resizeObserver == nil {
             resizeObserver = observe(NSWindow.didResizeNotification, throttle: .milliseconds(10)) { [weak self] in

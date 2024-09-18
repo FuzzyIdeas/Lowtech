@@ -16,7 +16,7 @@ open class GlobalEventMonitor {
     }
 
     deinit {
-        Task.init { await MainActor.run { stop() } }
+        mainActor { self.stop() }
     }
 
     public func start() {
@@ -61,7 +61,7 @@ open class LocalEventMonitor {
     }
 
     deinit {
-        Task.init { await MainActor.run { stop() } }
+        mainActor { self.stop() }
     }
 
     public func start() {

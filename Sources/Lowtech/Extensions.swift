@@ -2,11 +2,79 @@ import Combine
 import Foundation
 import SwiftUI
 
+infix operator =~: ComparisonPrecedence
+infix operator !~: ComparisonPrecedence
+
+public func =~ (input: String, pattern: String) -> Bool {
+    guard let regex = try? Regex(pattern) else { return false }
+    return input.contains(regex)
+}
+public func !~ (input: String, pattern: String) -> Bool {
+    !(input =~ pattern)
+}
+
+public func =~ (input: String, regex: Regex<String>) -> Bool {
+    input.contains(regex)
+}
+public func !~ (input: String, regex: Regex<String>) -> Bool {
+    !(input =~ regex)
+}
+public func =~ (regex: Regex<String>, input: String) -> Bool {
+    input.contains(regex)
+}
+public func !~ (regex: Regex<String>, input: String) -> Bool {
+    !(regex =~ input)
+}
+public func =~ (input: String, regex: Regex<Substring>) -> Bool {
+    input.contains(regex)
+}
+public func !~ (input: String, regex: Regex<Substring>) -> Bool {
+    !(input =~ regex)
+}
+public func =~ (regex: Regex<Substring>, input: String) -> Bool {
+    input.contains(regex)
+}
+public func !~ (regex: Regex<Substring>, input: String) -> Bool {
+    !(regex =~ input)
+}
+
+public extension Regex {
+    func replaceAll(in string: String, with replacement: String) -> String {
+        string.replacing(self, with: replacement)
+    }
+}
+
+// implementation of the `/` operator for FilePath and String that always returns a FilePath using .appending
+public func / (lhs: FilePath, rhs: String) -> FilePath {
+    lhs.appending(rhs)
+}
+public func / (lhs: FilePath, rhs: FilePath.Component) -> FilePath {
+    lhs.appending(rhs)
+}
+public func / (lhs: FilePath, rhs: FilePath) -> FilePath {
+    lhs.appending(rhs.string)
+}
+public func / (lhs: String, rhs: FilePath.Component) -> FilePath {
+    FilePath(lhs).appending(rhs)
+}
+public func / (lhs: String, rhs: FilePath) -> FilePath {
+    FilePath(lhs).appending(rhs.string)
+}
+public func / (lhs: String, rhs: String) -> FilePath {
+    FilePath(lhs).appending(rhs)
+}
+
 public prefix func ! (value: Binding<Bool>) -> Binding<Bool> {
     Binding<Bool>(
         get: { !value.wrappedValue },
         set: { value.wrappedValue = !$0 }
     )
+}
+
+public extension String {
+    var r: Regex<String>? {
+        try? Regex(self)
+    }
 }
 
 public prefix func ! <T>(keyPath: KeyPath<T, Bool>) -> (T) -> Bool {
@@ -321,7 +389,7 @@ public extension Bool {
         }
     }
 
-    extension NSSize: Comparable { // @retroactive Comparable {
+    extension NSSize: @retroactive Comparable {
         public static func < (lhs: CGSize, rhs: CGSize) -> Bool {
             (lhs.width < rhs.width && lhs.height <= rhs.height)
                 || (lhs.width <= rhs.width && lhs.height < rhs.height)
@@ -1277,7 +1345,7 @@ public enum BackportSortOrder {
 
 // MARK: - Bool + Comparable
 
-extension Bool: Comparable { // @retroactive Comparable {
+extension Bool: @retroactive Comparable {
     public static func < (lhs: Bool, rhs: Bool) -> Bool {
         !lhs && rhs
     }
@@ -1579,7 +1647,7 @@ public extension String {
 
 // MARK: - Text + AdditiveArithmetic
 
-extension Text: AdditiveArithmetic { // @retroactive AdditiveArithmetic {
+extension Text: @retroactive AdditiveArithmetic {
     public static func - (lhs: Text, rhs: Text) -> Text {
         lhs + rhs
     }
@@ -1636,6 +1704,19 @@ public extension NumberFormatter {
 }
 
 public extension FilePath {
+    func relative(to: String) -> FilePath {
+        guard let fp = to.filePath else { return self }
+
+        var copy = self
+        let _ = copy.removePrefix(fp)
+        return copy
+    }
+    func relative(to fp: FilePath) -> FilePath {
+        var copy = self
+        let _ = copy.removePrefix(fp)
+        return copy
+    }
+
     var contentsSHA256: String? {
         guard let data = fm.contents(atPath: string) else {
             return nil
@@ -1849,6 +1930,10 @@ public extension FilePath {
     }
 
     var shellString: String { string.shellString }
+
+    static let Applications = FilePath("/Applications")
+    static let root = FilePath("/")
+    static let home: FilePath = URL.homeDirectory.filePath!
 }
 
 public extension String {
@@ -1872,13 +1957,6 @@ public extension URL {
 
 public let HOME = URL.homeDirectory.filePath!
 
-public func / (_ path: FilePath, _ str: String) -> FilePath {
-    path.appending(str)
-}
-public func / (_ path: FilePath, _ component: FilePath.Component) -> FilePath {
-    path.appending(component)
-}
-
 public func focus() {
     if #available(macOS 14.0, *) {
         NSApp.activate(ignoringOtherApps: true)
@@ -1891,7 +1969,7 @@ public func focus() {
 
 // MARK: - NSRect + Hashable
 
-extension NSRect: Hashable { // @retroactive Hashable {
+extension NSRect: @retroactive Hashable {
     public func hash(into hasher: inout Hasher) {
         hasher.combine(origin)
         hasher.combine(size)
@@ -1900,7 +1978,7 @@ extension NSRect: Hashable { // @retroactive Hashable {
 
 // MARK: - NSPoint + Hashable  // @retroactive Hashable
 
-extension NSPoint: Hashable { // @retroactive Hashable {
+extension NSPoint: @retroactive Hashable {
     public func hash(into hasher: inout Hasher) {
         hasher.combine(x)
         hasher.combine(y)
@@ -1915,7 +1993,7 @@ public extension NSSize {
 
 // MARK: - NSSize + Hashable  // @retroactive Hashable
 
-extension NSSize: Hashable { // @retroactive Hashable {
+extension NSSize: @retroactive Hashable {
     public func hash(into hasher: inout Hasher) {
         hasher.combine(width)
         hasher.combine(height)

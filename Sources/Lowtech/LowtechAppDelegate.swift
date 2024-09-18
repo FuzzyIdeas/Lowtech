@@ -164,6 +164,12 @@ open class LowtechAppDelegate: NSObject, NSApplicationDelegate, ObservableObject
             x: screen.visibleFrame.maxX - notificationPopover!.contentView!.frame.width,
             y: screen.visibleFrame.maxY - notificationPopover!.contentView!.frame.height
         ), activate: false)
+        mainAsyncAfter(ms: 10) {
+            self.notificationPopover.show(at: NSPoint(
+                x: screen.visibleFrame.maxX - self.notificationPopover!.contentView!.frame.width,
+                y: screen.visibleFrame.maxY - self.notificationPopover!.contentView!.frame.height
+            ), animate: true, activate: false)
+        }
         notificationCloser = mainAsyncAfter(ms: closeMilliseconds) {
             guard let notif = self.notificationPopover, notif.isVisible else { return }
             notif.forceClose()

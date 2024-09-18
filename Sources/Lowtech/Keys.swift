@@ -1179,6 +1179,7 @@ public let KM = KeysManager()
         var shortReadableStr: String { map(\.shortReadableStr).joined(separator: "+") }
 
         var allPressed: Bool { allSatisfy(\.pressed) }
+        var allPressedExclusive: Bool { count == KM.flags.count && allPressed }
 
         func toggling(key: TriggerKey, on: Bool? = nil) -> [TriggerKey] {
             if on ?? !contains(key) {
@@ -1349,12 +1350,30 @@ public let KM = KeysManager()
             keyEquivalentModifierMask.subtracting(.uselessModifier)
         }
     }
+    public extension String {
+        var sauceKey: SauceKey? {
+            SauceKey(character: self, virtualKeyCode: nil)
+        }
+    }
+
+    extension SauceKey: Defaults.Serializable {}
     public extension SauceKey {
+        var uppercasedChar: String {
+            memoz.character.uppercased()
+        }
+        var lowercasedChar: String {
+            memoz.character.lowercased()
+        }
         var character: String {
-            switch QWERTYKeyCode.i {
-            case kVK_Return: "⏎"
-            case kVK_Space: "⎵"
-            default: Sauce.shared.character(for: QWERTYKeyCode.i, cocoaModifiers: [])?.uppercased() ?? rawValue.uppercased()
+            switch self {
+            case .underscore:
+                Sauce.shared.character(for: SauceKey.minus.QWERTYKeyCode.i, cocoaModifiers: [.shift])?.uppercased() ?? rawValue.uppercased()
+            default:
+                switch QWERTYKeyCode.i {
+                case kVK_Return: "⏎"
+                case kVK_Space: "⎵"
+                default: Sauce.shared.character(for: QWERTYKeyCode.i, cocoaModifiers: [])?.uppercased() ?? rawValue.uppercased()
+                }
             }
         }
 

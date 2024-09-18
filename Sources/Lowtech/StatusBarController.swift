@@ -132,6 +132,7 @@ open class StatusBarController: NSObject, NSWindowDelegate, ObservableObject {
 
     public var window: PanelWindow? {
         didSet {
+            window?.allowToBecomeKey = true
             window?.delegate = self
 
             oldValue?.forceClose()
@@ -239,6 +240,9 @@ open class StatusBarController: NSObject, NSWindowDelegate, ObservableObject {
 
         if allowPopover {
             window!.show(at: position, activate: true, corner: screenCorner, margin: margin)
+            mainAsyncAfter(ms: 10) {
+                self.window!.show(at: self.position, activate: true, corner: self.screenCorner, margin: self.margin)
+            }
             focus()
         } else {
             LowtechAppDelegate.instance.onPopoverNotAllowed()

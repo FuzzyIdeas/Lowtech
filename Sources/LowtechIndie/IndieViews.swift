@@ -62,7 +62,7 @@ public struct VersionView: View {
                     checkForUpdates = false
                     updateCheckInterval = 0
                 }
-                .buttonStyle(PickerButton(horizontalPadding: 6, verticalPadding: 3, enumValue: $updateCheckInterval, onValue: 0))
+                .buttonStyle(PickerButton(horizontalPadding: 6, verticalPadding: 3, enumValue: updateCheckInterval, onValue: 0))
                 .font(.system(size: 11, weight: .semibold))
                 Button("Daily") {
                     checkForUpdates = true
@@ -71,7 +71,7 @@ public struct VersionView: View {
                 .buttonStyle(PickerButton(
                     horizontalPadding: 6,
                     verticalPadding: 3,
-                    enumValue: $updateCheckInterval,
+                    enumValue: updateCheckInterval,
                     onValue: UpdateCheckInterval.daily.rawValue
                 ))
                 .font(.system(size: 11, weight: .semibold))
@@ -82,7 +82,7 @@ public struct VersionView: View {
                 .buttonStyle(PickerButton(
                     horizontalPadding: 6,
                     verticalPadding: 3,
-                    enumValue: $updateCheckInterval,
+                    enumValue: updateCheckInterval,
                     onValue: UpdateCheckInterval.weekly.rawValue
                 ))
                 .font(.system(size: 11, weight: .semibold))
@@ -103,4 +103,4 @@ public struct VersionView: View {
 
 // MARK: - SPUUpdater + ObservableObject
 
-extension SPUUpdater: ObservableObject {} // @retroactive ObservableObject {}
+extension SPUUpdater: @retroactive ObservableObject {}

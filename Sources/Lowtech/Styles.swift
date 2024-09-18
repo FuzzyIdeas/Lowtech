@@ -422,7 +422,7 @@ public struct PickerButton<T: Equatable>: ButtonStyle {
         scale: CGFloat = 1,
         radius: CGFloat = 8,
         hoverColor: Color = .white.opacity(0.15),
-        enumValue: Binding<T>,
+        enumValue: T,
         onValue: T
     ) {
         self.color = color
@@ -432,7 +432,7 @@ public struct PickerButton<T: Equatable>: ButtonStyle {
         self.horizontalPadding = horizontalPadding
         self.verticalPadding = verticalPadding
         self.radius = radius
-        _enumValue = enumValue
+        self.enumValue = enumValue
         self.onValue = onValue
 
         self.onTextColor = onTextColor
@@ -513,7 +513,7 @@ public struct PickerButton<T: Equatable>: ButtonStyle {
     var hoverColor: Color
     var hoverTextColor: Color
     @State var hovering = false
-    @Binding var enumValue: T
+    var enumValue: T
     var onValue: T
 }
 
