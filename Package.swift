@@ -42,7 +42,7 @@ let package = Package(
         .package(url: "https://github.com/yannickl/DynamicColor", from: "5.0.1"),
         .package(url: "https://github.com/diniska/swiftui-system-colors", from: "1.1.0"),
         .package(url: "https://github.com/malcommac/SwiftDate", from: "7.0.0"),
-        .package(url: "https://github.com/alin23/AppReceiptValidator.git", from: "1.2.0"),
+        .package(url: "https://github.com/alin23/AppReceiptValidator", from: "1.2.0"),
 
         .package(url: "https://github.com/alin23/PaddleSPM", from: "4.4.3"),
         .package(url: "https://github.com/sparkle-project/Sparkle", from: "2.2.0"),
