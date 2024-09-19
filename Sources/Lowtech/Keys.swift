@@ -113,7 +113,7 @@ public class KeysManager: ObservableObject {
         KM.lshift = modifierFlags.contains(.leftShift) || (modifierFlags.contains(.shift) && !modifierFlags.contains(.rightShift))
         KM.lctrl = modifierFlags.contains(.leftControl) || (modifierFlags.contains(.control) && !modifierFlags.contains(.rightControl))
 
-        KM.fn = modifierFlags.contains(.fn)
+        KM.fn = modifierFlags.contains(.function)
         KM.flags = modifierFlags.triggerKeys
 
         if testKeyCombo == nil || testKeyCombo!.key != specialKey {
