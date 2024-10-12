@@ -926,6 +926,8 @@ public class KeysManager: ObservableObject {
             specialKey = Sauce.shared.key(for: specialKeyCode.i)
         }
 
+        // clear cache on all SauceKey values
+        Set<CGKeyCode>.ALL_KEYS.compactMap { SauceKey(QWERTYKeyCode: $0.i) }.forEach { $0.memoz.cache?.clear() }
         reinitHotkeys()
     }
 }
