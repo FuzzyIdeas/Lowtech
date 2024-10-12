@@ -952,6 +952,8 @@ public let KM = KeysManager()
         case ctrl
         case shift
 
+        case fn
+
         public var id: Int { rawValue }
         public var eventModifier: SwiftUI.EventModifiers {
             switch self {
@@ -963,6 +965,8 @@ public let KM = KeysManager()
                 .control
             case .lshift, .rshift, .shift:
                 .shift
+            case .fn:
+                .function
             }
         }
         public var modifier: NSEvent.ModifierFlags {
@@ -991,6 +995,8 @@ public let KM = KeysManager()
                 .control
             case .shift:
                 .shift
+            case .fn:
+                .function
             }
         }
 
@@ -1004,6 +1010,8 @@ public let KM = KeysManager()
                 .control
             case .rshift, .lshift, .shift:
                 .shift
+            case .fn:
+                .function
             }
         }
 
@@ -1033,6 +1041,8 @@ public let KM = KeysManager()
                 "^"
             case .shift:
                 "⇧"
+            case .fn:
+                "fn"
             }
         }
 
@@ -1062,6 +1072,8 @@ public let KM = KeysManager()
                 "^"
             case .shift:
                 "⇧"
+            case .fn:
+                "fn"
             }
         }
 
@@ -1091,6 +1103,8 @@ public let KM = KeysManager()
                 "Control"
             case .shift:
                 "Shift"
+            case .fn:
+                "Fn"
             }
         }
 
@@ -1104,6 +1118,8 @@ public let KM = KeysManager()
                 "Control"
             case .lshift, .rshift, .shift:
                 "Shift"
+            case .fn:
+                "Fn"
             }
         }
 
@@ -1133,6 +1149,8 @@ public let KM = KeysManager()
                 "ctrl"
             case .shift:
                 "shift"
+            case .fn:
+                "fn"
             }
         }
 
@@ -1162,6 +1180,8 @@ public let KM = KeysManager()
                 KM.rctrl || KM.lctrl
             case .shift:
                 KM.rshift || KM.lshift
+            case .fn:
+                KM.fn
             }
         }
 
@@ -1227,6 +1247,8 @@ public let KM = KeysManager()
                     return keys.toggling(key: TriggerKey.lctrl, on: false).toggling(key: TriggerKey.rctrl, on: false)
                 case .shift:
                     return keys.toggling(key: TriggerKey.lshift, on: false).toggling(key: TriggerKey.rshift, on: false)
+                case .fn:
+                    return keys
                 }
             } else {
                 let newTriggers = filter { $0 != key }
@@ -1247,6 +1269,7 @@ public let KM = KeysManager()
             if contains(.rightOption) { flags.append(.ralt) }
             if contains(.rightControl) { flags.append(.rctrl) }
             if contains(.rightShift) { flags.append(.rshift) }
+            if contains(.function) { flags.append(.fn) }
 
             return flags
         }
