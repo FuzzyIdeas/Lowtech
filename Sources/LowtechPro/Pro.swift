@@ -132,7 +132,10 @@ open class LowtechProAppDelegate: LowtechIndieAppDelegate, PADProductDelegate, P
     public func willShowPaddle(_: PADUIType, product _: PADProduct) -> PADDisplayConfiguration? {
         statusBar?.showPopoverIfNotVisible()
 
-        if let window = statusBar?.window ?? NSApp.windows.first(where: { $0.accessibilityRole() != .popover }), window.isVisible {
+        if let window = NSApp.windows.first(where: { $0.title.contains("Settings") })
+            ?? NSApp.windows.first(where: { $0.accessibilityRole() != .popover })
+            ?? statusBar?.window, window.isVisible
+        {
             window.makeKeyAndOrderFront(nil)
             return PADDisplayConfiguration(.sheet, hideNavigationButtons: false, parentWindow: window)
         }
