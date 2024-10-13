@@ -1847,6 +1847,7 @@ public extension FilePath {
         }
 
         do {
+            log.debug("Backing up path \(shellString) to \(backupPath.shellString)")
             if backupPath.exists {
                 guard force else { return backupPath }
                 try backupPath.delete()

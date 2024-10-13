@@ -136,6 +136,7 @@ open class LowtechProAppDelegate: LowtechIndieAppDelegate, PADProductDelegate, P
             ?? NSApp.windows.first(where: { $0.accessibilityRole() != .popover })
             ?? statusBar?.window, window.isVisible
         {
+            focus()
             window.makeKeyAndOrderFront(nil)
             return PADDisplayConfiguration(.sheet, hideNavigationButtons: false, parentWindow: window)
         }
