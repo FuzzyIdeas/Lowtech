@@ -1166,6 +1166,12 @@ public extension String {
     }
 }
 
+public extension Character {
+    var s: String {
+        String(self)
+    }
+}
+
 public extension CharacterSet {
     func characters() -> [Character] {
         // A Unicode scalar is any Unicode code point in the range U+0000 to U+D7FF inclusive or U+E000 to U+10FFFF inclusive.

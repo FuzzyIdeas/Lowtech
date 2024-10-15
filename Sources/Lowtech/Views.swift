@@ -342,7 +342,7 @@ public protocol Nameable {
         @Environment(\.font) public var font
 
         public var body: some View {
-            Button(key.character.uppercased()) {
+            Button(key.uppercasedChar) {
                 if env.recording, !recording {
                     env.recording = false
                     return

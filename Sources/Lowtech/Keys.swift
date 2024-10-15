@@ -928,6 +928,11 @@ public class KeysManager: ObservableObject {
 
         // clear cache on all SauceKey values
         Set<CGKeyCode>.ALL_KEYS.compactMap { SauceKey(QWERTYKeyCode: $0.i) }.forEach { $0.memoz.cache?.clear() }
+        SauceKey.charToPhysicalKeyMapping = SauceKey.ALL_KEYS.dict { key in
+            (key.lowercasedChar, key)
+        }
+        ALPHANUMERIC_KEYS = ALPHANUMERICS.compactMap(\.sauceKey)
+        ALPHANUMERIC_KEYS_SET = Set(ALPHANUMERIC_KEYS)
         reinitHotkeys()
     }
 }
@@ -1390,12 +1395,28 @@ public let KM = KeysManager()
     }
     public extension String {
         var sauceKey: SauceKey? {
+            SauceKey.charToPhysicalKeyMapping[self]
+        }
+        var sauceKeyNonOptional: SauceKey {
+            sauceKey ?? .section
+        }
+        var QWERTYSauceKey: SauceKey? {
             SauceKey(character: self, virtualKeyCode: nil)
+        }
+        var QWERTYSauceKeyNonOptional: SauceKey? {
+            SauceKey(character: self, virtualKeyCode: nil) ?? .section
         }
     }
 
     extension SauceKey: Defaults.Serializable {}
     public extension SauceKey {
+        var QWERTYKey: SauceKey {
+            SauceKey(character: uppercasedChar, virtualKeyCode: nil) ?? .section
+        }
+
+        static var charToPhysicalKeyMapping: [String: SauceKey] = SauceKey.ALL_KEYS.dict { key in
+            (key.lowercasedChar, key)
+        }
         var uppercasedChar: String {
             memoz.character.uppercased()
         }
