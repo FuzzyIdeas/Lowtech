@@ -1607,6 +1607,11 @@ public extension Encodable {
     var json: String? {
         (try? JSONEncoder().encode(self))?.s
     }
+    var prettyJSON: String? {
+        let encoder = JSONEncoder()
+        encoder.outputFormatting = .prettyPrinted
+        return (try? encoder.encode(self))?.s
+    }
 }
 
 public extension Decodable {

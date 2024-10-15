@@ -390,6 +390,9 @@ public protocol Nameable {
             .onDisappear { recording = false }
             .onExitCommand { recording = false }
             .opacity(isEnabled ? 1 : 0.6)
+            .onReceive(NotificationCenter.default.publisher(for: NSTextInputContext.keyboardSelectionDidChangeNotification)) { _ in
+                forceUpdate.toggle()
+            }
         }
 
         public static func keyString(_ keyCode: Int) -> String {
@@ -413,6 +416,9 @@ public protocol Nameable {
         @State var hoverColor = Color.primary
 
         @State var width: CGFloat? = nil
+
+        @State private var forceUpdate = false
+
     }
 
     // MARK: - KeyEventHandling

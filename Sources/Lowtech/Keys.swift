@@ -240,7 +240,9 @@ public class KeysManager: ObservableObject {
         onRegisterAltHotkeys?()
 
         guard !altHotkeys.isEmpty, !altHotkeysRegistered, !altHotkeys.isEmpty, !SWIFTUI_PREVIEW else { return }
-        altHotkeys.forEach { $0.register() }
+        for key in altHotkeys {
+            key.register()
+        }
         altHotkeysRegistered = true
     }
 
@@ -739,7 +741,10 @@ public class KeysManager: ObservableObject {
 
         return keys.compactMap { key in
             guard let combo = KeyCombo(key: key, cocoaModifiers: modifiers)
-            else { return nil }
+            else {
+                log.error("Failed to create KeyCombo for \(key) with modifiers \(modifiers)")
+                return nil
+            }
 
             return HotKey(
                 identifier: "\(identifier)\(key.QWERTYCharacter)",
@@ -928,7 +933,7 @@ public class KeysManager: ObservableObject {
 
         // clear cache on all SauceKey values
         Set<CGKeyCode>.ALL_KEYS.compactMap { SauceKey(QWERTYKeyCode: $0.i) }.forEach { $0.memoz.cache?.clear() }
-        SauceKey.charToPhysicalKeyMapping = SauceKey.ALL_KEYS.dict { key in
+        SauceKey.charToPhysicalKeyMapping = (SauceKey.ALL_KEYS + [.space, .return, .escape]).dict { key in
             (key.lowercasedChar, key)
         }
         ALPHANUMERIC_KEYS = ALPHANUMERICS.compactMap(\.sauceKey)
@@ -1401,10 +1406,15 @@ public let KM = KeysManager()
             sauceKey ?? .section
         }
         var QWERTYSauceKey: SauceKey? {
-            SauceKey(character: self, virtualKeyCode: nil)
+            switch self {
+            case SauceKey.return.lowercasedChar: .return
+            case SauceKey.space.lowercasedChar: .space
+            default:
+                SauceKey(character: self, virtualKeyCode: nil)
+            }
         }
         var QWERTYSauceKeyNonOptional: SauceKey? {
-            SauceKey(character: self, virtualKeyCode: nil) ?? .section
+            QWERTYSauceKey ?? .section
         }
     }
 
@@ -1414,7 +1424,7 @@ public let KM = KeysManager()
             SauceKey(character: uppercasedChar, virtualKeyCode: nil) ?? .section
         }
 
-        static var charToPhysicalKeyMapping: [String: SauceKey] = SauceKey.ALL_KEYS.dict { key in
+        static var charToPhysicalKeyMapping: [String: SauceKey] = (SauceKey.ALL_KEYS + [.space, .return, .escape]).dict { key in
             (key.lowercasedChar, key)
         }
         var uppercasedChar: String {
@@ -1424,7 +1434,7 @@ public let KM = KeysManager()
             memoz.character.lowercased()
         }
         var character: String {
-            switch self {
+            let char = switch self {
             case .underscore:
                 Sauce.shared.character(for: SauceKey.minus.QWERTYKeyCode.i, cocoaModifiers: [.shift])?.uppercased() ?? rawValue.uppercased()
             default:
@@ -1434,6 +1444,24 @@ public let KM = KeysManager()
                 default: Sauce.shared.character(for: QWERTYKeyCode.i, cocoaModifiers: [])?.uppercased() ?? rawValue.uppercased()
                 }
             }
+
+            if char.count > 1 {
+                switch char {
+                case "ONE": return "1"
+                case "TWO": return "2"
+                case "THREE": return "3"
+                case "FOUR": return "4"
+                case "FIVE": return "5"
+                case "SIX": return "6"
+                case "SEVEN": return "7"
+                case "EIGHT": return "8"
+                case "NINE": return "9"
+                case "ZERO": return "0"
+                default: return char
+                }
+            }
+
+            return char
         }
 
         var QWERTYCharacter: String {
