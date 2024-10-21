@@ -1468,6 +1468,7 @@ public let KM = KeysManager()
             return char
         }
 
+        var lowQWERTYCharacter: String { QWERTYCharacter.lowercased() }
         var QWERTYCharacter: String {
             switch QWERTYKeyCode.i {
             case kVK_ANSI_0: "0"
