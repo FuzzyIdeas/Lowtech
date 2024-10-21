@@ -1403,7 +1403,9 @@ public let KM = KeysManager()
             SauceKey.charToPhysicalKeyMapping[self]
         }
         var sauceKeyNonOptional: SauceKey {
-            sauceKey ?? .section
+            sauceKey
+                ?? SauceKey(character: self, virtualKeyCode: nil)
+                ?? .section
         }
         var QWERTYSauceKey: SauceKey? {
             switch self {
@@ -1421,7 +1423,9 @@ public let KM = KeysManager()
     extension SauceKey: Defaults.Serializable {}
     public extension SauceKey {
         var QWERTYKey: SauceKey {
-            SauceKey(character: uppercasedChar, virtualKeyCode: nil) ?? .section
+            SauceKey(character: uppercasedChar, virtualKeyCode: nil) ??
+                SauceKey(character: QWERTYCharacter, virtualKeyCode: nil) ??
+                .section
         }
 
         static var charToPhysicalKeyMapping: [String: SauceKey] = (SauceKey.ALL_KEYS + [.space, .return, .escape]).dict { key in
