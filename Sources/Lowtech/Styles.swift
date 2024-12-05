@@ -323,9 +323,9 @@ public func roundRect(_ radius: CGFloat, fill: Color) -> some View {
         .fill(fill)
 }
 
-public func roundRect(_ radius: CGFloat, stroke: Color) -> some View {
+public func roundRect(_ radius: CGFloat, stroke: Color, lineWidth: CGFloat = 1) -> some View {
     RoundedRectangle(cornerRadius: radius, style: .continuous)
-        .stroke(stroke)
+        .stroke(stroke, lineWidth: lineWidth)
 }
 
 // MARK: - ToggleButton
@@ -334,7 +334,6 @@ public struct ToggleButton: ButtonStyle {
     public init(
         isOn: Binding<Bool>,
         color: Color = Color.primary,
-        scale: CGFloat = 1,
         radius: CGFloat? = nil,
         width: CGFloat? = nil,
         height: CGFloat? = nil,
@@ -342,15 +341,14 @@ public struct ToggleButton: ButtonStyle {
         verticalPadding: CGFloat = 4.0,
         noFG: Bool = false
     ) {
-        _color = State(initialValue: color)
-        _scale = State(initialValue: scale)
-        _width = State(initialValue: width)
-        _height = State(initialValue: height)
-        _horizontalPadding = State(initialValue: horizontalPadding)
-        _verticalPadding = State(initialValue: verticalPadding)
-        _radius = radius?.state ?? (height != nil ? height! * 0.4 : 8).state
+        self.color = color
+        self.width = width
+        self.height = height
+        self.horizontalPadding = horizontalPadding
+        self.verticalPadding = verticalPadding
+        self.radius = radius ?? (height != nil ? height! * 0.4 : 8)
+        self.noFG = noFG
         _isOn = isOn
-        _noFG = State(initialValue: noFG)
     }
 
     @Environment(\.isEnabled) public var isEnabled
@@ -358,12 +356,14 @@ public struct ToggleButton: ButtonStyle {
     public func makeBody(configuration: Configuration) -> some View {
         configuration
             .label
-            .if(!noFG) { $0.foregroundColor(isOn ? .inverted : .primary) }
+            .foregroundColor(noFG ? nil : isOn ? .inverted : .primary)
+            .bold(isOn)
             .padding(.vertical, verticalPadding)
             .padding(.horizontal, horizontalPadding)
             .background(
                 roundRect(radius, fill: bgColor)
                     .frame(width: width, height: height, alignment: .center)
+                    .shadow(radius: isOn ? 6 : 0)
             )
             .brightness(hovering ? 0.05 : 0.0)
             .contrast(hovering ? 1.02 : 1.0)
@@ -381,19 +381,18 @@ public struct ToggleButton: ButtonStyle {
                     }
                 }
             }
-            .opacity(isEnabled ? 1 : 0.6)
+            .opacity(isEnabled ? (isOn ? 1 : 0.7) : 0.5)
     }
 
-    @State var color: Color = .primary
-    @State var scale: CGFloat = 1
-    @State var width: CGFloat? = nil
-    @State var height: CGFloat? = nil
-    @State var radius: CGFloat = 10
-    @State var horizontalPadding: CGFloat = 8.0
-    @State var verticalPadding: CGFloat = 4.0
-    @State var hovering = false
-    @State var noFG = false
+    var color: Color = .primary
+    var width: CGFloat? = nil
+    var height: CGFloat? = nil
+    var radius: CGFloat = 10
+    var horizontalPadding: CGFloat = 8.0
+    var verticalPadding: CGFloat = 4.0
+    var noFG = false
 
+    @State var hovering = false
     @Binding var isOn: Bool
 
     var bgColor: Color {
@@ -455,6 +454,7 @@ public struct PickerButton<T: Equatable>: ButtonStyle {
                             : offTextColor
                     )
             )
+            .underline(enumValue == onValue)
             .padding(.vertical, verticalPadding)
             .padding(.horizontal, horizontalPadding)
             .background(
