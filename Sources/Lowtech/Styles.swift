@@ -454,7 +454,6 @@ public struct PickerButton<T: Equatable>: ButtonStyle {
                             : offTextColor
                     )
             )
-            .underline(enumValue == onValue)
             .padding(.vertical, verticalPadding)
             .padding(.horizontal, horizontalPadding)
             .background(
@@ -470,6 +469,8 @@ public struct PickerButton<T: Equatable>: ButtonStyle {
                                 : (offColor ?? color.opacity(colorScheme == .dark ? 0.5 : 0.8))
                         )
                 )
+                .shadow(radius: enumValue == onValue ? 6 : 0)
+
             )
             .brightness(hovering ? 0.05 : 0.0)
             .contrast(hovering ? 1.01 : 1.0)
@@ -497,7 +498,7 @@ public struct PickerButton<T: Equatable>: ButtonStyle {
                     }
                 }
             }
-            .opacity(isEnabled ? 1 : 0.6)
+            .opacity(isEnabled ? (enumValue == onValue ? 1 : 0.7) : 0.5)
     }
 
     @Environment(\.colorScheme) var colorScheme
