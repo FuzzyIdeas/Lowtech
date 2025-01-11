@@ -473,7 +473,7 @@ public class LowtechPro: ObservableObject {
             #if DEBUG
                 return true
             #else
-                return timeSince(verifyDate) > (60 * 60 * 24)
+                return timeSince(verifyDate) > (60 * 60 * 24 * 7)
             #endif
         } else {
             return timeSince(verifyDate) > (5 * 60)
