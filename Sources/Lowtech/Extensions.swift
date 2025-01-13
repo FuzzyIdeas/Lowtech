@@ -1857,6 +1857,11 @@ public extension FilePath {
             return nil
         }
 
+        guard self.exists else {
+            log.error("Path doesn't exist: \(string)")
+            return nil
+        }
+
         do {
             log.debug("Backing up path \(shellString) to \(backupPath.shellString)")
             if backupPath.exists {
@@ -1901,6 +1906,10 @@ public extension FilePath {
             log.error("Trying to move path to itself: \(string)")
             return self
         }
+        guard self.exists else {
+            log.error("Path doesn't exist: \(string)")
+            return self
+        }
 
         let path = path.isDir ? path.appending(name) : path
 
@@ -1919,6 +1928,10 @@ public extension FilePath {
     func copy(to path: FilePath, force: Bool = false) throws -> FilePath {
         guard path != self else {
             log.error("Trying to copy path to itself: \(string)")
+            return self
+        }
+        guard self.exists else {
+            log.error("Path doesn't exist: \(string)")
             return self
         }
 
