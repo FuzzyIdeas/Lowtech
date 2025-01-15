@@ -1387,6 +1387,7 @@ public let KM = KeysManager()
         }
 
         @Binding var triggerKeys: [TriggerKey]
+
         var spacing: CGFloat = 3
         var noFG = false
     }

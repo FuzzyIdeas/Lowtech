@@ -181,13 +181,13 @@ open class OSDWindow: LowtechWindow {
 // MARK: - LowtechWindow
 
 open class LowtechWindow: NSPanel, NSWindowDelegate {
+    override open var canBecomeKey: Bool { allowToBecomeKey }
+
     open var onMouseUp: ((NSEvent) -> Void)?
     open var onMouseDown: ((NSEvent) -> Void)?
     open var onMouseDrag: ((NSEvent) -> Void)?
 
     open var allowToBecomeKey = false
-
-    override open var canBecomeKey: Bool { allowToBecomeKey }
 
     override open func mouseDragged(with event: NSEvent) {
         guard !ignoresMouseEvents, let onMouseDrag else { return }

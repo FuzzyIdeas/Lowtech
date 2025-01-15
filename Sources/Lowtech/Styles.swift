@@ -34,6 +34,7 @@ public struct CheckboxToggleStyle: ToggleStyle {
     }
 
     @Environment(\.isEnabled) public var isEnabled
+
     public let style: Style
     public let scale: Image.Scale
     public let color: Color?
@@ -77,6 +78,7 @@ public struct DetailToggleStyle: ToggleStyle {
     }
 
     @Environment(\.isEnabled) public var isEnabled
+
     public let style: Style // custom param
 
     public func makeBody(configuration: Configuration) -> some View {
@@ -384,6 +386,9 @@ public struct ToggleButton: ButtonStyle {
             .opacity(isEnabled ? (isOn ? 1 : 0.7) : 0.5)
     }
 
+    @State var hovering = false
+    @Binding var isOn: Bool
+
     var color: Color = .primary
     var width: CGFloat? = nil
     var height: CGFloat? = nil
@@ -391,9 +396,6 @@ public struct ToggleButton: ButtonStyle {
     var horizontalPadding: CGFloat = 8.0
     var verticalPadding: CGFloat = 4.0
     var noFG = false
-
-    @State var hovering = false
-    @Binding var isOn: Bool
 
     var bgColor: Color {
         hovering ? (isOn ? color.opacity(0.8) : color.opacity(0.2)) : (isOn ? color.opacity(0.75) : color.opacity(0.15))
@@ -503,6 +505,8 @@ public struct PickerButton<T: Equatable>: ButtonStyle {
 
     @Environment(\.colorScheme) var colorScheme
 
+    @State var hovering = false
+
     var color = Color.primary.opacity(0.15)
     var onColor: Color = .primary
     var offColor: Color? = nil
@@ -513,7 +517,6 @@ public struct PickerButton<T: Equatable>: ButtonStyle {
     var radius: CGFloat
     var hoverColor: Color
     var hoverTextColor: Color
-    @State var hovering = false
     var enumValue: T
     var onValue: T
 }

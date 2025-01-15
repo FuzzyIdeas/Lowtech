@@ -95,10 +95,11 @@ public struct VersionView: View {
         .padding(.top, 10)
     }
 
+    @ObservedObject var updater: SPUUpdater
+
     @Default(.checkForUpdates) var checkForUpdates
     @Default(.updateCheckInterval) var updateCheckInterval
 
-    @ObservedObject var updater: SPUUpdater
 }
 
 // MARK: - SPUUpdater + ObservableObject

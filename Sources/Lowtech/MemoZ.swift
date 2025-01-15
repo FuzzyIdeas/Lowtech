@@ -283,18 +283,18 @@ public final class Cache<Key: Hashable, Value> {
         self.val = val
     }
 
-    @usableFromInline let val: T
-
     @inlinable override var hash: Int {
         val.hashValue
     }
 
-    @inlinable static func == (lhs: KeyRef, rhs: KeyRef) -> Bool {
-        lhs.val == rhs.val
-    }
+    @usableFromInline let val: T
 
     @inlinable override func isEqual(_ object: Any?) -> Bool {
         (object as? Self)?.val == val
+    }
+
+    @inlinable static func == (lhs: KeyRef, rhs: KeyRef) -> Bool {
+        lhs.val == rhs.val
     }
 
 }

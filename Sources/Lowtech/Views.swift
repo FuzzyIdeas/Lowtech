@@ -399,11 +399,6 @@ public protocol Nameable {
             Sauce.shared.character(for: keyCode, cocoaModifiers: []) ?? SauceKey(QWERTYKeyCode: keyCode)?.character ?? ""
         }
 
-        var darkHoverColor = Color.hotRed
-        var lightHoverColor = Color.lunarYellow
-        var recordingColor = Color.hotRed
-        var allowedKeys: Set<SauceKey>?
-
         @EnvironmentObject var env: EnvState
         @Environment(\.colorScheme) var colorScheme
 
@@ -416,6 +411,11 @@ public protocol Nameable {
         @State var hoverColor = Color.primary
 
         @State var width: CGFloat? = nil
+
+        var darkHoverColor = Color.hotRed
+        var lightHoverColor = Color.lunarYellow
+        var recordingColor = Color.hotRed
+        var allowedKeys: Set<SauceKey>?
 
         @State private var forceUpdate = false
 
@@ -660,12 +660,12 @@ public struct PopoverView<Content: View>: View {
         .onChange(of: visible) { setup($0) }
     }
 
-    let content: () -> Content
-
     @State var name: String
     @Binding var visible: Bool
     @EnvironmentObject var env: EnvState
     @State var size: CGSize = .zero
+
+    let content: () -> Content
 
     func setup(_ visible: Bool? = nil) {
         guard visible ?? self.visible else {
@@ -1032,6 +1032,7 @@ public struct SharingsPicker: NSViewRepresentable {
     }
 
     @Binding public var isPresented: Bool
+
     public var sharingItems: [Any] = []
 
     public func makeNSView(context: Context) -> NSView {

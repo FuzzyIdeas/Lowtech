@@ -87,6 +87,42 @@ public func shellProc(_ launchPath: String = "/bin/zsh", args: [String], env: [S
     return task
 }
 
+public func shellProcDevNull(_ launchPath: String = "/bin/zsh", args: [String], env: [String: String]? = nil) -> Process? {
+    let task = Process()
+    task.standardOutput = FileHandle.nullDevice
+    task.standardError = FileHandle.nullDevice
+    task.launchPath = launchPath
+    task.arguments = args
+
+    task.environment = env ?? ProcessInfo.processInfo.environment
+
+    do {
+        try task.run()
+    } catch {
+        err("Error running \(launchPath) \(args): \(error)")
+        return nil
+    }
+
+    return task
+}
+
+public func shellProcOut(_ launchPath: String = "/bin/zsh", args: [String], env: [String: String]? = nil) -> Process? {
+    let task = Process()
+    task.launchPath = launchPath
+    task.arguments = args
+
+    task.environment = env ?? ProcessInfo.processInfo.environment
+
+    do {
+        try task.run()
+    } catch {
+        err("Error running \(launchPath) \(args): \(error)")
+        return nil
+    }
+
+    return task
+}
+
 public func shell(
     _ launchPath: String = "/bin/zsh",
     command: String,
