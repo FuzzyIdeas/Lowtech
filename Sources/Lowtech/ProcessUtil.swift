@@ -6,6 +6,7 @@ public struct ProcessStatus {
     public var output: Data?
     public var error: Data?
     public var success: Bool
+    public var process: Process?
 
     public var o: String? {
         output?.s?.trimmed
@@ -148,7 +149,8 @@ public func shell(
         return ProcessStatus(
             output: nil,
             error: nil,
-            success: true
+            success: true,
+            process: task
         )
     }
 
@@ -157,7 +159,8 @@ public func shell(
         return ProcessStatus(
             output: stdout(of: task),
             error: stderr(of: task),
-            success: task.terminationStatus == 0
+            success: task.terminationStatus == 0,
+            process: task
         )
     }
 
@@ -171,6 +174,7 @@ public func shell(
     return ProcessStatus(
         output: stdout(of: task),
         error: stderr(of: task),
-        success: task.terminationStatus == 0
+        success: task.terminationStatus == 0,
+        process: task
     )
 }
