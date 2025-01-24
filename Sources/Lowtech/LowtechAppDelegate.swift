@@ -188,6 +188,6 @@ open class LowtechAppDelegate: NSObject, NSApplicationDelegate, ObservableObject
         )
     }
 
-    private var didBecomeActiveAtLeastOnce = false
+    public var didBecomeActiveAtLeastOnce = false
 
 }
