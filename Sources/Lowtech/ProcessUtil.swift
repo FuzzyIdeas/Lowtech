@@ -47,18 +47,31 @@ public func stderr(of process: Process) -> Data? {
     FileManager.default
 }
 
+public extension Process {
+    var stdoutFilePath: String? {
+        environment?["__swift_stdout"]
+    }
+    var stderrFilePath: String? {
+        environment?["__swift_stderr"]
+    }
+}
+
 public func shellProc(_ launchPath: String = "/bin/zsh", args: [String], env: [String: String]? = nil) -> Process? {
-    let outputDir = try! fm.url(
+    guard let outputDir = try? fm.url(
         for: .itemReplacementDirectory,
         in: .userDomainMask,
         appropriateFor: fm.homeDirectoryForCurrentUser,
         create: true
-    )
+    ) else {
+        return nil
+    }
+    let procOutputDir = outputDir.appendingPathComponent("\(launchPath.safeFilename)(\(args.joined(separator: " ").safeFilename))")
+    try? fm.createDirectory(at: procOutputDir, withIntermediateDirectories: true, attributes: nil)
 
-    let stdoutFilePath = outputDir.appendingPathComponent("stdout").path
+    let stdoutFilePath = procOutputDir.appendingPathComponent("stdout").path
     fm.createFile(atPath: stdoutFilePath, contents: nil, attributes: nil)
 
-    let stderrFilePath = outputDir.appendingPathComponent("stderr").path
+    let stderrFilePath = procOutputDir.appendingPathComponent("stderr").path
     fm.createFile(atPath: stderrFilePath, contents: nil, attributes: nil)
 
     guard let stdoutFile = FileHandle(forWritingAtPath: stdoutFilePath),

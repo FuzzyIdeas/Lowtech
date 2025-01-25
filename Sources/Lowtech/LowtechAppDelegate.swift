@@ -124,6 +124,8 @@ open class LowtechAppDelegate: NSObject, NSApplicationDelegate, ObservableObject
 
     public var statusItemLength = NSStatusItem.squareLength
 
+    public var didBecomeActiveAtLeastOnce = false
+
     public var notificationPopover: PanelWindow! {
         didSet {
             oldValue?.forceClose()
@@ -187,7 +189,5 @@ open class LowtechAppDelegate: NSObject, NSApplicationDelegate, ObservableObject
             LowtechView(accentColor: color) { contentView }.any, length: statusItemLength
         )
     }
-
-    public var didBecomeActiveAtLeastOnce = false
 
 }
