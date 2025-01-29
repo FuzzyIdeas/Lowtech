@@ -213,6 +213,14 @@ public class Setting<Value: Defaults.Serializable> {
     }
     return DispatchQueue.main.sync { action() }
 }
+@discardableResult
+@inline(__always) public func mainThread(execute task: DispatchWorkItem) {
+    guard !Thread.isMainThread else {
+        task.perform()
+        return
+    }
+    return DispatchQueue.main.sync(execute: task)
+}
 
 public func debouncer<T>(in observers: inout Set<AnyCancellable>, throttle: Bool = false, every duration: RunLoop.SchedulerTimeType.Stride? = nil, _ action: @escaping (T) -> Void) -> PassthroughSubject<T, Never> {
     let subject = PassthroughSubject<T, Never>()
@@ -858,4 +866,61 @@ private final class CStringArray {
 
     /// The null-terminated array of C string pointers.
     public let cArray: [UnsafeMutablePointer<Int8>?]
+}
+
+public class ExpiringBool: ExpressibleByBooleanLiteral, CustomStringConvertible, ObservableObject {
+    public required init(booleanLiteral value: BooleanLiteralType) {
+        self.value = value
+    }
+
+    deinit {
+        if let task, !task.isCancelled {
+            task.cancel()
+        }
+    }
+
+    @Published private(set) var value: Bool
+    var expiresAt: Date = .distantFuture
+
+    public var description: String {
+        if let task, !task.isCancelled {
+            return "\(value) (expires at \(expiresAt))"
+        }
+        return "\(value)"
+    }
+    var task: DispatchWorkItem? {
+        didSet {
+            oldValue?.cancel()
+        }
+    }
+
+    public func expire() {
+        if let task, !task.isCancelled {
+            mainThread(execute: task)
+            self.task = nil
+        }
+    }
+
+    public func `true`(for time: TimeInterval) {
+        set(true, expireAfter: time)
+    }
+    public func `false`(for time: TimeInterval) {
+        set(false, expireAfter: time)
+    }
+
+    public func set(_ value: Bool, expireAfter: TimeInterval) {
+        self.value = value
+        expiresAt = .init(timeIntervalSinceNow: expireAfter)
+        task = mainAsyncAfter(ms: (expireAfter * 1000).intround) { [self] in
+            self.value = !value
+        }
+    }
+
+    public func toggle(expireAfter: TimeInterval) {
+        value.toggle()
+        expiresAt = .init(timeIntervalSinceNow: expireAfter)
+        task = mainAsyncAfter(ms: (expireAfter * 1000).intround) { [self] in
+            value.toggle()
+        }
+    }
 }
