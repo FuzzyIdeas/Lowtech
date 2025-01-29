@@ -879,6 +879,8 @@ public class ExpiringBool: ExpressibleByBooleanLiteral, CustomStringConvertible,
         }
     }
 
+    @Published public var value: Bool
+
     public var description: String {
         if let task, !task.isCancelled {
             return "\(value) (expires at \(expiresAt))"
@@ -923,7 +925,6 @@ public class ExpiringBool: ExpressibleByBooleanLiteral, CustomStringConvertible,
         }
     }
 
-    @Published private(set) var value: Bool
     var expiresAt: Date = .distantFuture
 
     var task: DispatchWorkItem? {
