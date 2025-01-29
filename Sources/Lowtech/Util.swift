@@ -213,7 +213,7 @@ public class Setting<Value: Defaults.Serializable> {
     }
     return DispatchQueue.main.sync { action() }
 }
-@discardableResult
+
 @inline(__always) public func mainThread(execute task: DispatchWorkItem) {
     guard !Thread.isMainThread else {
         task.perform()
@@ -879,19 +879,11 @@ public class ExpiringBool: ExpressibleByBooleanLiteral, CustomStringConvertible,
         }
     }
 
-    @Published private(set) var value: Bool
-    var expiresAt: Date = .distantFuture
-
     public var description: String {
         if let task, !task.isCancelled {
             return "\(value) (expires at \(expiresAt))"
         }
         return "\(value)"
-    }
-    var task: DispatchWorkItem? {
-        didSet {
-            oldValue?.cancel()
-        }
     }
 
     public func expire() {
@@ -923,4 +915,86 @@ public class ExpiringBool: ExpressibleByBooleanLiteral, CustomStringConvertible,
             value.toggle()
         }
     }
+
+    @Published private(set) var value: Bool
+    var expiresAt: Date = .distantFuture
+
+    var task: DispatchWorkItem? {
+        didSet {
+            oldValue?.cancel()
+        }
+    }
+
+}
+
+public extension Optional {
+    var s: String {
+        guard let self else {
+            return "nil"
+        }
+        return "\(self)"
+    }
+}
+
+public class ExpiringOptional<T>: ExpressibleByNilLiteral, CustomStringConvertible, ObservableObject {
+    public required init(nilLiteral value: ()) {
+        self.value = nil
+    }
+
+    deinit {
+        if let task, !task.isCancelled {
+            task.cancel()
+        }
+    }
+
+    @Published public var value: T?
+
+    public var description: String {
+        if let task, !task.isCancelled {
+            return "\(value.s) (expires at \(expiresAt))"
+        }
+        return "\(value.s)"
+    }
+
+    public func set(_ value: T, expireAfter: TimeInterval) {
+        self.value = value
+        refresh(expireAfter: expireAfter)
+    }
+
+    public func refresh(expireAfter: TimeInterval) {
+        guard value != nil else { return }
+
+        expiresAt = .init(timeIntervalSinceNow: expireAfter)
+        task = mainAsyncAfter(ms: (expireAfter * 1000).intround) { [self] in
+            value = nil
+        }
+    }
+
+    public func expire() {
+        if let task, !task.isCancelled {
+            mainThread(execute: task)
+            self.task = nil
+        }
+    }
+
+    public func setOrRefresh(_ value: T?, expireAfter: TimeInterval) {
+        guard let value else {
+            return
+        }
+
+        if self.value == nil {
+            set(value, expireAfter: 1)
+        } else {
+            refresh(expireAfter: 1)
+        }
+    }
+
+    var expiresAt: Date = .distantFuture
+
+    var task: DispatchWorkItem? {
+        didSet {
+            oldValue?.cancel()
+        }
+    }
+
 }
