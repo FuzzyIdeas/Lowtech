@@ -900,8 +900,15 @@ public class ExpiringBool: ExpressibleByBooleanLiteral, CustomStringConvertible,
         set(false, expireAfter: time)
     }
 
-    public func set(_ value: Bool, expireAfter: TimeInterval) {
+    public func set(_ value: Bool, expireAfter: TimeInterval?) {
         self.value = value
+        guard let expireAfter else {
+            task?.cancel()
+            task = nil
+            expiresAt = .distantFuture
+            return
+        }
+
         expiresAt = .init(timeIntervalSinceNow: expireAfter)
         task = mainAsyncAfter(ms: (expireAfter * 1000).intround) { [self] in
             self.value = !value
@@ -956,8 +963,15 @@ public class ExpiringOptional<T>: ExpressibleByNilLiteral, CustomStringConvertib
         return "\(value.s)"
     }
 
-    public func set(_ value: T, expireAfter: TimeInterval) {
+    public func set(_ value: T, expireAfter: TimeInterval?) {
         self.value = value
+        guard let expireAfter else {
+            task?.cancel()
+            task = nil
+            expiresAt = .distantFuture
+            return
+        }
+
         refresh(expireAfter: expireAfter)
     }
 
