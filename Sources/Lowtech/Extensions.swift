@@ -1800,13 +1800,17 @@ public extension FilePath {
         "\(stem!.replacing(#/_\[.+\]$/#, with: "")).\(`extension`!)"
     }
 
-    var timestamp: TimeInterval? {
+    var modificationDate: Date? {
         guard let attrs = try? fm.attributesOfItem(atPath: string),
               let date = attrs[.modificationDate] as? Date ?? attrs[.creationDate] as? Date
         else {
             return nil
         }
-        return date.timeIntervalSince1970
+        return date
+    }
+
+    var timestamp: TimeInterval? {
+        return modificationDate?.timeIntervalSince1970
     }
 
     var nameWithHash: String {
