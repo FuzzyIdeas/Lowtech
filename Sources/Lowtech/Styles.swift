@@ -148,6 +148,7 @@ public struct OutlineButton: ButtonStyle {
                     }
                 }
             }
+            .opacity(isEnabled ? 1 : 0.6)
     }
 
     @State var color = Color.primary.opacity(0.8)
