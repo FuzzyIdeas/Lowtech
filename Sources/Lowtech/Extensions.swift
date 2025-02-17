@@ -1821,12 +1821,18 @@ public extension FilePath {
         return "\(name)_\(hash).\(ext)"
     }
 
-    static let hashPattern = try! Regex(#"_([a-f0-9]{64})\."#)
+    static let hashPattern = try! Regex(#"_([a-f0-9]{64})$"#)
     var nameWithoutHash: String {
         guard let stem else {
             return name.string
         }
         return stem.replacing(Self.hashPattern, with: ".")
+    }
+    var withoutHash: FilePath {
+        guard let ext = `extension` else {
+            return dir / "\(nameWithoutHash)"
+        }
+        return dir / "\(nameWithoutHash).\(ext)"
     }
 
     static var tmp = FilePath("/tmp")
