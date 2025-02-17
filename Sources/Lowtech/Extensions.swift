@@ -1810,7 +1810,7 @@ public extension FilePath {
     }
 
     var timestamp: TimeInterval? {
-        return modificationDate?.timeIntervalSince1970
+        modificationDate?.timeIntervalSince1970
     }
 
     var nameWithHash: String {
@@ -1819,6 +1819,14 @@ public extension FilePath {
         }
         let name = stem.replacingOccurrences(of: "_\(hash)", with: "")
         return "\(name)_\(hash).\(ext)"
+    }
+
+    static let hashPattern = try! Regex(#"_([a-f0-9]{64})\."#)
+    var nameWithoutHash: String {
+        guard let stem else {
+            return name.string
+        }
+        return stem.replacing(Self.hashPattern, with: ".")
     }
 
     static var tmp = FilePath("/tmp")
