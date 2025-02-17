@@ -32,7 +32,9 @@ open class OSDWindow: LowtechWindow {
         if !canScreenshot {
             sharingType = .none
         }
-        ignoresMouseEvents = !allowsMouse
+        if !allowsMouse {
+            ignoresMouseEvents = true
+        }
         setAccessibilityRole(.popover)
         setAccessibilitySubrole(.unknown)
 
