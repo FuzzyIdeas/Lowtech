@@ -65,7 +65,9 @@ public func shellProc(_ launchPath: String = "/bin/zsh", args: [String], env: [S
     ) else {
         return nil
     }
-    let procOutputDir = outputDir.appendingPathComponent("\(launchPath.safeFilename)(\(args.joined(separator: " ").safeFilename))")
+    let binName = launchPath.filePath?.name.string ?? launchPath
+    let argNames = args.map { $0.filePath?.name.string ?? $0 }
+    let procOutputDir = outputDir.appendingPathComponent("\(binName.safeFilename)(\(argNames.joined(separator: "_").safeFilename.prefix(250)))-\(Date().timeIntervalSince1970)")
     try? fm.createDirectory(at: procOutputDir, withIntermediateDirectories: true, attributes: nil)
 
     let stdoutFilePath = procOutputDir.appendingPathComponent("stdout").path
