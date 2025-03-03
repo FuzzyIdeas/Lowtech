@@ -1907,6 +1907,9 @@ public extension FilePath {
     }
 
     func fileSize() -> Int? {
+        guard exists else {
+            return nil
+        }
         let attr: [FileAttributeKey: Any]? = withTimeout(5, name: "fileSize(\(string))") {
             try fm.attributesOfItem(atPath: string)
         }
