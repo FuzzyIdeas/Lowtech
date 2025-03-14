@@ -74,8 +74,8 @@ public extension Hashable where Self: AnyObject {
         Memoizer(value: self, cache: .shared)
     }
     @available(OSX 10.12, iOS 12, tvOS 13, watchOS 2, *)
-    @inlinable func set(_ value: Any, forKey key: KeyPath<Self, some Any>) {
-        MemoizationCache.shared[.init(subject: self, keyPath: key)] = value
+    @inlinable func cache<T>(_ value: T, forKey key: KeyPath<Self, T>, in cache: MemoizationCache = .shared) {
+        cache[.init(subject: self, keyPath: key)] = value
     }
 }
 
