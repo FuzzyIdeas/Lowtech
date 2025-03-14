@@ -73,6 +73,10 @@ public extension Hashable where Self: AnyObject {
     @inlinable var memoz: Memoizer<Self> {
         Memoizer(value: self, cache: .shared)
     }
+    @available(OSX 10.12, iOS 12, tvOS 13, watchOS 2, *)
+    @inlinable func set(_ value: Any, forKey key: KeyPath<Self, some Any>) {
+        MemoizationCache.shared[.init(subject: self, keyPath: key)] = value
+    }
 }
 
 // MARK: - Memoizer
@@ -87,8 +91,7 @@ public extension Hashable where Self: AnyObject {
 
     @available(OSX 10.12, iOS 12, tvOS 13, watchOS 2, *)
     @inlinable public subscript<T>(dynamicMember keyPath: KeyPath<Value, T>) -> T {
-        get { value.memoize(with: cache, keyPath) }
-        set { cache?[.init(subject: value, keyPath: keyPath)] = newValue }
+        value.memoize(with: cache, keyPath)
     }
 
     @usableFromInline let value: Value
