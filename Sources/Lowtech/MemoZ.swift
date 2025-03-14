@@ -87,7 +87,8 @@ public extension Hashable where Self: AnyObject {
 
     @available(OSX 10.12, iOS 12, tvOS 13, watchOS 2, *)
     @inlinable public subscript<T>(dynamicMember keyPath: KeyPath<Value, T>) -> T {
-        value.memoize(with: cache, keyPath)
+        get { value.memoize(with: cache, keyPath) }
+        set { cache?[.init(subject: value, keyPath: keyPath)] = newValue }
     }
 
     @usableFromInline let value: Value
