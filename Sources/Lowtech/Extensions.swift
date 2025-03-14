@@ -1791,7 +1791,7 @@ public extension FilePath {
         return false
     }
 
-    var name: FilePath.Component { lastComponent! }
+    var name: FilePath.Component { lastComponent ?? "Root" }
     var nameWithoutSize: String {
         "\(stem!.replacing(#/_\d+x\d+$/#, with: "")).\(`extension`!)"
     }
