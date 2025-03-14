@@ -56,6 +56,12 @@ public extension Hashable {
         Memoizer(value: self, cache: .shared)
     }
 
+    @available(OSX 10.12, iOS 12, tvOS 13, watchOS 2, *)
+    @inlinable func cache<T>(_ value: T, forKey key: KeyPath<Self, T>, in cache: MemoizationCache = .shared) {
+        cache[.init(subject: self, keyPath: key)] = value
+    }
+
+
     /// `memoize`s the result of the subsequent path in the specified cache.
     /// - Parameter cache: the custom memoization cache to use; use .shared for the global cache, or `nil` to disable caching
     /// - Returns: the cached or uncached key path
@@ -72,10 +78,6 @@ public extension Hashable where Self: AnyObject {
     @available(OSX 10.12, iOS 12, tvOS 13, watchOS 2, *)
     @inlinable var memoz: Memoizer<Self> {
         Memoizer(value: self, cache: .shared)
-    }
-    @available(OSX 10.12, iOS 12, tvOS 13, watchOS 2, *)
-    @inlinable func cache<T>(_ value: T, forKey key: KeyPath<Self, T>, in cache: MemoizationCache = .shared) {
-        cache[.init(subject: self, keyPath: key)] = value
     }
 }
 
