@@ -61,7 +61,6 @@ public extension Hashable {
         cache[.init(subject: self, keyPath: key)] = value
     }
 
-
     /// `memoize`s the result of the subsequent path in the specified cache.
     /// - Parameter cache: the custom memoization cache to use; use .shared for the global cache, or `nil` to disable caching
     /// - Returns: the cached or uncached key path
