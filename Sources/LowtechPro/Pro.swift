@@ -33,6 +33,73 @@ open class LowtechProAppDelegate: LowtechIndieAppDelegate, PADProductDelegate, @
         return user
     }
 
+    @MainActor
+    open func willShowPaddle(_: PADUIType, product _: PADProduct) -> PADDisplayConfiguration? {
+        statusBar?.showPopoverIfNotVisible()
+
+        if let window = NSApp.windows.first(where: { $0.title.contains("Settings") })
+            ?? NSApp.windows.first(where: { $0.accessibilityRole() != .popover })
+            ?? statusBar?.window, window.isVisible
+        {
+            focus()
+            window.makeKeyAndOrderFront(nil)
+            return PADDisplayConfiguration(.sheet, hideNavigationButtons: false, parentWindow: window)
+        }
+
+        return PADDisplayConfiguration(.window, hideNavigationButtons: false, parentWindow: nil)
+    }
+
+    @MainActor
+    open func willShowPaddle(_ alert: PADAlert) -> Bool {
+        if alert.alertType == .error, !LowtechProAppDelegate.showNextPaddleError {
+            LowtechProAppDelegate.showNextPaddleError = true
+
+            return false
+        }
+
+        return true
+    }
+
+    @MainActor
+    open func paddleDidError(_ error: Error) {
+        guard let code = PADErrorCode(rawValue: (error as NSError).code) else { return }
+
+        switch code {
+        case .licenseCodeUtilized, .tooManyActivationsOrExpired, .noActivations:
+            guard let product,
+                  let s = statusBar, let window = s.window,
+                  let sheet = window.sheets.first,
+                  let paddleController = sheet.windowController as? PADActivateWindowController,
+                  let email = paddleController.emailTxt?.stringValue,
+                  let licenseCode = paddleController.licenseTxt?.stringValue
+            else { return }
+
+            LowtechProAppDelegate.showNextPaddleError = false
+            product.activations(forLicense: licenseCode) { activations, error in
+                guard let activationsList = activations as? [[String: Any]], let oldestActivation = activationsList.first
+                else { return }
+
+                product.deactivateActivation(oldestActivation["activation_id"] as! String, license: licenseCode) { deactivated, error in
+                    guard deactivated else { return }
+                    mainAsync {
+                        product.activateEmail(email, license: licenseCode) { didActivate, error in
+                            guard didActivate else {
+                                if let error {
+                                    log.error(error.localizedDescription)
+                                    paddleController.showErrorAlert(error.localizedDescription)
+                                }
+                                return
+                            }
+                            paddleController.closeDialog(.activated, internalUICloseReason: nil)
+                        }
+                    }
+                }
+            }
+        default:
+            break
+        }
+    }
+
     public static var showNextPaddleError = true
 
     public static var proDelegate: LowtechProAppDelegate? {
@@ -128,72 +195,6 @@ open class LowtechProAppDelegate: LowtechIndieAppDelegate, PADProductDelegate, @
         }
     }
 
-    @MainActor
-    public func willShowPaddle(_: PADUIType, product _: PADProduct) -> PADDisplayConfiguration? {
-        statusBar?.showPopoverIfNotVisible()
-
-        if let window = NSApp.windows.first(where: { $0.title.contains("Settings") })
-            ?? NSApp.windows.first(where: { $0.accessibilityRole() != .popover })
-            ?? statusBar?.window, window.isVisible
-        {
-            focus()
-            window.makeKeyAndOrderFront(nil)
-            return PADDisplayConfiguration(.sheet, hideNavigationButtons: false, parentWindow: window)
-        }
-
-        return PADDisplayConfiguration(.window, hideNavigationButtons: false, parentWindow: nil)
-    }
-
-    @MainActor
-    public func willShowPaddle(_ alert: PADAlert) -> Bool {
-        if alert.alertType == .error, !LowtechProAppDelegate.showNextPaddleError {
-            LowtechProAppDelegate.showNextPaddleError = true
-
-            return false
-        }
-
-        return true
-    }
-
-    @MainActor
-    public func paddleDidError(_ error: Error) {
-        guard let code = PADErrorCode(rawValue: (error as NSError).code) else { return }
-
-        switch code {
-        case .licenseCodeUtilized, .tooManyActivationsOrExpired, .noActivations:
-            guard let product,
-                  let s = statusBar, let window = s.window,
-                  let sheet = window.sheets.first,
-                  let paddleController = sheet.windowController as? PADActivateWindowController,
-                  let email = paddleController.emailTxt?.stringValue,
-                  let licenseCode = paddleController.licenseTxt?.stringValue
-            else { return }
-
-            LowtechProAppDelegate.showNextPaddleError = false
-            product.activations(forLicense: licenseCode) { activations, error in
-                guard let activationsList = activations as? [[String: Any]], let oldestActivation = activationsList.first
-                else { return }
-
-                product.deactivateActivation(oldestActivation["activation_id"] as! String, license: licenseCode) { deactivated, error in
-                    guard deactivated else { return }
-                    mainAsync {
-                        product.activateEmail(email, license: licenseCode) { didActivate, error in
-                            guard didActivate else {
-                                if let error {
-                                    log.error(error.localizedDescription)
-                                    paddleController.showErrorAlert(error.localizedDescription)
-                                }
-                                return
-                            }
-                            paddleController.closeDialog(.activated, internalUICloseReason: nil)
-                        }
-                    }
-                }
-            }
-        default:
-            break
-        }
-    }
 }
 
 public var paddle: Paddle?
