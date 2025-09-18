@@ -42,7 +42,7 @@ public struct VersionView: View {
     }
 
     public var body: some View {
-        VStack(alignment: .leading) {
+        VStack(alignment: .leading, spacing: 6) {
             HStack {
                 Text("Version:")
                     .font(.system(size: 11, weight: .medium, design: .monospaced))
