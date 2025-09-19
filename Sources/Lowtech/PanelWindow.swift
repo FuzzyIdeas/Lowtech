@@ -28,6 +28,14 @@ open class PanelWindow: LowtechWindow {
         becomesKeyOnlyIfNeeded = true
     }
 
+    override open var acceptsFirstResponder: Bool {
+        true
+    }
+
+    override open var canBecomeKey: Bool {
+        true
+    }
+
     open func show(at point: NSPoint? = nil, animate: Bool = false, activate: Bool = true, corner: ScreenCorner? = nil, margin: CGFloat? = nil, marginHorizontal: CGFloat? = nil, screen: NSScreen? = nil) {
         if let corner {
             moveToScreen(screen, corner: corner, margin: margin, animate: animate)

@@ -492,6 +492,8 @@ public protocol Nameable {
 
             if recording {
                 DispatchQueue.main.async {
+                    view.window?.becomeKey()
+                    view.window?.becomeFirstResponder()
                     view.window?.makeFirstResponder(view)
                 }
             }
@@ -505,6 +507,8 @@ public protocol Nameable {
 
             DispatchQueue.main.async {
                 if recording {
+                    view.window?.becomeKey()
+                    view.window?.becomeFirstResponder()
                     view.window?.makeFirstResponder(view)
                 } else {
                     view.resignFirstResponder()
