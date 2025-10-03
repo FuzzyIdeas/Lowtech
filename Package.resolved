@@ -91,15 +91,6 @@
       }
     },
     {
-      "identity" : "setapp-framework",
-      "kind" : "remoteSourceControl",
-      "location" : "https://github.com/MacPaw/Setapp-framework",
-      "state" : {
-        "revision" : "cb31c9ac1f4fa093f8254b5226a0aeb9e47777e0",
-        "version" : "4.2.3"
-      }
-    },
-    {
       "identity" : "sparkle",
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/sparkle-project/Sparkle",
