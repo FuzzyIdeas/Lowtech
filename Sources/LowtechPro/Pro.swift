@@ -37,14 +37,14 @@ open class LowtechProAppDelegate: LowtechIndieAppDelegate, PADProductDelegate, @
     open func willShowPaddle(_: PADUIType, product _: PADProduct) -> PADDisplayConfiguration? {
         statusBar?.showPopoverIfNotVisible()
 
-        if let window = NSApp.windows.first(where: { $0.title.contains("Settings") })
-            ?? NSApp.windows.first(where: { $0.accessibilityRole() != .popover })
-            ?? statusBar?.window, window.isVisible
-        {
-            focus()
-            window.makeKeyAndOrderFront(nil)
-            return PADDisplayConfiguration(.sheet, hideNavigationButtons: false, parentWindow: window)
-        }
+        // if let window = NSApp.windows.first(where: { $0.title.contains("Settings") })
+        //     ?? NSApp.windows.first(where: { $0.accessibilityRole() != .popover })
+        //     ?? statusBar?.window, window.isVisible
+        // {
+        //     focus()
+        //     window.makeKeyAndOrderFront(nil)
+        //     return PADDisplayConfiguration(.sheet, hideNavigationButtons: false, parentWindow: window)
+        // }
 
         return PADDisplayConfiguration(.window, hideNavigationButtons: false, parentWindow: nil)
     }
@@ -67,7 +67,11 @@ open class LowtechProAppDelegate: LowtechIndieAppDelegate, PADProductDelegate, @
         switch code {
         case .licenseCodeUtilized, .tooManyActivationsOrExpired, .noActivations:
             guard let product,
-                  let paddleController = NSApp.windows.compactMap({ w in w.sheets.compactMap { s in s.windowController as? PADActivateWindowController }.first }).first,
+                  let paddleController =
+                  (
+                      NSApp.windows.compactMap { w in w.sheets.compactMap { s in s.windowController as? PADActivateWindowController }.first }.first
+                          ?? NSApp.windows.compactMap { w in w.windowController as? PADActivateWindowController }.first
+                  ),
                   let email = paddleController.emailTxt?.stringValue,
                   let licenseCode = paddleController.licenseTxt?.stringValue
             else { return }
