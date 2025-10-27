@@ -67,9 +67,7 @@ open class LowtechProAppDelegate: LowtechIndieAppDelegate, PADProductDelegate, @
         switch code {
         case .licenseCodeUtilized, .tooManyActivationsOrExpired, .noActivations:
             guard let product,
-                  let s = statusBar, let window = s.window,
-                  let sheet = window.sheets.first,
-                  let paddleController = sheet.windowController as? PADActivateWindowController,
+                  let paddleController = NSApp.windows.compactMap({ w in w.sheets.compactMap { s in s.windowController as? PADActivateWindowController }.first }).first,
                   let email = paddleController.emailTxt?.stringValue,
                   let licenseCode = paddleController.licenseTxt?.stringValue
             else { return }
