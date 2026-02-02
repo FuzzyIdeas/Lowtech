@@ -34,7 +34,7 @@ let package = Package(
         .package(url: "https://github.com/sindresorhus/LaunchAtLogin-Modern", from: "1.0.0"),
         .package(url: "https://github.com/alin23/Magnet", from: "4.0.1"),
         .package(url: "https://github.com/Clipy/Sauce", from: "2.2.0"),
-        .package(url: "https://github.com/NKS1608/FSEvents", from: "0.1.7"),
+        .package(url: "https://github.com/NKS1608/EonilFSEvents", from: "0.1.7"),
         .package(url: "https://github.com/yannickl/DynamicColor", from: "5.0.1"),
         .package(url: "https://github.com/diniska/swiftui-system-colors", from: "1.1.0"),
         .package(url: "https://github.com/malcommac/SwiftDate", from: "7.0.0"),
