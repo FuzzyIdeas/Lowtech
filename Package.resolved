@@ -37,15 +37,6 @@
       }
     },
     {
-      "identity" : "fsevents",
-      "kind" : "remoteSourceControl",
-      "location" : "https://github.com/eonil/FSEvents",
-      "state" : {
-        "revision" : "e6b7cdfa2754454e194a45ee6c2004d0f630fe88",
-        "version" : "0.1.7"
-      }
-    },
-    {
       "identity" : "launchatlogin-modern",
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/sindresorhus/LaunchAtLogin-Modern",
@@ -86,8 +77,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/getsentry/sentry-cocoa",
       "state" : {
-        "revision" : "5bda7f7c1ca97eba3b1ba32cd40041e72c38de03",
-        "version" : "8.49.2"
+        "revision" : "a24b98028b0b6e81bfd0526967468ba4ba60303c",
+        "version" : "9.3.0"
       }
     },
     {
@@ -95,8 +86,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/sparkle-project/Sparkle",
       "state" : {
-        "revision" : "0ca3004e98712ea2b39dd881d28448630cce1c99",
-        "version" : "2.7.0"
+        "revision" : "5581748cef2bae787496fe6d61139aebe0a451f6",
+        "version" : "2.8.1"
       }
     },
     {
@@ -104,8 +95,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/apple/swift-atomics",
       "state" : {
-        "revision" : "cd142fd2f64be2100422d658e7411e39489da985",
-        "version" : "1.2.0"
+        "revision" : "b601256eab081c0f92f059e12818ac1d4f178ff7",
+        "version" : "1.3.0"
       }
     },
     {

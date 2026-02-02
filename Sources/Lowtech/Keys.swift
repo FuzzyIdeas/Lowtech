@@ -89,6 +89,7 @@ public class KeysManager: ObservableObject {
         KM.lctrl = modifierFlags.contains(.leftControl) || (modifierFlags.contains(.control) && !modifierFlags.contains(.rightControl))
 
         KM.fn = modifierFlags.contains(.function)
+        KM.capsLock = modifierFlags.contains(.capsLock)
         KM.flags = modifierFlags.triggerKeys
 
         if testKeyCombo == nil || testKeyCombo!.key != specialKey {
@@ -345,6 +346,7 @@ public class KeysManager: ObservableObject {
     @Published public var lctrl = false
     @Published public var lshift = false
     @Published public var fn = false
+    @Published public var capsLock = false
     @Published public var flags = [TriggerKey]()
     @Published public var lastModifierFlags: NSEvent.ModifierFlags = NSEvent.modifierFlags
 
@@ -757,15 +759,15 @@ public class KeysManager: ObservableObject {
     }
 
     @objc public func testKeyComboPressedShouldStop(hotkey: HotKey) -> Bool {
-        guard let combo = KM.testKeyCombo, hotkey.keyCombo == combo else {
+        guard let combo = testKeyCombo, hotkey.keyCombo == combo else {
             return false
         }
-        KM.testKeyPressed = true
+        testKeyPressed = true
 
-        KM.testKeyHandler?()
-        KM.testKeyHandler = nil
+        testKeyHandler?()
+        testKeyHandler = nil
 
-        return !KM.testKeyForward
+        return !testKeyForward
     }
 
     @objc public func handleSpecialHotkey(_ hotkey: HotKey) {
@@ -963,6 +965,7 @@ public let KM = KeysManager()
         case shift
 
         case fn
+        case capsLock
 
         public var id: Int { rawValue }
         public var eventModifier: SwiftUI.EventModifiers {
@@ -977,6 +980,8 @@ public let KM = KeysManager()
                 .shift
             case .fn:
                 .function
+            case .capsLock:
+                .capsLock
             }
         }
         public var modifier: NSEvent.ModifierFlags {
@@ -1007,6 +1012,8 @@ public let KM = KeysManager()
                 .shift
             case .fn:
                 .function
+            case .capsLock:
+                .capsLock
             }
         }
 
@@ -1022,6 +1029,8 @@ public let KM = KeysManager()
                 .shift
             case .fn:
                 .function
+            case .capsLock:
+                .capsLock
             }
         }
 
@@ -1053,6 +1062,8 @@ public let KM = KeysManager()
                 "⇧"
             case .fn:
                 "fn"
+            case .capsLock:
+                "⇪"
             }
         }
 
@@ -1084,6 +1095,8 @@ public let KM = KeysManager()
                 "⇧"
             case .fn:
                 "fn"
+            case .capsLock:
+                "⇪"
             }
         }
 
@@ -1115,6 +1128,8 @@ public let KM = KeysManager()
                 "Shift"
             case .fn:
                 "Fn"
+            case .capsLock:
+                "Caps Lock"
             }
         }
 
@@ -1130,6 +1145,8 @@ public let KM = KeysManager()
                 "Shift"
             case .fn:
                 "Fn"
+            case .capsLock:
+                "Caps Lock"
             }
         }
 
@@ -1161,6 +1178,8 @@ public let KM = KeysManager()
                 "shift"
             case .fn:
                 "fn"
+            case .capsLock:
+                "caps"
             }
         }
 
@@ -1192,6 +1211,8 @@ public let KM = KeysManager()
                 KM.rshift || KM.lshift
             case .fn:
                 KM.fn
+            case .capsLock:
+                KM.capsLock
             }
         }
 
@@ -1226,7 +1247,7 @@ public let KM = KeysManager()
         var allPressed: Bool { allSatisfy(\.pressed) }
         var allPressedExclusive: Bool { count == KM.flags.count && allPressed }
 
-        func toggling(key: TriggerKey, on: Bool? = nil) -> [TriggerKey] {
+        func toggling(key: TriggerKey, on: Bool? = nil, allowShiftAlone: Bool = false) -> [TriggerKey] {
             if on ?? !contains(key) {
                 var keys = self
                 if !contains(key) {
@@ -1259,10 +1280,15 @@ public let KM = KeysManager()
                     return keys.toggling(key: TriggerKey.lshift, on: false).toggling(key: TriggerKey.rshift, on: false)
                 case .fn:
                     return keys
+                case .capsLock:
+                    return keys
                 }
             } else {
-                let newTriggers = filter { $0 != key }
-                return newTriggers.withoutShift.isEmpty ? [] : newTriggers
+                var newTriggers = filter { $0 != key }
+                if !allowShiftAlone {
+                    newTriggers = newTriggers.withoutShift
+                }
+                return newTriggers.isEmpty ? [] : newTriggers
             }
         }
     }
@@ -1280,87 +1306,170 @@ public let KM = KeysManager()
             if contains(.rightControl) { flags.append(.rctrl) }
             if contains(.rightShift) { flags.append(.rshift) }
             if contains(.function) { flags.append(.fn) }
+            // Note: capsLock is tracked manually via keycode detection, not via toggle state
 
             return flags
         }
     }
 
     public struct DirectionalModifierView: View {
-        public init(triggerKeys: Binding<[TriggerKey]>, spacing: CGFloat = 3, noFG: Bool = false) {
+        public init(triggerKeys: Binding<[TriggerKey]>, spacing: CGFloat = 3, noFG: Bool = false, singleRow: Bool = true, showFnCaps: Bool = true) {
             _triggerKeys = triggerKeys
             self.spacing = spacing
             self.noFG = noFG
+            self.singleRow = singleRow
+            self.showFnCaps = showFnCaps
         }
 
         @Environment(\.isEnabled) public var isEnabled
 
         public var body: some View {
+            let lshiftTrigger = Binding<Bool>(
+                get: { triggerKeys.contains(.lshift) || triggerKeys.contains(.shift) },
+                set: {
+                    triggerKeys = triggerKeys.toggling(key: TriggerKey.lshift, on: $0).toggling(key: TriggerKey.capsLock, on: false)
+                }
+            )
+            let rshiftTrigger = Binding<Bool>(
+                get: { triggerKeys.contains(.rshift) || triggerKeys.contains(.shift) },
+                set: {
+                    triggerKeys = triggerKeys.toggling(key: TriggerKey.rshift, on: $0).toggling(key: TriggerKey.capsLock, on: false)
+                }
+            )
+
+            let capsLockTrigger = Binding<Bool>(
+                get: { triggerKeys.contains(.capsLock) },
+                set: { newValue in
+                    if newValue {
+                        triggerKeys = [.capsLock]
+                    } else {
+                        triggerKeys = [.rcmd]
+                    }
+                }
+            )
+
+            if singleRow {
+                HStack(alignment: .bottom, spacing: spacing) {
+                    if showFnCaps {
+                        Button("⇪") {
+                            if triggerKeys.contains(.capsLock) {
+                                triggerKeys = [.rcmd]
+                            } else {
+                                triggerKeys = [.capsLock]
+                            }
+                        }.buttonStyle(ToggleButton(isOn: capsLockTrigger, noFG: noFG))
+                    }
+
+                    commonModifiers
+
+                    Button("⇧") {
+                        triggerKeys = triggerKeys.toggling(key: .rshift).toggling(key: .capsLock, on: false)
+                    }.buttonStyle(ToggleButton(isOn: rshiftTrigger, noFG: noFG))
+                        .overlay(Color.red.opacity(triggerKeys.contains(.shift) ? 0.1 : 0.0).clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous)))
+                }.disabled(!isEnabled)
+            } else {
+                VStack(alignment: .center, spacing: spacing) {
+                    if showFnCaps {
+                        HStack(spacing: spacing) {
+                            Button("⇪ capslock") {
+                                if triggerKeys.contains(.capsLock) {
+                                    triggerKeys = [.rcmd]
+                                } else {
+                                    triggerKeys = [.capsLock]
+                                }
+                            }.buttonStyle(ToggleButton(isOn: capsLockTrigger, noFG: noFG))
+                            Spacer()
+                        }.frame(width: commonModifiersRowSize.width)
+                    }
+
+                    HStack(alignment: .bottom, spacing: spacing) {
+                        Button("⇧ shift") {
+                            triggerKeys = triggerKeys.toggling(key: .lshift).toggling(key: TriggerKey.capsLock, on: false)
+                        }.buttonStyle(ToggleButton(isOn: lshiftTrigger, noFG: noFG))
+                            .overlay(Color.red.opacity(triggerKeys.contains(.shift) ? 0.1 : 0.0).clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous)))
+
+                        Spacer()
+
+                        Button("⇧ shift") {
+                            triggerKeys = triggerKeys.toggling(key: .rshift).toggling(key: TriggerKey.capsLock, on: false)
+                        }.buttonStyle(ToggleButton(isOn: rshiftTrigger, noFG: noFG))
+                            .overlay(Color.red.opacity(triggerKeys.contains(.shift) ? 0.1 : 0.0).clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous)))
+                    }.frame(width: commonModifiersRowSize.width)
+
+                    commonModifiers
+                }.disabled(!isEnabled)
+            }
+        }
+
+        @Binding var triggerKeys: [TriggerKey]
+
+        var spacing: CGFloat = 3
+        var noFG = false
+        var singleRow = true
+        var showFnCaps = true
+
+        @ViewBuilder var commonModifiers: some View {
             let rcmdTrigger = Binding<Bool>(
                 get: { triggerKeys.contains(.rcmd) || triggerKeys.contains(.cmd) },
                 set: {
-                    triggerKeys = triggerKeys.toggling(key: TriggerKey.rcmd, on: $0)
+                    triggerKeys = triggerKeys.toggling(key: TriggerKey.rcmd, on: $0).toggling(key: TriggerKey.capsLock, on: false)
                 }
             )
             let raltTrigger = Binding<Bool>(
                 get: { triggerKeys.contains(.ralt) || triggerKeys.contains(.alt) },
                 set: {
-                    triggerKeys = triggerKeys.toggling(key: TriggerKey.ralt, on: $0)
+                    triggerKeys = triggerKeys.toggling(key: TriggerKey.ralt, on: $0).toggling(key: TriggerKey.capsLock, on: false)
                 }
             )
 
             let lcmdTrigger = Binding<Bool>(
                 get: { triggerKeys.contains(.lcmd) || triggerKeys.contains(.cmd) },
                 set: {
-                    triggerKeys = triggerKeys.toggling(key: TriggerKey.lcmd, on: $0)
+                    triggerKeys = triggerKeys.toggling(key: TriggerKey.lcmd, on: $0).toggling(key: TriggerKey.capsLock, on: false)
                 }
             )
             let laltTrigger = Binding<Bool>(
                 get: { triggerKeys.contains(.lalt) || triggerKeys.contains(.alt) },
                 set: {
-                    triggerKeys = triggerKeys.toggling(key: TriggerKey.lalt, on: $0)
+                    triggerKeys = triggerKeys.toggling(key: TriggerKey.lalt, on: $0).toggling(key: TriggerKey.capsLock, on: false)
                 }
             )
             let lctrlTrigger = Binding<Bool>(
                 get: { triggerKeys.contains(.lctrl) || triggerKeys.contains(.ctrl) },
                 set: {
-                    triggerKeys = triggerKeys.toggling(key: TriggerKey.lctrl, on: $0)
-                }
-            )
-
-            let lshiftTrigger = Binding<Bool>(
-                get: { triggerKeys.contains(.lshift) || triggerKeys.contains(.shift) },
-                set: {
-                    triggerKeys = triggerKeys.toggling(key: TriggerKey.lshift, on: $0)
-                }
-            )
-            let rshiftTrigger = Binding<Bool>(
-                get: { triggerKeys.contains(.rshift) || triggerKeys.contains(.shift) },
-                set: {
-                    triggerKeys = triggerKeys.toggling(key: TriggerKey.rshift, on: $0)
+                    triggerKeys = triggerKeys.toggling(key: TriggerKey.lctrl, on: $0).toggling(key: TriggerKey.capsLock, on: false)
                 }
             )
             let rctrlTrigger = Binding<Bool>(
                 get: { triggerKeys.contains(.rctrl) || triggerKeys.contains(.ctrl) },
                 set: {
-                    triggerKeys = triggerKeys.toggling(key: TriggerKey.rctrl, on: $0)
+                    triggerKeys = triggerKeys.toggling(key: TriggerKey.rctrl, on: $0).toggling(key: TriggerKey.capsLock, on: false)
+                }
+            )
+            let fnTrigger = Binding<Bool>(
+                get: { triggerKeys.contains(.fn) },
+                set: {
+                    triggerKeys = triggerKeys.toggling(key: TriggerKey.fn, on: $0).toggling(key: TriggerKey.capsLock, on: false)
                 }
             )
 
             HStack(spacing: spacing) {
-                Button("⇧") {
-                    triggerKeys = triggerKeys.toggling(key: .lshift)
-                }.buttonStyle(ToggleButton(isOn: lshiftTrigger, noFG: noFG))
-                    .overlay(Color.red.opacity(triggerKeys.contains(.shift) ? 0.1 : 0.0).clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous)))
+                if showFnCaps {
+                    Button("fn") {
+                        triggerKeys = triggerKeys.toggling(key: .fn)
+                    }.buttonStyle(ToggleButton(isOn: fnTrigger, noFG: noFG))
+                }
+
                 Button("⌃") {
-                    triggerKeys = triggerKeys.toggling(key: .lctrl)
+                    triggerKeys = triggerKeys.toggling(key: .lctrl).toggling(key: TriggerKey.capsLock, on: false)
                 }.buttonStyle(ToggleButton(isOn: lctrlTrigger, noFG: noFG))
                     .overlay(Color.red.opacity(triggerKeys.contains(.ctrl) ? 0.1 : 0.0).clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous)))
                 Button("⌥") {
-                    triggerKeys = triggerKeys.toggling(key: .lalt)
+                    triggerKeys = triggerKeys.toggling(key: .lalt).toggling(key: TriggerKey.capsLock, on: false)
                 }.buttonStyle(ToggleButton(isOn: laltTrigger, noFG: noFG))
                     .overlay(Color.red.opacity(triggerKeys.contains(.alt) ? 0.1 : 0.0).clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous)))
                 Button("⌘") {
-                    triggerKeys = triggerKeys.toggling(key: .lcmd)
+                    triggerKeys = triggerKeys.toggling(key: .lcmd).toggling(key: TriggerKey.capsLock, on: false)
                 }.buttonStyle(ToggleButton(isOn: lcmdTrigger, noFG: noFG))
                     .overlay(Color.red.opacity(triggerKeys.contains(.cmd) ? 0.1 : 0.0).clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous)))
                 Button("    ⎵    ") {}
@@ -1368,28 +1477,24 @@ public let KM = KeysManager()
                     .opacity(0.9)
                     .disabled(true)
                 Button("⌘") {
-                    triggerKeys = triggerKeys.toggling(key: .rcmd)
+                    triggerKeys = triggerKeys.toggling(key: .rcmd).toggling(key: TriggerKey.capsLock, on: false)
                 }.buttonStyle(ToggleButton(isOn: rcmdTrigger, noFG: noFG))
                     .overlay(Color.red.opacity(triggerKeys.contains(.cmd) ? 0.1 : 0.0).clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous)))
                 Button("⌥") {
-                    triggerKeys = triggerKeys.toggling(key: .ralt)
+                    triggerKeys = triggerKeys.toggling(key: .ralt).toggling(key: TriggerKey.capsLock, on: false)
                 }.buttonStyle(ToggleButton(isOn: raltTrigger, noFG: noFG))
                     .overlay(Color.red.opacity(triggerKeys.contains(.alt) ? 0.1 : 0.0).clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous)))
                 Button("⌃") {
-                    triggerKeys = triggerKeys.toggling(key: .rctrl)
+                    triggerKeys = triggerKeys.toggling(key: .rctrl).toggling(key: TriggerKey.capsLock, on: false)
                 }.buttonStyle(ToggleButton(isOn: rctrlTrigger, noFG: noFG))
                     .overlay(Color.red.opacity(triggerKeys.contains(.ctrl) ? 0.1 : 0.0).clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous)))
-                Button("⇧") {
-                    triggerKeys = triggerKeys.toggling(key: .rshift)
-                }.buttonStyle(ToggleButton(isOn: rshiftTrigger, noFG: noFG))
-                    .overlay(Color.red.opacity(triggerKeys.contains(.shift) ? 0.1 : 0.0).clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous)))
-            }.disabled(!isEnabled)
+            }
+            .fixedSize()
+            .size(size: $commonModifiersRowSize)
         }
 
-        @Binding var triggerKeys: [TriggerKey]
+        @State private var commonModifiersRowSize: CGSize = .zero
 
-        var spacing: CGFloat = 3
-        var noFG = false
     }
 
     import Carbon

@@ -2046,8 +2046,6 @@ extension NSSize: @retroactive Hashable {
     }
 }
 
-import EonilFSEvents
-
 public enum LowtechFSEvents {
     public static func startWatching(
         paths: [String],

@@ -70,35 +70,7 @@ open class LowtechAppDelegate: NSObject, NSApplicationDelegate, ObservableObject
         #if DEBUG
             print(notification)
         #endif
-
-        LowtechAppDelegate.instance = self
-        Defaults[.launchCount] += 1
-
-        if shouldRestartOnCrash {
-            restartOnCrash()
-        }
-
-        initMenubar()
-        initObservers()
-        KM.onSpecialHotkey = { [self] in
-            guard showPopoverOnSpecialKey else {
-                return
-            }
-
-            statusBar?.togglePopover(sender: self)
-        }
-        KM.initHotkeys()
-        KM.initFlagsListener()
-
-        if Defaults[.launchCount] == 1, showPopoverOnFirstLaunch {
-            mainAsyncAfter(ms: 1000) {
-                guard let s = self.statusBar, s.window == nil || !s.window!.isVisible else { return }
-                s.showPopover(self)
-            }
-        }
-        initialized = true
-        KM.initialized = true
-        onFinishLaunching?()
+        setupOnLaunch()
     }
 
     @MainActor
@@ -139,6 +111,37 @@ open class LowtechAppDelegate: NSObject, NSApplicationDelegate, ObservableObject
             }
             oldCloser.cancel()
         }
+    }
+
+    @MainActor public func setupOnLaunch() {
+        LowtechAppDelegate.instance = self
+        Defaults[.launchCount] += 1
+
+        if shouldRestartOnCrash {
+            restartOnCrash()
+        }
+
+        initMenubar()
+        initObservers()
+        KM.onSpecialHotkey = { [self] in
+            guard showPopoverOnSpecialKey else {
+                return
+            }
+
+            statusBar?.togglePopover(sender: self)
+        }
+        KM.initHotkeys()
+        KM.initFlagsListener()
+
+        if Defaults[.launchCount] == 1, showPopoverOnFirstLaunch {
+            mainAsyncAfter(ms: 1000) {
+                guard let s = self.statusBar, s.window == nil || !s.window!.isVisible else { return }
+                s.showPopover(self)
+            }
+        }
+        initialized = true
+        KM.initialized = true
+        onFinishLaunching?()
     }
 
     @MainActor
