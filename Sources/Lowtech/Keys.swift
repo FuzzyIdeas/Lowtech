@@ -1290,10 +1290,10 @@ public let KM = KeysManager()
                 }
             } else {
                 var newTriggers = filter { $0 != key }
-                if !allowShiftAlone {
-                    newTriggers = newTriggers.withoutShift
+                if !allowShiftAlone, newTriggers.withoutShift.isEmpty {
+                    newTriggers = []
                 }
-                return clearingCapsLock(in: newTriggers.isEmpty ? [] : newTriggers)
+                return clearingCapsLock(in: newTriggers)
             }
         }
     }
