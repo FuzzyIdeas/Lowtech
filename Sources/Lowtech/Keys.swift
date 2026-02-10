@@ -1260,29 +1260,29 @@ public let KM = KeysManager()
                 }
                 switch key {
                 case .rcmd:
-                    return clearingCapsLock(in: keys.toggling(key: TriggerKey.lcmd, on: false))
+                    return clearingCapsLock(in: keys.toggling(key: TriggerKey.lcmd, on: false, allowShiftAlone: allowShiftAlone))
                 case .ralt:
-                    return clearingCapsLock(in: keys.toggling(key: TriggerKey.lalt, on: false))
+                    return clearingCapsLock(in: keys.toggling(key: TriggerKey.lalt, on: false, allowShiftAlone: allowShiftAlone))
                 case .lcmd:
-                    return clearingCapsLock(in: keys.toggling(key: TriggerKey.rcmd, on: false))
+                    return clearingCapsLock(in: keys.toggling(key: TriggerKey.rcmd, on: false, allowShiftAlone: allowShiftAlone))
                 case .lalt:
-                    return clearingCapsLock(in: keys.toggling(key: TriggerKey.ralt, on: false))
+                    return clearingCapsLock(in: keys.toggling(key: TriggerKey.ralt, on: false, allowShiftAlone: allowShiftAlone))
                 case .rshift:
-                    return clearingCapsLock(in: keys.toggling(key: TriggerKey.lshift, on: false))
+                    return clearingCapsLock(in: keys.toggling(key: TriggerKey.lshift, on: false, allowShiftAlone: allowShiftAlone))
                 case .lshift:
-                    return clearingCapsLock(in: keys.toggling(key: TriggerKey.rshift, on: false))
+                    return clearingCapsLock(in: keys.toggling(key: TriggerKey.rshift, on: false, allowShiftAlone: allowShiftAlone))
                 case .rctrl:
-                    return clearingCapsLock(in: keys.toggling(key: TriggerKey.lctrl, on: false))
+                    return clearingCapsLock(in: keys.toggling(key: TriggerKey.lctrl, on: false, allowShiftAlone: allowShiftAlone))
                 case .lctrl:
-                    return clearingCapsLock(in: keys.toggling(key: TriggerKey.rctrl, on: false))
+                    return clearingCapsLock(in: keys.toggling(key: TriggerKey.rctrl, on: false, allowShiftAlone: allowShiftAlone))
                 case .cmd:
-                    return clearingCapsLock(in: keys.toggling(key: TriggerKey.lcmd, on: false).toggling(key: TriggerKey.rcmd, on: false))
+                    return clearingCapsLock(in: keys.toggling(key: TriggerKey.lcmd, on: false, allowShiftAlone: allowShiftAlone).toggling(key: TriggerKey.rcmd, on: false, allowShiftAlone: allowShiftAlone))
                 case .alt:
-                    return clearingCapsLock(in: keys.toggling(key: TriggerKey.lalt, on: false).toggling(key: TriggerKey.ralt, on: false))
+                    return clearingCapsLock(in: keys.toggling(key: TriggerKey.lalt, on: false, allowShiftAlone: allowShiftAlone).toggling(key: TriggerKey.ralt, on: false, allowShiftAlone: allowShiftAlone))
                 case .ctrl:
-                    return clearingCapsLock(in: keys.toggling(key: TriggerKey.lctrl, on: false).toggling(key: TriggerKey.rctrl, on: false))
+                    return clearingCapsLock(in: keys.toggling(key: TriggerKey.lctrl, on: false, allowShiftAlone: allowShiftAlone).toggling(key: TriggerKey.rctrl, on: false, allowShiftAlone: allowShiftAlone))
                 case .shift:
-                    return clearingCapsLock(in: keys.toggling(key: TriggerKey.lshift, on: false).toggling(key: TriggerKey.rshift, on: false))
+                    return clearingCapsLock(in: keys.toggling(key: TriggerKey.lshift, on: false, allowShiftAlone: allowShiftAlone).toggling(key: TriggerKey.rshift, on: false, allowShiftAlone: allowShiftAlone))
                 case .fn:
                     return clearingCapsLock(in: keys)
                 case .capsLock:
