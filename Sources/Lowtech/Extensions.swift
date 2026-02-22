@@ -1303,6 +1303,11 @@ public extension Sequence where Element: Equatable & Hashable {
     var uniqued: [Element] { Set(self).arr }
     var set: Set<Element> { Set(self) }
 
+    func uniqued(by keyPath: KeyPath<Element, some Hashable>) -> [Element] {
+        var seen = Set<AnyHashable>()
+        return filter { seen.insert($0[keyPath: keyPath]).inserted }
+    }
+
     func replacing(_ element: Element, with newElement: Element) -> [Element] {
         map { $0 == element ? newElement : $0 }
     }

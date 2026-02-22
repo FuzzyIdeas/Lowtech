@@ -265,6 +265,8 @@ public class LowtechPro: ObservableObject {
     @Published public var onTrial = false
     @Published public var productActivated = false
 
+    @inline(__always) public var active: Bool { productActivated || onTrial }
+
     public func manageLicence() {
         guard let paddle, let product else {
             return
@@ -307,6 +309,13 @@ public class LowtechPro: ObservableObject {
         guard let paddle, let product else {
             return
         }
+
+        // if window already exists, focus it instead of opening a new one
+        if let w = NSApp.windows.first(where: { $0.windowController is PADActivateWindowController }) {
+            w.makeKeyAndOrderFront(self)
+            return
+        }
+
         paddle.showLicenseActivationDialog(for: product, email: nil, licenseCode: nil, activationStatusCompletion: { activationStatus in
             mainAsync {
                 switch activationStatus {
@@ -465,8 +474,6 @@ public class LowtechPro: ObservableObject {
     }()
 
     var retryUnverified = true
-
-    @inline(__always) var active: Bool { productActivated || onTrial }
 
     @inline(__always) func enoughTimeHasPassedSinceLastVerification(product: PADProduct) -> Bool {
         guard let verifyDate = product.lastVerifyDate else {
