@@ -296,6 +296,14 @@ public struct RoundBG: ViewModifier {
 }
 
 public extension View {
+    func roundbg(radius: CGFloat = 8, fill: Color = .primary.opacity(0.1)) -> some View {
+        background(roundRect(radius, fill: fill))
+    }
+
+    func roundbg(radius: CGFloat = 8, stroke: Color = .primary.opacity(0.1), lineWidth: CGFloat = 1) -> some View {
+        overlay(roundRect(radius, stroke: stroke, lineWidth: lineWidth))
+    }
+
     func roundbg(size: CGFloat = 2.5, color: Color = .primary, shadowSize: CGFloat = 0, noFG: Bool = false) -> some View {
         modifier(RoundBG(radius: size, color: color, shadowSize: shadowSize, noFG: noFG))
     }
@@ -318,6 +326,17 @@ public extension View {
 
     func fill(_ alignment: Alignment = .center) -> some View {
         frame(maxWidth: .infinity, maxHeight: .infinity, alignment: alignment)
+    }
+
+    /// Round card background with optional border
+    func card(radius: CGFloat = 8, fill: Color = .primary.opacity(0.04), borderColor: Color = .primary.opacity(0.1), borderWidth: CGFloat = 0.5) -> some View {
+        background(RoundedRectangle(cornerRadius: radius, style: .continuous).fill(fill))
+            .overlay(RoundedRectangle(cornerRadius: radius, style: .continuous).strokeBorder(borderColor, lineWidth: borderWidth))
+    }
+
+    /// Dimmed secondary text style
+    func dimmed(_ size: CGFloat = 10, weight: Font.Weight = .regular) -> some View {
+        font(.system(size: size, weight: weight)).foregroundColor(.secondary.opacity(0.6))
     }
 }
 
@@ -384,7 +403,7 @@ public struct ToggleButton: ButtonStyle {
                     }
                 }
             }
-            .opacity(isEnabled ? (isOn ? 1 : 0.7) : 0.5)
+            .opacity(isEnabled ? (isOn ? 1 : 0.5) : 0.4)
     }
 
     @State var hovering = false

@@ -1,5 +1,7 @@
+import AppKit
 import Combine
 import Foundation
+import QuickLookThumbnailing
 import SwiftUI
 
 infix operator =~: ComparisonPrecedence
@@ -1225,6 +1227,182 @@ public extension View {
             self
         }
     }
+
+    /// Drag modifier that writes real file URLs directly to NSPasteboard,
+    /// bypassing SwiftUI's NSFilePromiseProvider which copies files to
+    /// `~/Library/Caches/com.apple.SwiftUI.Drag-<UUID>/`.
+    func onDragRealPath(_ fileURL: URL?, disabled: Bool = false, onDragStarted: (() -> Void)? = nil) -> some View {
+        overlay(
+            RealPathDragSource(fileURLs: [fileURL].compactMap { $0 }, disabled: disabled, onDragStarted: onDragStarted)
+        )
+    }
+
+    func onDragRealPath(_ fileURLs: [URL], disabled: Bool = false, onDragStarted: (() -> Void)? = nil) -> some View {
+        overlay(
+            RealPathDragSource(fileURLs: fileURLs, disabled: disabled, onDragStarted: onDragStarted)
+        )
+    }
+}
+
+// MARK: - AppKit file drag source (bypasses SwiftUI's NSFilePromiseProvider cache copy)
+
+public struct RealPathDragSource: NSViewRepresentable {
+    public func makeNSView(context: Context) -> RealPathDragSourceView {
+        RealPathDragSourceView(fileURLs: fileURLs, disabled: disabled, onDragStarted: onDragStarted)
+    }
+
+    public func updateNSView(_ nsView: RealPathDragSourceView, context: Context) {
+        nsView.fileURLs = fileURLs
+        nsView.disabled = disabled
+        nsView.onDragStarted = onDragStarted
+    }
+
+    let fileURLs: [URL]
+    var disabled = false
+    var onDragStarted: (() -> Void)?
+
+}
+
+public class RealPathDragSourceView: NSView, NSDraggingSource {
+    init(fileURLs: [URL], disabled: Bool, onDragStarted: (() -> Void)?) {
+        self.fileURLs = fileURLs
+        self.disabled = disabled
+        self.onDragStarted = onDragStarted
+        super.init(frame: .zero)
+        loadThumbnail()
+    }
+
+    @available(*, unavailable)
+    required init?(coder: NSCoder) { fatalError() }
+
+    override public func mouseDown(with event: NSEvent) {
+        dragOrigin = convert(event.locationInWindow, from: nil)
+        super.mouseDown(with: event)
+    }
+
+    override public func mouseDragged(with event: NSEvent) {
+        guard !disabled, !fileURLs.isEmpty, let dragOrigin else {
+            super.mouseDragged(with: event)
+            return
+        }
+
+        let current = convert(event.locationInWindow, from: nil)
+        let dx = current.x - dragOrigin.x
+        let dy = current.y - dragOrigin.y
+        guard dx * dx + dy * dy > 16 else {
+            super.mouseDragged(with: event)
+            return
+        }
+        self.dragOrigin = nil
+
+        onDragStarted?()
+
+        var draggingItems = [NSDraggingItem]()
+        for (i, url) in fileURLs.enumerated() {
+            let pasteboardItem = NSPasteboardItem()
+            pasteboardItem.setString(url.absoluteString, forType: .fileURL)
+
+            let item = NSDraggingItem(pasteboardWriter: pasteboardItem)
+            let image = dragImage(for: url)
+            let imageSize = image.size
+            let offset = CGFloat(i) * 3
+            let frame = NSRect(
+                origin: NSPoint(x: (bounds.width - imageSize.width) / 2 + offset, y: (bounds.height - imageSize.height) / 2 - offset),
+                size: imageSize
+            )
+            item.setDraggingFrame(frame, contents: image)
+            draggingItems.append(item)
+        }
+
+        beginDraggingSession(with: draggingItems, event: event, source: self)
+    }
+
+    override public func hitTest(_ point: NSPoint) -> NSView? {
+        guard !fileURLs.isEmpty, !disabled else { return nil }
+        return frame.contains(point) ? self : nil
+    }
+
+    public func draggingSession(_ session: NSDraggingSession, sourceOperationMaskFor context: NSDraggingContext) -> NSDragOperation {
+        .copy
+    }
+
+    var disabled: Bool
+    var onDragStarted: (() -> Void)?
+
+    var fileURLs: [URL] {
+        didSet {
+            guard fileURLs != oldValue else { return }
+            loadThumbnail()
+        }
+    }
+
+    private static let thumbSize = CGSize(width: 128, height: 128)
+
+    private var dragOrigin: NSPoint?
+    private var cachedThumbnail: NSImage?
+
+    private func loadThumbnail() {
+        cachedThumbnail = nil
+        guard let fileURL = fileURLs.first else { return }
+
+        let scale = NSScreen.main?.backingScaleFactor ?? 2
+        let request = QLThumbnailGenerator.Request(fileAt: fileURL, size: Self.thumbSize, scale: scale, representationTypes: .all)
+        QLThumbnailGenerator.shared.generateBestRepresentation(for: request) { [weak self] representation, _ in
+            DispatchQueue.main.async {
+                guard let self, self.fileURLs.first == fileURL else { return }
+                if let cgImage = representation?.cgImage {
+                    self.cachedThumbnail = NSImage(cgImage: cgImage, size: Self.thumbSize)
+                }
+            }
+        }
+    }
+
+    private func dragImage(for url: URL) -> NSImage {
+        let thumb: NSImage
+        if let cachedThumbnail, url == fileURLs.first {
+            thumb = cachedThumbnail
+        } else {
+            thumb = NSWorkspace.shared.icon(forFile: url.path)
+            thumb.size = Self.thumbSize
+        }
+
+        let filename = url.lastPathComponent
+        let labelHeight: CGFloat = 22
+        let padding: CGFloat = 6
+        let cornerRadius: CGFloat = 18
+        let totalSize = NSSize(width: Self.thumbSize.width, height: Self.thumbSize.height + labelHeight + padding)
+
+        return NSImage(size: totalSize, flipped: true) { _ in
+            NSGraphicsContext.saveGraphicsState()
+            let thumbRect = NSRect(origin: .zero, size: Self.thumbSize)
+            let path = NSBezierPath(roundedRect: thumbRect, xRadius: cornerRadius, yRadius: cornerRadius)
+            path.addClip()
+            thumb.draw(in: thumbRect, from: .zero, operation: .sourceOver, fraction: 1)
+            NSGraphicsContext.restoreGraphicsState()
+
+            NSGraphicsContext.saveGraphicsState()
+            let labelRect = NSRect(x: 0, y: Self.thumbSize.height + padding, width: totalSize.width, height: labelHeight)
+            let bgRect = labelRect.insetBy(dx: -2, dy: -2)
+            let bgPath = NSBezierPath(roundedRect: bgRect, xRadius: 6, yRadius: 6)
+            NSColor(white: 0, alpha: 0.65).setFill()
+            bgPath.fill()
+
+            let style = NSMutableParagraphStyle()
+            style.alignment = .center
+            style.lineBreakMode = .byTruncatingMiddle
+            let attrs: [NSAttributedString.Key: Any] = [
+                .font: NSFont.systemFont(ofSize: 11, weight: .medium),
+                .foregroundColor: NSColor.white,
+                .paragraphStyle: style,
+            ]
+            let textRect = labelRect.insetBy(dx: 4, dy: 2)
+            (filename as NSString).draw(in: textRect, withAttributes: attrs)
+            NSGraphicsContext.restoreGraphicsState()
+
+            return true
+        }
+    }
+
 }
 
 public extension Sequence where Element: AdditiveArithmetic {
