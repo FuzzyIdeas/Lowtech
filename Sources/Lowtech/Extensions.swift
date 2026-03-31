@@ -1244,6 +1244,90 @@ public extension View {
     }
 }
 
+// MARK: - SwiftUI .draggable() symlink swizzle
+
+/// Swizzles SwiftUI's drag internals so that `.draggable()` provides the real
+/// file path instead of copying to `~/Library/Caches/com.apple.SwiftUI.Drag-<UUID>/`.
+///
+/// Two swizzles work together:
+/// 1. `NSFileManager.copyItemAtURL:toURL:error:` creates a symlink instead of a copy
+/// 2. `NSPasteboardItem.setString:forType:` and `setData:forType:` resolve the
+///    symlink back to the real path before writing to the pasteboard
+///
+/// Call once at app launch (e.g. in `applicationDidFinishLaunching`).
+public func swizzleDraggableToRealPath() {
+    // Swizzle 1: copy -> symlink
+    if let original = class_getInstanceMethod(FileManager.self, NSSelectorFromString("copyItemAtURL:toURL:error:")),
+       let swizzled = class_getInstanceMethod(FileManager.self, #selector(FileManager.lt_copyItem(at:to:error:)))
+    {
+        method_exchangeImplementations(original, swizzled)
+    }
+
+    // Swizzle 2: resolve symlink in pasteboard string
+    if let original = class_getInstanceMethod(NSPasteboardItem.self, #selector(NSPasteboardItem.setString(_:forType:))),
+       let swizzled = class_getInstanceMethod(NSPasteboardItem.self, #selector(NSPasteboardItem.lt_setString(_:forType:)))
+    {
+        method_exchangeImplementations(original, swizzled)
+    }
+
+    // Swizzle 3: resolve symlink in pasteboard data
+    if let original = class_getInstanceMethod(NSPasteboardItem.self, #selector(NSPasteboardItem.setData(_:forType:))),
+       let swizzled = class_getInstanceMethod(NSPasteboardItem.self, #selector(NSPasteboardItem.lt_setData(_:forType:)))
+    {
+        method_exchangeImplementations(original, swizzled)
+    }
+}
+
+@available(*, deprecated, renamed: "swizzleDraggableToRealPath")
+public func swizzleDraggableCopyToSymlink() {
+    swizzleDraggableToRealPath()
+}
+
+import ObjectiveC
+
+private let swiftUIDragMarker = "com.apple.SwiftUI.Drag"
+
+extension FileManager {
+    @objc dynamic func lt_copyItem(at srcURL: NSURL, to dstURL: NSURL, error errorPtr: NSErrorPointer) -> Bool {
+        if let dstStr = dstURL.absoluteString, dstStr.contains(swiftUIDragMarker) {
+            do {
+                try createSymbolicLink(at: dstURL as URL, withDestinationURL: srcURL as URL)
+                return true
+            } catch {}
+        }
+        return lt_copyItem(at: srcURL, to: dstURL, error: errorPtr)
+    }
+}
+
+extension NSPasteboardItem {
+    @objc dynamic func lt_setString(_ string: String, forType type: NSPasteboard.PasteboardType) -> Bool {
+        if type == .fileURL, string.contains(swiftUIDragMarker),
+           let resolved = resolveSwiftUIDragSymlink(string)
+        {
+            return lt_setString(resolved, forType: type)
+        }
+        return lt_setString(string, forType: type)
+    }
+
+    @objc dynamic func lt_setData(_ data: Data, forType type: NSPasteboard.PasteboardType) -> Bool {
+        if type == .fileURL,
+           let string = String(data: data, encoding: .utf8),
+           string.contains(swiftUIDragMarker),
+           let resolved = resolveSwiftUIDragSymlink(string)
+        {
+            return lt_setData(Data(resolved.utf8), forType: type)
+        }
+        return lt_setData(data, forType: type)
+    }
+}
+
+private func resolveSwiftUIDragSymlink(_ urlString: String) -> String? {
+    guard let url = URL(string: urlString),
+          let dest = try? FileManager.default.destinationOfSymbolicLink(atPath: url.path)
+    else { return nil }
+    return URL(fileURLWithPath: dest).absoluteString
+}
+
 // MARK: - AppKit file drag source (bypasses SwiftUI's NSFilePromiseProvider cache copy)
 
 public struct RealPathDragSource: NSViewRepresentable {
@@ -1269,7 +1353,7 @@ public class RealPathDragSourceView: NSView, NSDraggingSource {
         self.disabled = disabled
         self.onDragStarted = onDragStarted
         super.init(frame: .zero)
-        loadThumbnail()
+        loadThumbnails()
     }
 
     @available(*, unavailable)
@@ -1297,20 +1381,34 @@ public class RealPathDragSourceView: NSView, NSDraggingSource {
 
         onDragStarted?()
 
+        // All files go on the pasteboard, but only show up to 2 drag images
+        let maxVisible = 2
+        let totalCount = fileURLs.count
+
         var draggingItems = [NSDraggingItem]()
         for (i, url) in fileURLs.enumerated() {
             let pasteboardItem = NSPasteboardItem()
             pasteboardItem.setString(url.absoluteString, forType: .fileURL)
 
             let item = NSDraggingItem(pasteboardWriter: pasteboardItem)
-            let image = dragImage(for: url)
-            let imageSize = image.size
-            let offset = CGFloat(i) * 3
-            let frame = NSRect(
-                origin: NSPoint(x: (bounds.width - imageSize.width) / 2 + offset, y: (bounds.height - imageSize.height) / 2 - offset),
-                size: imageSize
-            )
-            item.setDraggingFrame(frame, contents: image)
+
+            if i < maxVisible {
+                // Show drag image for first 2 files (with count badge on the last visible one)
+                let showBadge = (i == maxVisible - 1 && totalCount > maxVisible)
+                let image = dragImage(for: url, badge: showBadge ? totalCount : nil)
+                let imageSize = image.size
+                let offset = CGFloat(i) * 4
+                let frame = NSRect(
+                    origin: NSPoint(x: (bounds.width - imageSize.width) / 2 + offset,
+                                    y: (bounds.height - imageSize.height) / 2 - offset),
+                    size: imageSize
+                )
+                item.setDraggingFrame(frame, contents: image)
+            } else {
+                // Hidden items: 1x1 transparent, still on the pasteboard
+                let pixel = NSImage(size: NSSize(width: 1, height: 1))
+                item.setDraggingFrame(NSRect(x: 0, y: 0, width: 1, height: 1), contents: pixel)
+            }
             draggingItems.append(item)
         }
 
@@ -1332,35 +1430,40 @@ public class RealPathDragSourceView: NSView, NSDraggingSource {
     var fileURLs: [URL] {
         didSet {
             guard fileURLs != oldValue else { return }
-            loadThumbnail()
+            loadThumbnails()
         }
     }
 
     private static let thumbSize = CGSize(width: 128, height: 128)
 
     private var dragOrigin: NSPoint?
-    private var cachedThumbnail: NSImage?
+    private var cachedThumbnails: [URL: NSImage] = [:]
 
-    private func loadThumbnail() {
-        cachedThumbnail = nil
-        guard let fileURL = fileURLs.first else { return }
+    private func loadThumbnails() {
+        cachedThumbnails.removeAll()
+
+        // Only generate thumbnails for the first 2 files (max visible in drag)
+        let toLoad = fileURLs.prefix(2)
+        guard !toLoad.isEmpty else { return }
 
         let scale = NSScreen.main?.backingScaleFactor ?? 2
-        let request = QLThumbnailGenerator.Request(fileAt: fileURL, size: Self.thumbSize, scale: scale, representationTypes: .all)
-        QLThumbnailGenerator.shared.generateBestRepresentation(for: request) { [weak self] representation, _ in
-            DispatchQueue.main.async {
-                guard let self, self.fileURLs.first == fileURL else { return }
-                if let cgImage = representation?.cgImage {
-                    self.cachedThumbnail = NSImage(cgImage: cgImage, size: Self.thumbSize)
+        for fileURL in toLoad {
+            let request = QLThumbnailGenerator.Request(fileAt: fileURL, size: Self.thumbSize, scale: scale, representationTypes: .all)
+            QLThumbnailGenerator.shared.generateBestRepresentation(for: request) { [weak self] representation, _ in
+                DispatchQueue.main.async {
+                    guard let self, self.fileURLs.contains(fileURL) else { return }
+                    if let cgImage = representation?.cgImage {
+                        self.cachedThumbnails[fileURL] = NSImage(cgImage: cgImage, size: Self.thumbSize)
+                    }
                 }
             }
         }
     }
 
-    private func dragImage(for url: URL) -> NSImage {
+    private func dragImage(for url: URL, badge: Int? = nil) -> NSImage {
         let thumb: NSImage
-        if let cachedThumbnail, url == fileURLs.first {
-            thumb = cachedThumbnail
+        if let cached = cachedThumbnails[url] {
+            thumb = cached
         } else {
             thumb = NSWorkspace.shared.icon(forFile: url.path)
             thumb.size = Self.thumbSize
@@ -1380,6 +1483,22 @@ public class RealPathDragSourceView: NSView, NSDraggingSource {
             thumb.draw(in: thumbRect, from: .zero, operation: .sourceOver, fraction: 1)
             NSGraphicsContext.restoreGraphicsState()
 
+            // Count badge (top-right corner)
+            if let badge {
+                let badgeStr = "\(badge)" as NSString
+                let badgeFont = NSFont.systemFont(ofSize: 13, weight: .bold)
+                let badgeAttrs: [NSAttributedString.Key: Any] = [.font: badgeFont, .foregroundColor: NSColor.white]
+                let badgeSize = badgeStr.size(withAttributes: badgeAttrs)
+                let badgeW = max(badgeSize.width + 10, 24)
+                let badgeH: CGFloat = 22
+                let badgeRect = NSRect(x: Self.thumbSize.width - badgeW - 2, y: 2, width: badgeW, height: badgeH)
+                NSColor.systemBlue.setFill()
+                NSBezierPath(roundedRect: badgeRect, xRadius: badgeH / 2, yRadius: badgeH / 2).fill()
+                let textOrigin = NSPoint(x: badgeRect.midX - badgeSize.width / 2, y: badgeRect.midY - badgeSize.height / 2)
+                badgeStr.draw(at: textOrigin, withAttributes: badgeAttrs)
+            }
+
+            // Filename label
             NSGraphicsContext.saveGraphicsState()
             let labelRect = NSRect(x: 0, y: Self.thumbSize.height + padding, width: totalSize.width, height: labelHeight)
             let bgRect = labelRect.insetBy(dx: -2, dy: -2)
