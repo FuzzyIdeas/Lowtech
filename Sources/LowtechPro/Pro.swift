@@ -9,6 +9,25 @@ extension Defaults.Keys {
     static let shownPaddleTrialEnded = Key<Bool>("shownPaddleTrialEnded", default: false)
 }
 
+public func clopDebugLog(_ message: String, includeCallStack: Bool = false) {
+    guard let bid = Bundle.main.bundleIdentifier, bid.hasPrefix("com.lowtechguys.Clop") else { return }
+
+    let df = DateFormatter()
+    df.dateFormat = "yyyy-MM-dd HH:mm:ss.SSS"
+    var line = "[\(df.string(from: Date()))] \(message)\n"
+    if includeCallStack {
+        line += Thread.callStackSymbols.joined(separator: "\n") + "\n"
+    }
+    let path = (NSHomeDirectory() as NSString).appendingPathComponent(".clop-debug-logs")
+    if let handle = FileHandle(forWritingAtPath: path) {
+        handle.seekToEndOfFile()
+        handle.write(line.data(using: .utf8)!)
+        handle.closeFile()
+    } else {
+        FileManager.default.createFile(atPath: path, contents: line.data(using: .utf8)!)
+    }
+}
+
 // MARK: - ProManager
 
 public class ProManager: ObservableObject {
@@ -62,10 +81,12 @@ open class LowtechProAppDelegate: LowtechIndieAppDelegate, PADProductDelegate, @
 
     @MainActor
     open func paddleDidError(_ error: Error) {
+        clopDebugLog("paddleDidError: code=\((error as NSError).code) description=\(error.localizedDescription)")
         guard let code = PADErrorCode(rawValue: (error as NSError).code) else { return }
 
         switch code {
         case .licenseCodeUtilized, .tooManyActivationsOrExpired, .noActivations:
+            clopDebugLog("paddleDidError: handling \(code.rawValue) (licenseCodeUtilized/tooManyActivations/noActivations)")
             guard let product,
                   let paddleController =
                   (
@@ -74,17 +95,26 @@ open class LowtechProAppDelegate: LowtechIndieAppDelegate, PADProductDelegate, @
                   ),
                   let email = paddleController.emailTxt?.stringValue,
                   let licenseCode = paddleController.licenseTxt?.stringValue
-            else { return }
+            else {
+                clopDebugLog("paddleDidError: guard failed (product=\(product != nil), no paddleController or credentials)")
+                return
+            }
 
             LowtechProAppDelegate.showNextPaddleError = false
             product.activations(forLicense: licenseCode) { activations, error in
                 guard let activationsList = activations as? [[String: Any]], let oldestActivation = activationsList.first
-                else { return }
+                else {
+                    clopDebugLog("paddleDidError: no activations list found, error=\(error?.localizedDescription ?? "nil")")
+                    return
+                }
 
+                clopDebugLog("paddleDidError: deactivating oldest activation \(oldestActivation["activation_id"] ?? "unknown") to make room")
                 product.deactivateActivation(oldestActivation["activation_id"] as! String, license: licenseCode) { deactivated, error in
+                    clopDebugLog("paddleDidError: deactivation result=\(deactivated), error=\(error?.localizedDescription ?? "nil")")
                     guard deactivated else { return }
                     mainAsync {
                         product.activateEmail(email, license: licenseCode) { didActivate, error in
+                            clopDebugLog("paddleDidError: re-activation result=\(didActivate), error=\(error?.localizedDescription ?? "nil")")
                             guard didActivate else {
                                 if let error {
                                     log.error(error.localizedDescription)
@@ -146,10 +176,12 @@ open class LowtechProAppDelegate: LowtechIndieAppDelegate, PADProductDelegate, @
     }
 
     public func productActivated() {
+        clopDebugLog("productActivated delegate called")
         pro.enablePro()
     }
 
     public func productDeactivated() {
+        clopDebugLog("productDeactivated delegate called", includeCallStack: true)
         pro.disablePro()
     }
 
@@ -258,7 +290,10 @@ public class LowtechPro: ObservableObject {
         product.willContinueAtTrialEnd = hasFreeFeatures
 
         if product.activated || trialActive(product: product) {
+            clopDebugLog("LowtechPro.init: enabling pro at init (activated=\(product.activated), trialActive=\(trialActive(product: product)))")
             enablePro()
+        } else {
+            clopDebugLog("LowtechPro.init: NOT enabling pro at init (activated=\(product.activated), trialActive=\(trialActive(product: product)), licenseCode=\(product.licenseCode != nil ? "present" : "nil"))")
         }
     }
 
@@ -340,11 +375,14 @@ public class LowtechPro: ObservableObject {
 
     public func checkProLicense() {
         guard let product else {
+            clopDebugLog("checkProLicense: product is nil, returning early")
             return
         }
+        clopDebugLog("checkProLicense: starting refresh (activated=\(product.activated), trialDaysRemaining=\(product.trialDaysRemaining ?? -1), licenseCode=\(product.licenseCode != nil ? "present" : "nil"))")
         product.refresh { [self]
             (delta: [AnyHashable: Any]?, error: Error?) in
                 mainAsync { [self] in
+                    clopDebugLog("checkProLicense: refresh complete (delta=\(delta?.isEmpty == false ? "\(delta!)" : "none"), error=\(error?.localizedDescription ?? "nil"), activated=\(product.activated), trialDaysRemaining=\(product.trialDaysRemaining ?? -1))")
                     if let delta, !delta.isEmpty {
                         log.warning("Differences in \(product.productName ?? "product") after refresh")
                     }
@@ -353,7 +391,10 @@ public class LowtechPro: ObservableObject {
                     }
 
                     if trialActive(product: product) || product.activated {
+                        clopDebugLog("checkProLicense: enabling pro (trialActive=\(trialActive(product: product)), activated=\(product.activated))")
                         enablePro()
+                    } else {
+                        clopDebugLog("checkProLicense: NOT enabling pro (trialActive=\(trialActive(product: product)), activated=\(product.activated))")
                     }
 
                     verifyLicense()
@@ -363,11 +404,17 @@ public class LowtechPro: ObservableObject {
 
     public func verifyLicense(force: Bool = false) {
         guard let paddle, let product else {
+            clopDebugLog("verifyLicense: paddle=\(paddle != nil), product=\(product != nil), returning early")
             return
         }
-        guard force || enoughTimeHasPassedSinceLastVerification(product: product) else { return }
+        guard force || enoughTimeHasPassedSinceLastVerification(product: product) else {
+            clopDebugLog("verifyLicense: skipping (force=\(force), lastVerifyDate=\(product.lastVerifyDate?.description ?? "nil"), productActivated=\(productActivated))")
+            return
+        }
+        clopDebugLog("verifyLicense: calling verifyActivation (force=\(force), activated=\(product.activated), licenseCode=\(product.licenseCode != nil ? "present" : "nil"))")
         product.verifyActivation { [self] (state: PADVerificationState, error: Error?) in
             mainAsync { [self] in
+                clopDebugLog("verifyLicense: callback state=\(state.rawValue) error=\(error?.localizedDescription ?? "nil") trialActive=\(trialActive(product: product))")
                 if let verificationError = error {
                     log.error(
                         "Error on verifying activation of \(product.productName ?? "product") from Paddle: \(verificationError.localizedDescription)"
@@ -381,8 +428,10 @@ public class LowtechPro: ObservableObject {
                     log.debug("\(product.productName ?? "") noActivation")
 
                     if onTrial {
+                        clopDebugLog("verifyLicense: noActivation but onTrial=true, enabling pro")
                         enablePro()
                     } else {
+                        clopDebugLog("verifyLicense: noActivation and onTrial=false, DISABLING pro")
                         disablePro()
                     }
                     if !onTrial, !Defaults[.shownPaddleTrialEnded] {
@@ -390,8 +439,10 @@ public class LowtechPro: ObservableObject {
                         Defaults[.shownPaddleTrialEnded] = true
                     }
                 case .unableToVerify where error == nil:
+                    clopDebugLog("verifyLicense: unableToVerify (network problems), keeping current state (productActivated=\(productActivated), onTrial=\(onTrial))")
                     log.error("\(product.productName ?? "Product") unableToVerify (network problems)")
                 case .unverified where error?.localizedDescription == "Machine does not match activations.":
+                    clopDebugLog("verifyLicense: unverified (machine mismatch), DISABLING pro")
                     log.error("\(product.productName ?? "Product") unableToVerify (machine does not match)")
                     disablePro()
                     if !onTrial, !Defaults[.shownPaddleTrialEnded] {
@@ -401,12 +452,14 @@ public class LowtechPro: ObservableObject {
                 case .unverified where error == nil:
                     if retryUnverified {
                         retryUnverified = false
+                        clopDebugLog("verifyLicense: unverified (revoked remotely), retrying in 3s")
                         log.warning("\(product.productName ?? "Product") unverified (revoked remotely), retrying for safe measure")
                         asyncAfter(ms: 3000) {
                             self.verifyLicense(force: true)
                         }
                         return
                     }
+                    clopDebugLog("verifyLicense: unverified (revoked remotely) after retry, DISABLING pro")
                     log.error("\(product.productName ?? "Product") unverified (revoked remotely)")
 
                     disablePro()
@@ -415,9 +468,11 @@ public class LowtechPro: ObservableObject {
                         Defaults[.shownPaddleTrialEnded] = true
                     }
                 case .verified:
+                    clopDebugLog("verifyLicense: verified, enabling pro")
                     log.info("\(product.productName ?? "Product") verified")
                     enablePro()
                 default:
+                    clopDebugLog("verifyLicense: unknown state \(state.rawValue)")
                     log.warning("\(product.productName ?? "Product") verification unknown state: \(state)")
                 }
             }
@@ -426,8 +481,10 @@ public class LowtechPro: ObservableObject {
 
     public func enablePro() {
         guard let product else {
+            clopDebugLog("enablePro: product is nil, returning early")
             return
         }
+        clopDebugLog("enablePro: setting productActivated=true (was \(productActivated), onTrial will be \(trialActive(product: product)))")
         mainAsync {
             self.productActivated = true
             self.onTrial = self.trialActive(product: product)
@@ -436,8 +493,10 @@ public class LowtechPro: ObservableObject {
 
     public func disablePro() {
         guard let product else {
+            clopDebugLog("disablePro: product is nil, returning early")
             return
         }
+        clopDebugLog("disablePro: setting productActivated=false (was \(productActivated), onTrial will be \(trialActive(product: product)))", includeCallStack: true)
         mainAsync {
             self.productActivated = false
             self.onTrial = self.trialActive(product: product)

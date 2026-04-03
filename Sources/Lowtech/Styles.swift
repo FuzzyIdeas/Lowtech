@@ -606,8 +606,8 @@ public struct FlatButton: ButtonStyle {
             .if(hoverScaleEffects) {
                 $0.scaleEffect(
                     configuration.isPressed || pressed
-                        ? 1.02
-                        : (hovering ? 1.05 : 1.00)
+                        ? 1.015
+                        : (hovering ? 1.03 : 1.00)
                 )
             }
             .onAppear {
