@@ -26,6 +26,10 @@ let package = Package(
             name: "LowtechPro",
             targets: ["LowtechPro"]
         ),
+        .library(
+            name: "LowtechProSentry",
+            targets: ["LowtechProSentry"]
+        ),
     ],
     dependencies: [
         // Dependencies declare other packages that this package depends on.
@@ -80,6 +84,12 @@ let package = Package(
             dependencies: [
                 "LowtechIndie",
                 .product(name: "Paddle", package: "PaddleSPM"),
+            ]
+        ),
+        .target(
+            name: "LowtechProSentry",
+            dependencies: [
+                "Lowtech",
                 .product(name: "Sentry", package: "sentry-cocoa"),
             ]
         ),

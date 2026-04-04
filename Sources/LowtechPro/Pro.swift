@@ -3,7 +3,6 @@ import Defaults
 import Lowtech
 import LowtechIndie
 import Paddle
-import Sentry
 
 extension Defaults.Keys {
     static let shownPaddleTrialEnded = Key<Bool>("shownPaddleTrialEnded", default: false)
@@ -22,17 +21,6 @@ public var PRO: LowtechPro? { (LowtechProAppDelegate.instance as? LowtechProAppD
 // MARK: - LowtechProAppDelegate
 
 open class LowtechProAppDelegate: LowtechIndieAppDelegate, PADProductDelegate, @preconcurrency PaddleDelegate {
-    open func getSentryUser() -> User {
-        let user = User(userId: SERIAL_NUMBER_HASH)
-        guard let product else { return user }
-        if Defaults[.paddleConsent] {
-            user.email = product.activationEmail
-        }
-        user.username = product.activationID
-
-        return user
-    }
-
     @MainActor
     open func willShowPaddle(_: PADUIType, product _: PADProduct) -> PADDisplayConfiguration? {
         statusBar?.showPopoverIfNotVisible()
