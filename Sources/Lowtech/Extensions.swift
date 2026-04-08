@@ -1399,8 +1399,10 @@ public class RealPathDragSourceView: NSView, NSDraggingSource {
                 let imageSize = image.size
                 let offset = CGFloat(i) * 4
                 let frame = NSRect(
-                    origin: NSPoint(x: (bounds.width - imageSize.width) / 2 + offset,
-                                    y: (bounds.height - imageSize.height) / 2 - offset),
+                    origin: NSPoint(
+                        x: (bounds.width - imageSize.width) / 2 + offset,
+                        y: (bounds.height - imageSize.height) / 2 - offset
+                    ),
                     size: imageSize
                 )
                 item.setDraggingFrame(frame, contents: image)
