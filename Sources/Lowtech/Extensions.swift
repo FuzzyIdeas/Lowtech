@@ -2121,10 +2121,11 @@ public extension FilePath {
         guard let stem, let ext = `extension`, let hash = sha256WithTimestamp else {
             return name.string
         }
-        let name = stem.replacingOccurrences(of: "_\(hash)", with: "")
+        let name = stem.replacing(Self.trailingHashesPattern, with: "")
         return "\(name)_\(hash).\(ext)"
     }
 
+    static let trailingHashesPattern = try! Regex(#"(_[a-f0-9]{64})+$"#)
     static let hashPattern = try! Regex(#"_([a-f0-9]{64})$"#)
     var nameWithoutHash: String {
         guard let stem else {

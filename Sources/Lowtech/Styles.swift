@@ -648,11 +648,18 @@ public struct FlatButton: ButtonStyle {
     @State var hoverColorEffects = true
     @State var hoverScaleEffects = true
 
+    var effectiveColor: Color {
+        if hovering, let hoverColor {
+            return hoverColor
+        }
+        return color
+    }
+
     var bg: some View {
         circle
             ?
             AnyView(
-                Circle().fill(color)
+                Circle().fill(effectiveColor)
                     .frame(
                         minWidth: width,
                         idealWidth: width,
@@ -666,7 +673,7 @@ public struct FlatButton: ButtonStyle {
                 RoundedRectangle(
                     cornerRadius: radius,
                     style: .continuous
-                ).fill(color).frame(
+                ).fill(effectiveColor).frame(
                     minWidth: width,
                     idealWidth: width,
                     maxWidth: stretch ? .infinity : nil,
