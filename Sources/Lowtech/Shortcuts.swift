@@ -7,15 +7,15 @@ import SwiftUI
 // MARK: - Model
 
 public struct Shortcut: Codable, Hashable, Defaults.Serializable, Identifiable {
-    public var name: String
-    public var identifier: String
-    public var folder: String?
-
     public init(name: String, identifier: String, folder: String? = nil) {
         self.name = name
         self.identifier = identifier
         self.folder = folder
     }
+
+    public var name: String
+    public var identifier: String
+    public var folder: String?
 
     public var id: String { identifier }
 
@@ -132,8 +132,6 @@ public enum ShortcutsFetcher {
         return process
     }
 
-    // MARK: - Private
-
     private static func runShortcutsList(args: [String]) -> String {
         let process = Process()
         process.executableURL = URL(fileURLWithPath: "/usr/bin/shortcuts")
@@ -169,6 +167,8 @@ public enum ShortcutsFetcher {
 /// ForEach(shortcutsManager.groupedByFolder, id: \.folder) { ... }
 /// ```
 public final class ShortcutsManager: ObservableObject {
+    public init() {}
+
     public static let shared = ShortcutsManager()
 
     @Published public private(set) var shortcuts: [Shortcut] = []
@@ -180,8 +180,6 @@ public final class ShortcutsManager: ObservableObject {
 
     /// How long before `fetch()` will refresh if called again. `force: true` bypasses this.
     public var cacheDuration: TimeInterval = 60
-
-    public init() {}
 
     // MARK: - Derived
 
@@ -258,8 +256,6 @@ public final class ShortcutsManager: ObservableObject {
         isWatching = false
     }
 
-    // MARK: - Private
-
     private var isFetching = false
     private var isWatching = false
     private var lastFetch: Date?
@@ -282,13 +278,11 @@ public let SHM = ShortcutsManager.shared
 /// Folder-grouped menu of all installed shortcuts.
 /// Use inside a `Picker` (tag-based selection) or pass `onShortcutChosen` for a button-based flow.
 public struct ShortcutChoiceMenu: View {
-    @ObservedObject var shortcutsManager = SHM
-
-    public var onShortcutChosen: ((Shortcut) -> Void)?
-
     public init(onShortcutChosen: ((Shortcut) -> Void)? = nil) {
         self.onShortcutChosen = onShortcutChosen
     }
+
+    public var onShortcutChosen: ((Shortcut) -> Void)?
 
     public var body: some View {
         if shortcutsManager.hasFetched {
@@ -311,6 +305,8 @@ public struct ShortcutChoiceMenu: View {
         }
     }
 
+    @ObservedObject var shortcutsManager = SHM
+
     @ViewBuilder
     private func shortcutList(_ shortcuts: [Shortcut]) -> some View {
         if let onShortcutChosen {
@@ -327,22 +323,46 @@ public struct ShortcutChoiceMenu: View {
     }
 }
 
-/// Compound picker: a folder-grouped Picker plus an "open in Shortcuts" hammer button.
+/// Compound picker: a folder-grouped Menu (with folder submenus) plus an "open in Shortcuts" hammer button.
 public struct ShortcutsPicker: View {
-    @ObservedObject var shortcutsManager = SHM
-    @Binding var shortcut: Shortcut?
-
-    public init(shortcut: Binding<Shortcut?>) {
+    public init(shortcut: Binding<Shortcut?>, placeholder: String = "Select shortcut") {
         _shortcut = shortcut
+        self.placeholder = placeholder
     }
 
     public var body: some View {
         HStack {
-            Picker(
-                selection: $shortcut,
-                content: { ShortcutChoiceMenu() },
-                label: { Text("Shortcut") }
-            )
+            Menu {
+                if shortcutsManager.hasFetched {
+                    let grouped = shortcutsManager.groupedByFolder
+                    if grouped.isEmpty {
+                        Text("No shortcuts found").disabled(true)
+                    } else {
+                        let ungrouped = grouped.first { $0.folder == nil }?.shortcuts ?? []
+                        let folders = grouped.filter { $0.folder != nil }
+
+                        ForEach(ungrouped) { s in
+                            Button(s.name) { shortcut = s }
+                        }
+                        if !ungrouped.isEmpty, !folders.isEmpty {
+                            Divider()
+                        }
+                        ForEach(folders, id: \.folder) { group in
+                            Menu(group.folder ?? "") {
+                                ForEach(group.shortcuts) { s in
+                                    Button(s.name) { shortcut = s }
+                                }
+                            }
+                        }
+                    }
+                } else {
+                    Text("Loading...").disabled(true)
+                }
+            } label: {
+                Text(shortcut?.name ?? placeholder)
+                    .lineLimit(1)
+                    .truncationMode(.middle)
+            }
             Button {
                 if let url = shortcut?.url {
                     NSWorkspace.shared.open(url)
@@ -355,13 +375,19 @@ public struct ShortcutsPicker: View {
         }
         .onAppear { shortcutsManager.fetch() }
     }
+
+    @ObservedObject var shortcutsManager = SHM
+    @Binding var shortcut: Shortcut?
+
+    var placeholder: String
+
 }
 
 /// Decorative Shortcuts app icon stand-in — used as a button adornment in shortcut pickers.
 public struct ShortcutsIcon: View {
-    public var size: CGFloat
-
     public init(size: CGFloat = 20) { self.size = size }
+
+    public var size: CGFloat
 
     public var body: some View {
         VStack(spacing: -size / 1.8) {
