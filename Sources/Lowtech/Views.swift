@@ -3,7 +3,10 @@ import Cocoa
 import Combine
 import Defaults
 import Foundation
+import os
 import SwiftUI
+
+private let logger = Logger(subsystem: lowtechLogSubsystem, category: "Views")
 
 extension NSButton {
     override open var focusRingType: NSFocusRingType {
@@ -673,14 +676,14 @@ public struct PopoverView<Content: View>: View {
 
     func setup(_ visible: Bool? = nil) {
         guard visible ?? self.visible else {
-            debug("Deallocating \(name) in 2 seconds...")
+            logger.debug("Deallocating \(name) in 2 seconds...")
             env.menuHideTask = mainAsyncAfter(ms: 2000) {
-                debug("Deallocated \(name)")
+                logger.debug("Deallocated \(name)")
                 env.closed = true
             }
             return
         }
-        debug("Reallocating \(name)")
+        logger.debug("Reallocating \(name)")
         env.menuHideTask = nil
         env.closed = false
     }

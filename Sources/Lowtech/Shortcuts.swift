@@ -2,7 +2,10 @@ import Cocoa
 import Combine
 import Defaults
 import Foundation
+import os
 import SwiftUI
+
+private let logger = Logger(subsystem: lowtechLogSubsystem, category: "Shortcuts")
 
 // MARK: - Model
 
@@ -246,7 +249,7 @@ public final class ShortcutsManager: ObservableObject {
             }
             isWatching = true
         } catch {
-            log.error("Failed to start shortcut watcher: \(error)")
+            logger.error("Failed to start shortcut watcher: \(error)")
         }
     }
 

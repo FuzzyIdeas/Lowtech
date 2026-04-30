@@ -2,7 +2,10 @@ import Combine
 import Defaults
 import Lowtech
 import LowtechIndie
+import os
 import Paddle
+
+private let logger = Logger(subsystem: lowtechLogSubsystem, category: "Pro")
 
 extension Defaults.Keys {
     static let shownPaddleTrialEnded = Key<Bool>("shownPaddleTrialEnded", default: false)
@@ -79,7 +82,7 @@ open class LowtechProAppDelegate: LowtechIndieAppDelegate, PADProductDelegate, @
                         product.activateEmail(email, license: licenseCode) { didActivate, error in
                             guard didActivate else {
                                 if let error {
-                                    log.error(error.localizedDescription)
+                                    logger.error("\(error.localizedDescription)")
                                     paddleController.showErrorAlert(error.localizedDescription)
                                 }
                                 return
@@ -184,7 +187,7 @@ open class LowtechProAppDelegate: LowtechIndieAppDelegate, PADProductDelegate, @
         }
         paddle.showLicenseRecovery(for: product) { _, error in
             if let error {
-                log.error("Error on recovering license from Paddle: \(error)")
+                logger.error("Error on recovering license from Paddle: \(error)")
             }
         }
     }
@@ -281,17 +284,17 @@ public class LowtechPro: ObservableObject {
                 state, _ in
                 switch state {
                 case .abandoned:
-                    log.debug("Checkout abandoned")
+                    logger.debug("Checkout abandoned")
                 case .failed:
-                    log.debug("Checkout failed")
+                    logger.debug("Checkout failed")
                 case .flagged:
-                    log.debug("Checkout flagged")
+                    logger.debug("Checkout flagged")
                 case .purchased:
-                    log.debug("Checkout purchased")
+                    logger.debug("Checkout purchased")
                 case .slowOrderProcessing:
-                    log.debug("Checkout slow processing")
+                    logger.debug("Checkout slow processing")
                 default:
-                    log.debug("Checkout unknown state: \(state)")
+                    logger.debug("Checkout unknown state: \(state.rawValue)")
                 }
             }
         )
@@ -338,10 +341,10 @@ public class LowtechPro: ObservableObject {
             (delta: [AnyHashable: Any]?, error: Error?) in
                 mainAsync { [self] in
                     if let delta, !delta.isEmpty {
-                        log.warning("Differences in \(product.productName ?? "product") after refresh")
+                        logger.warning("Differences in \(product.productName ?? "product") after refresh")
                     }
                     if let error {
-                        log.error("Error on refreshing \(product.productName ?? "product") from Paddle: \(error)")
+                        logger.error("Error on refreshing \(product.productName ?? "product") from Paddle: \(error)")
                     }
 
                     if trialActive(product: product) || product.activated {
@@ -363,7 +366,7 @@ public class LowtechPro: ObservableObject {
         product.verifyActivation { [self] (state: PADVerificationState, error: Error?) in
             mainAsync { [self] in
                 if let verificationError = error {
-                    log.error(
+                    logger.error(
                         "Error on verifying activation of \(product.productName ?? "product") from Paddle: \(verificationError.localizedDescription)"
                     )
                 }
@@ -372,7 +375,7 @@ public class LowtechPro: ObservableObject {
 
                 switch state {
                 case .noActivation:
-                    log.debug("\(product.productName ?? "") noActivation")
+                    logger.debug("\(product.productName ?? "") noActivation")
 
                     if onTrial {
                         enablePro()
@@ -384,9 +387,9 @@ public class LowtechPro: ObservableObject {
                         Defaults[.shownPaddleTrialEnded] = true
                     }
                 case .unableToVerify where error == nil:
-                    log.error("\(product.productName ?? "Product") unableToVerify (network problems)")
+                    logger.error("\(product.productName ?? "Product") unableToVerify (network problems)")
                 case .unverified where error?.localizedDescription == "Machine does not match activations.":
-                    log.error("\(product.productName ?? "Product") unableToVerify (machine does not match)")
+                    logger.error("\(product.productName ?? "Product") unableToVerify (machine does not match)")
                     disablePro()
                     if !onTrial, !Defaults[.shownPaddleTrialEnded] {
                         paddle.showProductAccessDialog(with: product)
@@ -395,13 +398,13 @@ public class LowtechPro: ObservableObject {
                 case .unverified where error == nil:
                     if retryUnverified {
                         retryUnverified = false
-                        log.warning("\(product.productName ?? "Product") unverified (revoked remotely), retrying for safe measure")
+                        logger.warning("\(product.productName ?? "Product") unverified (revoked remotely), retrying for safe measure")
                         asyncAfter(ms: 3000) {
                             self.verifyLicense(force: true)
                         }
                         return
                     }
-                    log.error("\(product.productName ?? "Product") unverified (revoked remotely)")
+                    logger.error("\(product.productName ?? "Product") unverified (revoked remotely)")
 
                     disablePro()
                     if !onTrial, !Defaults[.shownPaddleTrialEnded] {
@@ -409,10 +412,10 @@ public class LowtechPro: ObservableObject {
                         Defaults[.shownPaddleTrialEnded] = true
                     }
                 case .verified:
-                    log.info("\(product.productName ?? "Product") verified")
+                    logger.info("\(product.productName ?? "Product") verified")
                     enablePro()
                 default:
-                    log.warning("\(product.productName ?? "Product") verification unknown state: \(state)")
+                    logger.warning("\(product.productName ?? "Product") verification unknown state: \(state.rawValue)")
                 }
             }
         }

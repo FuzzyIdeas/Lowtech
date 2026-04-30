@@ -1,4 +1,7 @@
 import Foundation
+import os
+
+private let logger = Logger(subsystem: lowtechLogSubsystem, category: "ProcessUtil")
 
 // MARK: - ProcessStatus
 
@@ -107,14 +110,14 @@ public func shellProc(_ launchPath: String = "/bin/zsh", args: [String], env: [S
                 try stderrFile.close()
             }
         } catch {
-            log.error("Error handling termination of process \(launchPath) \(args) [PID: \(process.processIdentifier)]: \(error)")
+            logger.error("Error handling termination of process \(launchPath) \(args) [PID: \(process.processIdentifier)]: \(error)")
         }
     }
 
     do {
         try task.run()
     } catch {
-        err("Error running \(launchPath) \(args): \(error)")
+        logger.error("Error running \(launchPath) \(args): \(error)")
         return nil
     }
 
@@ -133,7 +136,7 @@ public func shellProcDevNull(_ launchPath: String = "/bin/zsh", args: [String], 
     do {
         try task.run()
     } catch {
-        err("Error running \(launchPath) \(args): \(error)")
+        logger.error("Error running \(launchPath) \(args): \(error)")
         return nil
     }
 
@@ -150,7 +153,7 @@ public func shellProcOut(_ launchPath: String = "/bin/zsh", args: [String], env:
     do {
         try task.run()
     } catch {
-        err("Error running \(launchPath) \(args): \(error)")
+        logger.error("Error running \(launchPath) \(args): \(error)")
         return nil
     }
 

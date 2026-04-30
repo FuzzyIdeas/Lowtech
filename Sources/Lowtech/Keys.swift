@@ -9,8 +9,11 @@ import Combine
 import Defaults
 import Foundation
 import Magnet
+import os
 import Sauce
 import SwiftUI
+
+private let logger = Logger(subsystem: lowtechLogSubsystem, category: "Keys")
 
 // MARK: - KeysManager
 
@@ -175,7 +178,7 @@ public class KeysManager: ObservableObject {
         onRegisterPrimaryHotkeys?()
 
         guard !primaryHotkeys.isEmpty, !primaryHotkeysRegistered, !SWIFTUI_PREVIEW else { return }
-        debug("registerPrimaryHotkeys")
+        logger.debug("registerPrimaryHotkeys")
         primaryHotkeys.forEach { $0.register() }
         primaryHotkeysRegistered = true
     }
@@ -184,7 +187,7 @@ public class KeysManager: ObservableObject {
         onUnregisterPrimaryHotkeys?()
 
         guard !primaryHotkeys.isEmpty, primaryHotkeysRegistered else { return }
-        debug("unregisterPrimaryHotkeys")
+        logger.debug("unregisterPrimaryHotkeys")
         primaryHotkeys.forEach { $0.unregister() }
         primaryHotkeysRegistered = false
     }
@@ -744,7 +747,7 @@ public class KeysManager: ObservableObject {
         return keys.compactMap { key in
             guard let combo = KeyCombo(key: key, cocoaModifiers: modifiers)
             else {
-                log.error("Failed to create KeyCombo for \(key) with modifiers \(modifiers)")
+                logger.error("Failed to create KeyCombo for \(String(describing: key)) with modifiers \(String(describing: modifiers))")
                 return nil
             }
 

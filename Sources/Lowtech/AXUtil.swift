@@ -61,7 +61,7 @@
 //            let wins = try app.windows()
 //            return wins?.compactMap { AXWindow(from: $0, runningApp: self) }
 //        } catch {
-//            log.error("Can't get windows for app \(self): \(error)")
+//            logger.error("Can't get windows for app \(self): \(error)")
 //            return nil
 //        }
 //    }

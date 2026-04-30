@@ -1,8 +1,11 @@
 import AppKit
 import Combine
 import Foundation
+import os
 import QuickLookThumbnailing
 import SwiftUI
+
+private let logger = Logger(subsystem: lowtechLogSubsystem, category: "Extensions")
 
 infix operator =~: ComparisonPrecedence
 infix operator !~: ComparisonPrecedence
@@ -2157,7 +2160,7 @@ public extension FilePath {
         do {
             try fm.createDirectory(atPath: string, withIntermediateDirectories: withIntermediateDirectories, attributes: [.posixPermissions: permissions])
         } catch {
-            log.error("Error creating directory '\(string)': \(error)")
+            logger.error("Error creating directory '\(string)': \(error)")
             return false
         }
         return true
@@ -2181,12 +2184,12 @@ public extension FilePath {
         }
 
         guard exists else {
-            log.error("Path doesn't exist: \(string)")
+            logger.error("Path doesn't exist: \(string)")
             return nil
         }
 
         do {
-            log.debug("Backing up path \(shellString) to \(backupPath.shellString)")
+            logger.debug("Backing up path \(shellString) to \(backupPath.shellString)")
             if backupPath.exists {
                 guard force else { return backupPath }
                 try backupPath.delete()
@@ -2229,18 +2232,18 @@ public extension FilePath {
     @discardableResult
     func move(to path: FilePath, force: Bool = false) throws -> FilePath {
         guard path != self else {
-            log.error("Trying to move path to itself: \(string)")
+            logger.error("Trying to move path to itself: \(string)")
             return self
         }
         guard exists else {
-            log.error("Path doesn't exist: \(string)")
+            logger.error("Path doesn't exist: \(string)")
             return self
         }
 
         let path = path.isDir ? path.appending(name) : path
 
         if force { try path.delete() }
-        log.debug("Moving path \(shellString) to \(path.shellString)")
+        logger.debug("Moving path \(shellString) to \(path.shellString)")
         try fm.moveItem(atPath: string, toPath: path.string)
         return path
     }
@@ -2253,25 +2256,25 @@ public extension FilePath {
     @discardableResult
     func copy(to path: FilePath, force: Bool = false) throws -> FilePath {
         guard path != self else {
-            log.error("Trying to copy path to itself: \(string)")
+            logger.error("Trying to copy path to itself: \(string)")
             return self
         }
         guard exists else {
-            log.error("Path doesn't exist: \(string)")
+            logger.error("Path doesn't exist: \(string)")
             return self
         }
 
         let path = path.isDir ? path.appending(name) : path
 
         if force { try path.delete() }
-        log.debug("Copying path \(shellString) to \(path.shellString)")
+        logger.debug("Copying path \(shellString) to \(path.shellString)")
         try fm.copyItem(atPath: string, toPath: path.string)
         return path
     }
 
     func delete() throws {
         guard exists else { return }
-        log.debug("Deleting path \(shellString)")
+        logger.debug("Deleting path \(shellString)")
         try fm.removeItem(atPath: string)
     }
 

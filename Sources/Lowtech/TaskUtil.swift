@@ -1,5 +1,8 @@
 import Combine
 import Foundation
+import os
+
+private let logger = Logger(subsystem: lowtechLogSubsystem, category: "TaskUtil")
 
 public class Repeater {
     public init(
@@ -25,18 +28,18 @@ public class Repeater {
             .autoconnect()
             .sink { [weak self] d in
                 if counter == 0 {
-                    debug("Starting repeater '\(name)'")
+                    logger.debug("Starting repeater '\(name)'")
                 }
 
                 counter += 1
                 if let maxDuration, startTime.distance(to: d) > maxDuration {
-                    debug("Repeater finished on maxDuration '\(name)'")
+                    logger.debug("Repeater finished on maxDuration '\(name)'")
                     self?.stop()
                     onFinish?()
                     return
                 }
                 guard times <= 0 || counter < times else {
-                    debug("Repeater finished on maxRunCount '\(name)'")
+                    logger.debug("Repeater finished on maxRunCount '\(name)'")
                     self?.stop()
                     onFinish?()
                     return
@@ -47,7 +50,7 @@ public class Repeater {
 
     deinit {
         #if DEBUG
-            debug("Deinit repeater '\(self.name)'")
+            logger.debug("Deinit repeater '\(self.name)'")
         #endif
 
         stop()
@@ -57,7 +60,7 @@ public class Repeater {
     public func stop() {
         let name = name
         #if DEBUG
-            debug("Stopping repeater '\(name)'")
+            logger.debug("Stopping repeater '\(name)'")
         #endif
 
         stopped = true

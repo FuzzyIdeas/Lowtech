@@ -1,7 +1,10 @@
 import AppKit
 import Combine
 import Defaults
+import os
 import SwiftUI
+
+private let logger = Logger(subsystem: lowtechLogSubsystem, category: "StatusBarController")
 
 public extension NSNotification.Name {
     static let closePopover: NSNotification.Name = .init("closePopover")
@@ -105,7 +108,7 @@ open class StatusBarController: NSObject, NSWindowDelegate, ObservableObject {
     }
 
     open func windowWillClose(_: Notification) {
-        debug("windowWillClose")
+        logger.debug("windowWillClose")
         if !Defaults[.popoverClosed] {
             Defaults[.popoverClosed] = true
         }

@@ -9,6 +9,9 @@ import Cocoa
 import Combine
 import Defaults
 import Foundation
+import os
+
+private let logger = Logger(subsystem: lowtechLogSubsystem, category: "Util")
 
 @inline(__always) @inlinable
 public func timeSince(_ date: Date) -> TimeInterval {
@@ -301,13 +304,13 @@ public func withTimeout<T>(_ timeout: TimeInterval, name: String, _ block: @esca
         do {
             value = try block()
         } catch {
-            log.error("Error: \(error)")
+            logger.error("Error: \(error)")
         }
     }
     DispatchQueue.global().async(execute: workItem)
     let result = workItem.wait(timeout: .now() + timeout)
     if result == .timedOut {
-        log.error("\(name) timed out")
+        logger.error("\(name) timed out")
         workItem.cancel()
     }
 
@@ -631,7 +634,7 @@ public func saveBookmarkData(for workDir: URL, defaultsKey: Defaults.Key<Data?>?
 
         Defaults[defaultsKey ?? Defaults.Key("\(workDir.path.sha1)-BookmarkData")] = bookmarkData
     } catch {
-        err("Failed to save bookmark data for \(workDir): \(error)")
+        logger.error("Failed to save bookmark data for \(workDir): \(error)")
     }
 }
 
@@ -642,12 +645,12 @@ public func restoreFileAccess(for workDir: URL? = nil, defaultsKey: Defaults.Key
         var isStale = false
         let url = try URL(resolvingBookmarkData: bookmarkData, options: .withSecurityScope, relativeTo: nil, bookmarkDataIsStale: &isStale)
         if isStale {
-            debug("Bookmark is stale, need to save a new one... ")
+            logger.debug("Bookmark is stale, need to save a new one... ")
             saveBookmarkData(for: url, defaultsKey: defaultsKey)
         }
         return url
     } catch {
-        err("Error resolving bookmark: \(error)")
+        logger.error("Error resolving bookmark: \(error)")
         return nil
     }
 }
@@ -700,7 +703,7 @@ let downloadCache: URLCache = {
     let cachesURL = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask)[0]
     let diskCacheURL = cachesURL.appendingPathComponent("DownloadCache")
     let cache = URLCache(memoryCapacity: 100_000_000, diskCapacity: 1_000_000_000, directory: diskCacheURL)
-    debug("Cache path: \(diskCacheURL.path)")
+    logger.debug("Cache path: \(diskCacheURL.path)")
     return cache
 }()
 
@@ -785,7 +788,7 @@ public func restart() {
     do {
         try exec(arg0: Bundle.main.executablePath!, args: args)
     } catch {
-        err("Failed to restart: \(error)")
+        logger.error("Failed to restart: \(error)")
     }
     exit(0)
 }
