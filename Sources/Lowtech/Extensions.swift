@@ -1798,18 +1798,25 @@ public extension NSRunningApplication {
             try fm.attributesOfItem(atPath: path)
         }
         guard let attr else {
+            logger.warning("binaryMatchesLaunchDate: could not read attributes of \(path, privacy: .public), assuming match")
             return true
         }
 
         let binaryModifiedDate = attr[.modificationDate] as? Date
-        guard let launchDate, let binaryModifiedDate else { return true }
+        guard let launchDate, let binaryModifiedDate else {
+            logger.warning("binaryMatchesLaunchDate: \(path, privacy: .public) missing launchDate or modificationDate, assuming match")
+            return true
+        }
 
-        #if DEBUG
-            print("Launch date: \(launchDate)")
-            print("Binary modified date: \(binaryModifiedDate)")
-        #endif
-
-        return binaryModifiedDate <= launchDate || ignoredBinaryDates[path] == binaryModifiedDate
+        let ignored = ignoredBinaryDates[path] == binaryModifiedDate
+        let matches = binaryModifiedDate <= launchDate || ignored
+        let launchDateStr = "\(launchDate)"
+        let binaryDateStr = "\(binaryModifiedDate)"
+        logger
+            .info(
+                "binaryMatchesLaunchDate: path=\(path, privacy: .public) launchDate=\(launchDateStr, privacy: .public) binaryModifiedDate=\(binaryDateStr, privacy: .public) ignored=\(ignored, privacy: .public) matches=\(matches, privacy: .public)"
+            )
+        return matches
     }
 }
 
