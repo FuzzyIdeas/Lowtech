@@ -697,7 +697,11 @@ public extension URL {
     }
 }
 
-public let SWIFTUI_PREVIEW = ProcessInfo.processInfo.environment["XCODE_RUNNING_FOR_PREVIEWS"] == "1"
+#if DEBUG
+    public let SWIFTUI_PREVIEW = ProcessInfo.processInfo.environment["XCODE_RUNNING_FOR_PREVIEWS"] == "1"
+#else
+    public let SWIFTUI_PREVIEW = false
+#endif
 
 let downloadCache: URLCache = {
     let cachesURL = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask)[0]
