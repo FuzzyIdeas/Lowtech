@@ -16,7 +16,13 @@ open class GlobalEventMonitor {
     }
 
     deinit {
-        mainActor { self.stop() }
+        // Inline removeMonitor instead of `mainActor { self.stop() }` so we
+        // don't capture self in an async Task while self is mid-deinit, which
+        // tripped the Swift runtime ("deallocated with non-zero retain count").
+        // NSEvent.removeMonitor(_:) is safe to call from any thread.
+        if let monitor {
+            NSEvent.removeMonitor(monitor)
+        }
     }
 
     public func start() {
@@ -61,7 +67,13 @@ open class LocalEventMonitor {
     }
 
     deinit {
-        mainActor { self.stop() }
+        // Inline removeMonitor instead of `mainActor { self.stop() }` so we
+        // don't capture self in an async Task while self is mid-deinit, which
+        // tripped the Swift runtime ("deallocated with non-zero retain count").
+        // NSEvent.removeMonitor(_:) is safe to call from any thread.
+        if let monitor {
+            NSEvent.removeMonitor(monitor)
+        }
     }
 
     public func start() {
