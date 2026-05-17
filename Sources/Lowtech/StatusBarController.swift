@@ -54,7 +54,7 @@ open class StatusBarController: NSObject, NSWindowDelegate, ObservableObject {
         NSWorkspace.shared.notificationCenter.publisher(for: NSWorkspace.activeSpaceDidChangeNotification)
             .debounce(for: .milliseconds(10), scheduler: RunLoop.main)
             .sink { _ in
-                guard self.statusItem.isVisible else { return }
+                guard self.statusItem.isVisible, !self.shouldLeavePopoverOpen else { return }
                 self.hidePopover(LowtechAppDelegate.instance)
             }
             .store(in: &observers)
@@ -188,6 +188,7 @@ open class StatusBarController: NSObject, NSWindowDelegate, ObservableObject {
 
     @objc public func togglePopover(sender: AnyObject) {
         if let window, window.isVisible {
+            guard !shouldLeavePopoverOpen else { return }
             hidePopover(sender)
         } else {
             showPopover(sender)
