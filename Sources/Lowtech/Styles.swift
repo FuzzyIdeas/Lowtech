@@ -47,7 +47,7 @@ public struct CheckboxToggleStyle: ToggleStyle {
                 Image(systemName: configuration.isOn ? "checkmark.\(style.sfSymbolName).fill" : style.sfSymbolName)
                     .imageScale(scale)
                     .foregroundColor(color)
-                configuration.label
+                configuration.label.offset(x: -4)
             }
         })
         .buttonStyle(PlainButtonStyle()) // remove any implicit styling from the button
@@ -768,6 +768,28 @@ public extension View {
     func helpTag(isPresented: Binding<Bool>, alignment: Alignment = .center, offset: CGSize = .zero, _ text: String) -> some View {
         overlay(alignment: alignment) {
             HelpTag(isPresented: isPresented, text: text, offset: offset)
+        }
+    }
+
+    func topHelpTag(isPresented: Binding<Bool>, _ text: String) -> some View {
+        helpTag(isPresented: isPresented, alignment: .top, offset: CGSize(width: 0, height: -15), text)
+    }
+
+    func bottomHelpTag(isPresented: Binding<Bool>, _ text: String) -> some View {
+        helpTag(isPresented: isPresented, alignment: .bottom, offset: CGSize(width: 0, height: 15), text)
+    }
+
+    func leftHelpTag(isPresented: Binding<Bool>, gap: CGFloat = 8, _ text: String) -> some View {
+        overlay(alignment: .leading) {
+            HelpTag(isPresented: isPresented, text: text, offset: .zero)
+                .alignmentGuide(.leading) { d in d.width + gap }
+        }
+    }
+
+    func rightHelpTag(isPresented: Binding<Bool>, gap: CGFloat = 8, _ text: String) -> some View {
+        overlay(alignment: .trailing) {
+            HelpTag(isPresented: isPresented, text: text, offset: .zero)
+                .alignmentGuide(.trailing) { _ in -gap }
         }
     }
 }
