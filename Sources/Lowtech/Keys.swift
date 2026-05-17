@@ -1321,13 +1321,15 @@ public let KM = KeysManager()
     }
 
     public struct DirectionalModifierView: View {
-        public init(triggerKeys: Binding<[TriggerKey]>, spacing: CGFloat = 3, noFG: Bool = false, singleRow: Bool = true, showFnCaps: Bool = true, allowShiftAlone: Bool = false) {
+        public init(triggerKeys: Binding<[TriggerKey]>, spacing: CGFloat = 3, noFG: Bool = false, singleRow: Bool = true, showFnCaps: Bool = true, allowShiftAlone: Bool = false, spacebarFullWidth: Bool = false, radius: CGFloat = 6) {
             _triggerKeys = triggerKeys
             self.spacing = spacing
             self.noFG = noFG
             self.singleRow = singleRow
             self.showFnCaps = showFnCaps
             self.allowShiftAlone = allowShiftAlone
+            self.spacebarFullWidth = spacebarFullWidth
+            self.radius = radius
         }
 
         @Environment(\.isEnabled) public var isEnabled
@@ -1366,20 +1368,20 @@ public let KM = KeysManager()
                             } else {
                                 triggerKeys = [.capsLock]
                             }
-                        }.buttonStyle(ToggleButton(isOn: capsLockTrigger, noFG: noFG))
+                        }.buttonStyle(ToggleButton(isOn: capsLockTrigger, radius: radius, noFG: noFG))
                     }
 
                     Button("⇧") {
                         triggerKeys = triggerKeys.toggling(key: .lshift, allowShiftAlone: allowShiftAlone)
-                    }.buttonStyle(ToggleButton(isOn: lshiftTrigger, noFG: noFG))
-                        .overlay(Color.red.opacity(triggerKeys.contains(.shift) ? 0.1 : 0.0).clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous)))
+                    }.buttonStyle(ToggleButton(isOn: lshiftTrigger, radius: radius, noFG: noFG))
+                        .overlay(Color.red.opacity(triggerKeys.contains(.shift) ? 0.1 : 0.0).clipShape(RoundedRectangle(cornerRadius: radius, style: .continuous)))
 
                     commonModifiers
 
                     Button("⇧") {
                         triggerKeys = triggerKeys.toggling(key: .rshift, allowShiftAlone: allowShiftAlone)
-                    }.buttonStyle(ToggleButton(isOn: rshiftTrigger, noFG: noFG))
-                        .overlay(Color.red.opacity(triggerKeys.contains(.shift) ? 0.1 : 0.0).clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous)))
+                    }.buttonStyle(ToggleButton(isOn: rshiftTrigger, radius: radius, noFG: noFG))
+                        .overlay(Color.red.opacity(triggerKeys.contains(.shift) ? 0.1 : 0.0).clipShape(RoundedRectangle(cornerRadius: radius, style: .continuous)))
                 }.disabled(!isEnabled)
             } else {
                 VStack(alignment: .center, spacing: spacing) {
@@ -1391,7 +1393,7 @@ public let KM = KeysManager()
                                 } else {
                                     triggerKeys = [.capsLock]
                                 }
-                            }.buttonStyle(ToggleButton(isOn: capsLockTrigger, noFG: noFG))
+                            }.buttonStyle(ToggleButton(isOn: capsLockTrigger, radius: radius, noFG: noFG))
                             Spacer()
                         }.frame(width: commonModifiersRowSize.width)
                     }
@@ -1399,15 +1401,15 @@ public let KM = KeysManager()
                     HStack(alignment: .bottom, spacing: spacing) {
                         Button("⇧ shift") {
                             triggerKeys = triggerKeys.toggling(key: .lshift, allowShiftAlone: allowShiftAlone)
-                        }.buttonStyle(ToggleButton(isOn: lshiftTrigger, noFG: noFG))
-                            .overlay(Color.red.opacity(triggerKeys.contains(.shift) ? 0.1 : 0.0).clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous)))
+                        }.buttonStyle(ToggleButton(isOn: lshiftTrigger, radius: radius, noFG: noFG))
+                            .overlay(Color.red.opacity(triggerKeys.contains(.shift) ? 0.1 : 0.0).clipShape(RoundedRectangle(cornerRadius: radius, style: .continuous)))
 
                         Spacer()
 
                         Button("⇧ shift") {
                             triggerKeys = triggerKeys.toggling(key: .rshift, allowShiftAlone: allowShiftAlone)
-                        }.buttonStyle(ToggleButton(isOn: rshiftTrigger, noFG: noFG))
-                            .overlay(Color.red.opacity(triggerKeys.contains(.shift) ? 0.1 : 0.0).clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous)))
+                        }.buttonStyle(ToggleButton(isOn: rshiftTrigger, radius: radius, noFG: noFG))
+                            .overlay(Color.red.opacity(triggerKeys.contains(.shift) ? 0.1 : 0.0).clipShape(RoundedRectangle(cornerRadius: radius, style: .continuous)))
                     }.frame(width: commonModifiersRowSize.width)
 
                     commonModifiers
@@ -1422,6 +1424,8 @@ public let KM = KeysManager()
         var singleRow = true
         var showFnCaps = true
         var allowShiftAlone = false
+        var spacebarFullWidth = false
+        var radius: CGFloat = 6
 
         @ViewBuilder var commonModifiers: some View {
             let rcmdTrigger = Binding<Bool>(
@@ -1472,39 +1476,44 @@ public let KM = KeysManager()
                 if showFnCaps {
                     Button("fn") {
                         triggerKeys = triggerKeys.toggling(key: .fn, allowShiftAlone: allowShiftAlone)
-                    }.buttonStyle(ToggleButton(isOn: fnTrigger, noFG: noFG))
+                    }.buttonStyle(ToggleButton(isOn: fnTrigger, radius: radius, noFG: noFG))
                 }
 
                 Button("⌃") {
                     triggerKeys = triggerKeys.toggling(key: .lctrl, allowShiftAlone: allowShiftAlone)
-                }.buttonStyle(ToggleButton(isOn: lctrlTrigger, noFG: noFG))
-                    .overlay(Color.red.opacity(triggerKeys.contains(.ctrl) ? 0.1 : 0.0).clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous)))
+                }.buttonStyle(ToggleButton(isOn: lctrlTrigger, radius: radius, noFG: noFG))
+                    .overlay(Color.red.opacity(triggerKeys.contains(.ctrl) ? 0.1 : 0.0).clipShape(RoundedRectangle(cornerRadius: radius, style: .continuous)))
                 Button("⌥") {
                     triggerKeys = triggerKeys.toggling(key: .lalt, allowShiftAlone: allowShiftAlone)
-                }.buttonStyle(ToggleButton(isOn: laltTrigger, noFG: noFG))
-                    .overlay(Color.red.opacity(triggerKeys.contains(.alt) ? 0.1 : 0.0).clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous)))
+                }.buttonStyle(ToggleButton(isOn: laltTrigger, radius: radius, noFG: noFG))
+                    .overlay(Color.red.opacity(triggerKeys.contains(.alt) ? 0.1 : 0.0).clipShape(RoundedRectangle(cornerRadius: radius, style: .continuous)))
                 Button("⌘") {
                     triggerKeys = triggerKeys.toggling(key: .lcmd, allowShiftAlone: allowShiftAlone)
-                }.buttonStyle(ToggleButton(isOn: lcmdTrigger, noFG: noFG))
-                    .overlay(Color.red.opacity(triggerKeys.contains(.cmd) ? 0.1 : 0.0).clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous)))
-                Button("    ⎵    ") {}
-                    .buttonStyle(ToggleButton(isOn: .constant(false), noFG: noFG))
-                    .opacity(0.9)
-                    .disabled(true)
+                }.buttonStyle(ToggleButton(isOn: lcmdTrigger, radius: radius, noFG: noFG))
+                    .overlay(Color.red.opacity(triggerKeys.contains(.cmd) ? 0.1 : 0.0).clipShape(RoundedRectangle(cornerRadius: radius, style: .continuous)))
+                Button(action: {}) {
+                    Text("")
+                        .frame(maxWidth: spacebarFullWidth ? .infinity : nil)
+                        .padding(.horizontal, spacebarFullWidth ? 0 : 16)
+                }
+                .buttonStyle(ToggleButton(isOn: .constant(false), radius: radius, noFG: noFG))
+                .padding(.horizontal, spacebarFullWidth ? 8 : 0)
+                .opacity(0.9)
+                .disabled(true)
                 Button("⌘") {
                     triggerKeys = triggerKeys.toggling(key: .rcmd, allowShiftAlone: allowShiftAlone)
-                }.buttonStyle(ToggleButton(isOn: rcmdTrigger, noFG: noFG))
-                    .overlay(Color.red.opacity(triggerKeys.contains(.cmd) ? 0.1 : 0.0).clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous)))
+                }.buttonStyle(ToggleButton(isOn: rcmdTrigger, radius: radius, noFG: noFG))
+                    .overlay(Color.red.opacity(triggerKeys.contains(.cmd) ? 0.1 : 0.0).clipShape(RoundedRectangle(cornerRadius: radius, style: .continuous)))
                 Button("⌥") {
                     triggerKeys = triggerKeys.toggling(key: .ralt, allowShiftAlone: allowShiftAlone)
-                }.buttonStyle(ToggleButton(isOn: raltTrigger, noFG: noFG))
-                    .overlay(Color.red.opacity(triggerKeys.contains(.alt) ? 0.1 : 0.0).clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous)))
+                }.buttonStyle(ToggleButton(isOn: raltTrigger, radius: radius, noFG: noFG))
+                    .overlay(Color.red.opacity(triggerKeys.contains(.alt) ? 0.1 : 0.0).clipShape(RoundedRectangle(cornerRadius: radius, style: .continuous)))
                 Button("⌃") {
                     triggerKeys = triggerKeys.toggling(key: .rctrl, allowShiftAlone: allowShiftAlone)
-                }.buttonStyle(ToggleButton(isOn: rctrlTrigger, noFG: noFG))
-                    .overlay(Color.red.opacity(triggerKeys.contains(.ctrl) ? 0.1 : 0.0).clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous)))
+                }.buttonStyle(ToggleButton(isOn: rctrlTrigger, radius: radius, noFG: noFG))
+                    .overlay(Color.red.opacity(triggerKeys.contains(.ctrl) ? 0.1 : 0.0).clipShape(RoundedRectangle(cornerRadius: radius, style: .continuous)))
             }
-            .fixedSize()
+            .fixedSize(horizontal: !spacebarFullWidth, vertical: true)
             .size(size: $commonModifiersRowSize)
         }
 
