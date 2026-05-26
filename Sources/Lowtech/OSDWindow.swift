@@ -299,8 +299,29 @@ open class LowtechWindow: NSPanel, NSWindowDelegate {
                 case .right:
                     origin = NSPoint(x: (o.x + f.width) - frame.width, y: o.y + (f.height - frame.height) / 2).applying(.init(translationX: -(self.marginHorizontal ?? self.margin), y: 0))
                 case .center:
-                    w.center()
-                    return
+                    // True geometric center of the visible frame, with the
+                    // stored offsets interpreted as signed distances from
+                    // screen center. Screen coords are y-up, so a positive
+                    // `margin` shifts the OSD upward and a positive
+                    // `marginHorizontal` shifts it to the right — matching
+                    // the picker's convention and avoiding NSWindow.center()'s
+                    // built-in upward bias.
+                    let rawCx = o.x + (f.width - frame.width) / 2 + (self.marginHorizontal ?? 0)
+                    let rawCy = o.y + (f.height - frame.height) / 2 + self.margin
+                    // Clamp the resulting frame so it stays fully within
+                    // the visible frame — the offsets are unbounded by
+                    // design (the picker stores raw center-relative deltas
+                    // measured against a representative OSD size, so a
+                    // larger real OSD can extend past the screen edge if we
+                    // apply them verbatim).
+                    let minX = o.x
+                    let maxX = o.x + f.width - frame.width
+                    let minY = o.y
+                    let maxY = o.y + f.height - frame.height
+                    origin = NSPoint(
+                        x: max(minX, min(maxX, rawCx)),
+                        y: max(minY, min(maxY, rawCy))
+                    )
                 }
 
                 w.setFrame(NSRect(origin: origin, size: frame.size), display: true)
