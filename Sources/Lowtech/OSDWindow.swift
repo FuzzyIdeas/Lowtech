@@ -213,6 +213,13 @@ open class LowtechWindow: NSPanel, NSWindowDelegate {
     public var margin: CGFloat = 0
     public var marginHorizontal: CGFloat? = nil
 
+    /// When set, `.center` placement keeps the window's TOP edge where it would
+    /// sit at this height, instead of re-centering as the window shrinks. Lets a
+    /// content-sized OSD that grows/shrinks keep a fixed top origin (no empty
+    /// space below) rather than collapsing toward the middle. `nil` = plain
+    /// centering (default for every other OSDWindow user).
+    public var centeredAnchorMaxHeight: CGFloat?
+
     public lazy var wc = NSWindowController(window: self)
 
     public var screenCorner: ScreenCorner?
@@ -307,7 +314,14 @@ open class LowtechWindow: NSPanel, NSWindowDelegate {
                     // the picker's convention and avoiding NSWindow.center()'s
                     // built-in upward bias.
                     let rawCx = o.x + (f.width - frame.width) / 2 + (self.marginHorizontal ?? 0)
-                    let rawCy = o.y + (f.height - frame.height) / 2 + self.margin
+                    var rawCy = o.y + (f.height - frame.height) / 2 + self.margin
+                    // Top-anchor: if a max height is set, shift up by half the
+                    // shortfall so the window's top stays where it would be at
+                    // that height instead of collapsing toward the centre as it
+                    // shrinks. Screen coords are y-up, so adding raises the top.
+                    if let maxH = self.centeredAnchorMaxHeight, maxH > frame.height {
+                        rawCy += (maxH - frame.height) / 2
+                    }
                     // Clamp the resulting frame so it stays fully within
                     // the visible frame — the offsets are unbounded by
                     // design (the picker stores raw center-relative deltas
