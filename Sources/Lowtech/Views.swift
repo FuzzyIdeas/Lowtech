@@ -89,7 +89,7 @@ public struct NotificationView: View {
             ForEach(notificationLines, id: \.self) { line in
                 if line.starts(with: "# ") {
                     Text(line.suffix(line.count - 2))
-                        .font(.title.weight(.heavy))
+                        .font(.title2.weight(.heavy))
                         .padding(.bottom, notificationLines.count > 1 ? 4 : 0)
                         .lineLimit(1)
                         .scaledToFit()
