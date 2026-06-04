@@ -40,7 +40,8 @@ open class PanelWindow: LowtechWindow {
         if let corner {
             moveToScreen(screen, corner: corner, margin: margin, animate: animate)
         } else if let point {
-            withAnim(animate: animate) { w in w.setFrame(NSRect(origin: point, size: frame.size), display: true) }
+            let onscreen = Self.clampOnscreen(origin: point, size: frame.size)
+            withAnim(animate: animate) { w in w.setFrame(NSRect(origin: onscreen, size: frame.size), display: true) }
         } else {
             withAnim(animate: animate) { w in w.center() }
         }
@@ -53,5 +54,28 @@ open class PanelWindow: LowtechWindow {
         if activate {
             focus()
         }
+    }
+
+    /// Keep a window of `size` positioned at bottom-left `origin` (global Cocoa
+    /// coordinates) fully within the visible frame of whichever screen it lands
+    /// on. Without this, showing the window at the mouse location near a screen
+    /// edge (e.g. the menubar-icon-hidden popover) would push most of it
+    /// offscreen.
+    static func clampOnscreen(origin: NSPoint, size: NSSize) -> NSPoint {
+        let rect = NSRect(origin: origin, size: size)
+        let center = NSPoint(x: rect.midX, y: rect.midY)
+        let screen = NSScreen.screens.first { NSMouseInRect(center, $0.frame, false) }
+            ?? NSScreen.screens.max { intersectionArea($0.frame, rect) < intersectionArea($1.frame, rect) }
+            ?? NSScreen.main
+        guard let visible = screen?.visibleFrame else { return origin }
+
+        let x = size.width <= visible.width ? min(max(origin.x, visible.minX), visible.maxX - size.width) : visible.minX
+        let y = size.height <= visible.height ? min(max(origin.y, visible.minY), visible.maxY - size.height) : visible.minY
+        return NSPoint(x: x, y: y)
+    }
+
+    private static func intersectionArea(_ a: NSRect, _ b: NSRect) -> CGFloat {
+        let i = a.intersection(b)
+        return i.isNull ? 0 : i.width * i.height
     }
 }
