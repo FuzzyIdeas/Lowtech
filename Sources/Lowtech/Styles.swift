@@ -385,6 +385,11 @@ public struct ToggleButton: ButtonStyle {
             .background(
                 roundRect(radius, fill: bgColor)
                     .frame(width: width, height: height, alignment: .center)
+                    .overlay(
+                        roundRect(radius, fill: Color.accentColor)
+                            .frame(width: width, height: height, alignment: .center)
+                            .opacity(isOn ? 0.2 : 0)
+                    )
                     .shadow(radius: isOn ? 6 : 0)
             )
             .brightness(hovering ? 0.05 : 0.0)
