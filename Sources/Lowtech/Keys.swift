@@ -70,6 +70,7 @@ public class KeysManager: ObservableObject {
     @Published open var secondaryLeftShiftHotkeysRegistered = false
 
     @Published open var specialHotkeyRegistered = false
+    @Published open var bareHotkeysRegistered = false
 
     open var initialized = false {
         didSet {
@@ -310,6 +311,7 @@ public class KeysManager: ObservableObject {
     public var onSpecialHotkey: (() -> Void)?
     public var onPrimaryHotkey: ((Key) -> Void)?
     public var onSecondaryHotkey: ((Key) -> Void)?
+    public var onBareHotkey: ((Key) -> Bool)?
 
     public var onAltHotkey: ((Key) -> Void)?
     public var onRightShiftHotkey: ((Key) -> Void)?
@@ -366,6 +368,12 @@ public class KeysManager: ObservableObject {
 
     public var primaryKeys: [Key] = []
     public var secondaryKeys: [Key] = []
+
+    /// Keys registered without any modifier (e.g. plain Space). Registered for as long
+    /// as the array is non-empty, so keep the scope tight (e.g. only while hovering a UI
+    /// element) since a registered key is swallowed system-wide. The handler returns
+    /// whether it handled the key; on false the keypress is forwarded to the focused app.
+    public var bareKeys: [Key] = []
 
     public var altKeys: [Key] = []
     public var rightShiftKeys: [Key] = []
@@ -525,6 +533,13 @@ public class KeysManager: ObservableObject {
         }
     }
 
+    public var bareHotkeys: [HotKey] = [] {
+        didSet {
+            guard initialized else { return }
+            oldValue.forEach { $0.unregister() }
+        }
+    }
+
     public func reinitHotkeys() {
         guard initialized else { return }
         unregisterPrimaryHotkeys()
@@ -539,6 +554,7 @@ public class KeysManager: ObservableObject {
         unregisterSecondaryLeftShiftHotkeys()
 
         unregisterSpecialHotkey()
+        unregisterBareHotkeys()
         computeKeyModifiers()
         specialKeyIdentifier = "SPECIAL_KEY-\(specialKey?.character ?? "NO_KEY")"
         initHotkeys()
@@ -587,6 +603,57 @@ public class KeysManager: ObservableObject {
         initSecondaryAltHotkeys()
         initSecondaryRightShiftHotkeys()
         initSecondaryLeftShiftHotkeys()
+
+        initBareHotkeys()
+    }
+
+    public func initBareHotkeys() {
+        if !bareKeys.isEmpty {
+            bareHotkeys = bareKeys.compactMap { key in
+                guard let combo = KeyCombo(key: key, cocoaModifiers: [], allowEmptyModifiers: true) else {
+                    logger.error("Failed to create bare KeyCombo for \(String(describing: key))")
+                    return nil
+                }
+                return HotKey(
+                    identifier: "bare-\(key.QWERTYCharacter)",
+                    keyCombo: combo,
+                    // Synchronous queue so the handler can set forwardNextEvent on the
+                    // current event when it decides not to handle the key.
+                    actionQueue: .session,
+                    detectKeyHold: false,
+                    handler: handleBareHotkey
+                )
+            }
+            bareHotkeysRegistered = false
+            // No modifier to gate registration on (unlike the other hotkey groups which
+            // register in flagsChanged), so register for as long as the keys are set.
+            registerBareHotkeys()
+        } else {
+            bareHotkeys = []
+            bareHotkeysRegistered = false
+        }
+    }
+
+    open func registerBareHotkeys() {
+        guard !bareHotkeys.isEmpty, !bareHotkeysRegistered, !SWIFTUI_PREVIEW else { return }
+        bareHotkeys.forEach { $0.register() }
+        bareHotkeysRegistered = true
+    }
+
+    open func unregisterBareHotkeys() {
+        guard bareHotkeysRegistered else { return }
+        bareHotkeys.forEach { $0.unregister() }
+        bareHotkeysRegistered = false
+    }
+
+    @objc public func handleBareHotkey(_ hotkey: HotKey) {
+        #if DEBUG
+            print(hotkey.identifier)
+        #endif
+        guard let onBareHotkey, onBareHotkey(hotkey.keyCombo.key) else {
+            hotkey.forwardNextEvent = true
+            return
+        }
     }
 
     public func initSpecialHotkeys() {

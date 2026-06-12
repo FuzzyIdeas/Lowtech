@@ -36,7 +36,7 @@ let package = Package(
         .package(url: "https://github.com/sindresorhus/Defaults", from: "7.0.0"),
         .package(url: "https://github.com/apple/swift-atomics", from: "1.0.2"),
         .package(url: "https://github.com/sindresorhus/LaunchAtLogin-Modern", from: "1.0.0"),
-        .package(url: "https://github.com/alin23/Magnet", from: "4.0.1"),
+        .package(url: "https://github.com/alin23/Magnet", from: "4.1.3"),
         .package(url: "https://github.com/Clipy/Sauce", from: "2.2.0"),
         .package(url: "https://github.com/yannickl/DynamicColor", from: "5.0.1"),
         .package(url: "https://github.com/diniska/swiftui-system-colors", from: "1.1.0"),
