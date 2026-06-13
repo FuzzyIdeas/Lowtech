@@ -33,7 +33,7 @@ let package = Package(
     ],
     dependencies: [
         // Dependencies declare other packages that this package depends on.
-        .package(url: "https://github.com/sindresorhus/Defaults", from: "7.0.0"),
+        .package(url: "https://github.com/sindresorhus/Defaults", from: "9.0.0"),
         .package(url: "https://github.com/apple/swift-atomics", from: "1.0.2"),
         .package(url: "https://github.com/sindresorhus/LaunchAtLogin-Modern", from: "1.0.0"),
         .package(url: "https://github.com/alin23/Magnet", from: "4.1.3"),
