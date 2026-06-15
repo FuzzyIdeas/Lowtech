@@ -172,7 +172,7 @@ public struct AboutView: View {
                 HStack(spacing: 20) {
                     if let websiteURL { Link("Website", destination: websiteURL) }
                     if let contactURL { Link("Contact", destination: contactURL) }
-                    if let discordURL { Link("Get help on Discord", destination: discordURL) }
+                    if let discordURL { Link("Discord", destination: discordURL) }
                     if let sourceURL { Link("Source", destination: sourceURL) }
                 }
                 .underline()
