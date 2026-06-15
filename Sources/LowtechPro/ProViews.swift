@@ -118,6 +118,7 @@ public struct AboutView: View {
         websiteURL: URL? = nil,
         contactURL: URL? = nil,
         discordURL: URL? = nil,
+        sourceURL: URL? = nil,
         vendorName: String = "The low-tech guys"
     ) {
         self.appName = appName
@@ -126,6 +127,7 @@ public struct AboutView: View {
         self.websiteURL = websiteURL
         self.contactURL = contactURL
         self.discordURL = discordURL
+        self.sourceURL = sourceURL
         self.vendorName = vendorName
     }
 
@@ -166,11 +168,12 @@ public struct AboutView: View {
                 }
             }
 
-            if websiteURL != nil || contactURL != nil || discordURL != nil {
+            if websiteURL != nil || contactURL != nil || discordURL != nil || sourceURL != nil {
                 HStack(spacing: 20) {
                     if let websiteURL { Link("Website", destination: websiteURL) }
                     if let contactURL { Link("Contact", destination: contactURL) }
                     if let discordURL { Link("Get help on Discord", destination: discordURL) }
+                    if let sourceURL { Link("Source", destination: sourceURL) }
                 }
                 .underline()
                 .opacity(0.75)
@@ -198,6 +201,7 @@ public struct AboutView: View {
     private let websiteURL: URL?
     private let contactURL: URL?
     private let discordURL: URL?
+    private let sourceURL: URL?
     private let vendorName: String
 }
 
