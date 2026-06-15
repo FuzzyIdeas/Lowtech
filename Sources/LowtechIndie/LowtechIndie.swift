@@ -10,10 +10,26 @@ public enum UpdateCheckInterval: Int {
     case weekly = 604_800
 }
 
+// MARK: - UpdateChannel
+
+public enum UpdateChannel: UInt8, Defaults.Serializable {
+    case release = 0
+    case beta = 1
+}
+
 public extension Defaults.Keys {
     static let silentUpdates = Key<Bool>("SUAutomaticallyUpdate", default: false)
     static let checkForUpdates = Key<Bool>("SUEnableAutomaticChecks", default: true)
     static let updateCheckInterval = Key<Int>("SUScheduledCheckInterval", default: 86400)
+    static let updateChannel = Key<UpdateChannel>("updateChannel", default: .release)
+}
+
+/// Sparkle allowed channels computed from the current `Defaults[.updateChannel]`.
+///
+/// Each app's `SPUUpdaterDelegate.allowedChannels(for:)` can return this directly:
+/// `func allowedChannels(for _: SPUUpdater) -> Set<String> { lowtechAllowedChannels() }`
+public func lowtechAllowedChannels() -> Set<String> {
+    Defaults[.updateChannel] == .beta ? ["beta"] : []
 }
 
 // MARK: - UpdateManager

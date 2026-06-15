@@ -2,6 +2,7 @@ import Combine
 import Defaults
 import Lowtech
 import Sentry
+import SwiftUI
 
 public extension Defaults.Keys {
     static let enableSentry = Key<Bool>("enableSentry", default: true)
@@ -88,6 +89,38 @@ public enum LowtechSentry {
 
     private static var enableSentryObserver: Cancellable?
     private static var sentryLaunchEvent: DispatchWorkItem?
+}
+
+// MARK: - SentryToggleRow
+
+/// A "Send error reports" toggle bound to `Defaults[.enableSentry]`.
+///
+/// The Sentry SDK is reconfigured / closed automatically by `LowtechSentry.configureSentry`'s
+/// observer when this default changes, so flipping the toggle is enough.
+public struct SentryToggleRow: View {
+    public init(title: String = "Send anonymous error reports", subtitle: String? = nil) {
+        self.title = title
+        self.subtitle = subtitle
+    }
+
+    public var body: some View {
+        Toggle(isOn: $enableSentry) {
+            VStack(alignment: .leading, spacing: 2) {
+                Text(title)
+                    .font(.system(size: 12, weight: .medium))
+                if let subtitle {
+                    Text(subtitle)
+                        .font(.system(size: 11, design: .rounded))
+                        .foregroundStyle(.secondary)
+                }
+            }
+        }
+    }
+
+    private let title: String
+    private let subtitle: String?
+
+    @Default(.enableSentry) private var enableSentry
 }
 
 public func crumb(_ msg: String, level: SentryLevel = .info, category: String) {
