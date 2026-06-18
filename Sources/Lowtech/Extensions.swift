@@ -1767,7 +1767,14 @@ public extension Bundle {
 
 public extension NSRunningApplication {
     var isRegular: Bool {
-        activationPolicyCache.fetch(key: identifier, create: { _ in activationPolicy }) == .regular
+        // The RUNNING activation policy is dynamic: an app can call
+        // `setActivationPolicy` at runtime (e.g. a menubar/.accessory app that
+        // flips to .regular when it opens a real window). It's a cheap
+        // in-process read, so it must NOT be cached — caching froze the
+        // first-seen value and made dynamically-promoted apps look permanently
+        // accessory. (The on-disk *bundle* policy never changes and stays
+        // worth caching elsewhere; this isn't that.)
+        activationPolicy == .regular
     }
 
     var identifier: String {
@@ -1821,7 +1828,6 @@ public extension NSRunningApplication {
 }
 
 var ignoredBinaryDates: [String: Date] = [:]
-var activationPolicyCache = Cache<String, NSApplication.ActivationPolicy>()
 let bundleCache = Cache<URL, Bundle?>()
 let binaryValidCache = Cache<String, Bool>()
 
