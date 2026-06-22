@@ -83,18 +83,19 @@ public struct LicenseRow: View {
 /// LowtechIndie `UpdatesView`. License state comes from the `LowtechPro` object, updates
 /// come from Sparkle and `Defaults[.updateChannel]`.
 public struct LicenseAndUpdatesView: View {
-    public init(pro: LowtechPro, updater: SPUUpdater, appName: String? = nil, showChannel: Bool = true) {
+    public init(pro: LowtechPro, updater: SPUUpdater, appName: String? = nil, showChannel: Bool = true, changelogURL: URL? = nil) {
         self.pro = pro
         self.updater = updater
         self.appName = appName
         self.showChannel = showChannel
+        self.changelogURL = changelogURL
     }
 
     public var body: some View {
         VStack(alignment: .leading, spacing: 16) {
             LicenseRow(pro: pro, appName: appName)
             Divider()
-            UpdatesView(updater: updater, showChannel: showChannel)
+            UpdatesView(updater: updater, showChannel: showChannel, changelogURL: changelogURL)
         }
     }
 
@@ -103,6 +104,7 @@ public struct LicenseAndUpdatesView: View {
     private let updater: SPUUpdater
     private let appName: String?
     private let showChannel: Bool
+    private let changelogURL: URL?
 }
 
 // MARK: - AboutView
@@ -119,6 +121,7 @@ public struct AboutView: View {
         contactURL: URL? = nil,
         discordURL: URL? = nil,
         sourceURL: URL? = nil,
+        changelogURL: URL? = nil,
         vendorName: String = "The low-tech guys"
     ) {
         self.appName = appName
@@ -128,6 +131,7 @@ public struct AboutView: View {
         self.contactURL = contactURL
         self.discordURL = discordURL
         self.sourceURL = sourceURL
+        self.changelogURL = changelogURL
         self.vendorName = vendorName
     }
 
@@ -143,9 +147,18 @@ public struct AboutView: View {
             Text(appName)
                 .round(48, weight: .black)
                 .padding(.top, -4)
-            Text("v\(Bundle.main.version)")
-                .mono(13, weight: .regular)
-                .foregroundColor(.secondary)
+            Group {
+                if let changelogURL {
+                    Button { openURL(changelogURL) } label: {
+                        Text("v\(Bundle.main.version)").mono(13, weight: .regular)
+                    }
+                    .buttonStyle(.plain)
+                    .help("View the changelog")
+                } else {
+                    Text("v\(Bundle.main.version)").mono(13, weight: .regular)
+                }
+            }
+            .foregroundColor(.secondary)
 
             if let updater {
                 GentleUpdateView(updater: updater)
@@ -168,12 +181,13 @@ public struct AboutView: View {
                 }
             }
 
-            if websiteURL != nil || contactURL != nil || discordURL != nil || sourceURL != nil {
+            if websiteURL != nil || contactURL != nil || discordURL != nil || sourceURL != nil || changelogURL != nil {
                 HStack(spacing: 20) {
                     if let websiteURL { Link("Website", destination: websiteURL) }
                     if let contactURL { Link("Contact", destination: contactURL) }
                     if let discordURL { Link("Discord", destination: discordURL) }
                     if let sourceURL { Link("Source", destination: sourceURL) }
+                    if let changelogURL { Link("Changelog", destination: changelogURL) }
                 }
                 .underline()
                 .opacity(0.75)
@@ -194,6 +208,7 @@ public struct AboutView: View {
     }
 
     @ObservedObject private var um = UM
+    @Environment(\.openURL) private var openURL
 
     private let appName: String
     private let pro: LowtechPro?
@@ -202,7 +217,122 @@ public struct AboutView: View {
     private let contactURL: URL?
     private let discordURL: URL?
     private let sourceURL: URL?
+    private let changelogURL: URL?
     private let vendorName: String
+}
+
+// MARK: - AppInfoPopoverView
+
+/// Reusable menubar "App Info" popover: app identity (icon + name + version,
+/// where the version opens the changelog), the `LicenseRow` + `UpdatesView`
+/// pair, and a row of Website / Contact / Discord / Source / Changelog links.
+/// `trailing` adds an app-specific control to the links row (e.g. a "Show
+/// tutorial" button); it receives a `dismiss` closure so that control can close
+/// the popover. All URLs are optional, so a link only renders when provided.
+public struct AppInfoPopoverView<Trailing: View>: View {
+    public init(
+        appName: String,
+        pro: LowtechPro? = nil,
+        updater: SPUUpdater? = nil,
+        websiteURL: URL? = nil,
+        contactURL: URL? = nil,
+        discordURL: URL? = nil,
+        sourceURL: URL? = nil,
+        changelogURL: URL? = nil,
+        width: CGFloat = 440,
+        @ViewBuilder trailing: @escaping (@escaping () -> Void) -> Trailing = { _ in EmptyView() }
+    ) {
+        self.appName = appName
+        self.pro = pro
+        self.updater = updater
+        self.websiteURL = websiteURL
+        self.contactURL = contactURL
+        self.discordURL = discordURL
+        self.sourceURL = sourceURL
+        self.changelogURL = changelogURL
+        self.width = width
+        self.trailing = trailing
+    }
+
+    public var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            HStack(spacing: 10) {
+                if let icon = NSImage(named: NSImage.applicationIconName) {
+                    Image(nsImage: icon)
+                        .resizable()
+                        .interpolation(.high)
+                        .scaledToFit()
+                        .frame(width: 38, height: 38)
+                }
+                Text(appName).round(22, weight: .black)
+                Spacer()
+                versionLabel
+            }
+
+            Divider()
+
+            // Settings renders these inside a Form, which gives the unstyled
+            // Pickers a compact menu style; in the popover's plain VStack they
+            // default to a tall style, so force the menu style. The channel
+            // Picker's own .segmented style still overrides this.
+            if let pro, let updater {
+                LicenseAndUpdatesView(pro: pro, updater: updater, appName: appName, changelogURL: changelogURL)
+                    .pickerStyle(.menu)
+            }
+
+            HStack(spacing: 6) {
+                linkButton("Website", websiteURL)
+                linkButton("Contact", contactURL)
+                linkButton("Discord", discordURL)
+                linkButton("Source", sourceURL)
+                linkButton("Changelog", changelogURL)
+
+                Spacer()
+
+                trailing { dismiss() }
+            }
+            .font(.system(size: 11, weight: .semibold))
+            .padding(.top, 4)
+        }
+        .padding(16)
+        .frame(width: width)
+    }
+
+    @Environment(\.openURL) private var openURL
+    @Environment(\.dismiss) private var dismiss
+
+    private let appName: String
+    private let pro: LowtechPro?
+    private let updater: SPUUpdater?
+    private let websiteURL: URL?
+    private let contactURL: URL?
+    private let discordURL: URL?
+    private let sourceURL: URL?
+    private let changelogURL: URL?
+    private let width: CGFloat
+    private let trailing: (@escaping () -> Void) -> Trailing
+
+    @ViewBuilder private var versionLabel: some View {
+        if let changelogURL {
+            Button { openURL(changelogURL) } label: {
+                Text("v\(Bundle.main.version)").mono(12, weight: .regular)
+            }
+            .buttonStyle(.plain)
+            .help("View the changelog")
+            .foregroundColor(.secondary)
+        } else {
+            Text("v\(Bundle.main.version)").mono(12, weight: .regular).foregroundColor(.secondary)
+        }
+    }
+
+    @ViewBuilder private func linkButton(_ title: String, _ url: URL?) -> some View {
+        if let url {
+            Button(title) { openURL(url) }
+                .buttonStyle(FlatButton(color: .primary.opacity(0.1), textColor: .primary, horizontalPadding: 6, verticalPadding: 3))
+                .lineLimit(1)
+                .fixedSize()
+        }
+    }
 }
 
 // MARK: - LicenseView

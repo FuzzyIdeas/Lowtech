@@ -123,21 +123,23 @@ private enum AutoUpdate {
 /// `SUAutomaticallyUpdate`, `SUScheduledCheckInterval`) plus `Defaults[.updateChannel]`,
 /// so it needs nothing from the app beyond the `SPUUpdater`.
 public struct UpdatesView: View {
-    public init(updater: SPUUpdater, showChannel: Bool = true) {
+    public init(updater: SPUUpdater, showChannel: Bool = true, changelogURL: URL? = nil) {
         self.updater = updater
         self.showChannel = showChannel
+        self.changelogURL = changelogURL
     }
 
     public var body: some View {
         VStack(alignment: .leading, spacing: 12) {
             row("Version") {
                 HStack(spacing: 8) {
-                    Text(Bundle.main.version)
-                        .font(.system(size: 11, weight: .semibold, design: .monospaced))
-                        .padding(.horizontal, 8)
-                        .padding(.vertical, 3)
-                        .background(Capsule(style: .continuous).fill(.quaternary))
-                        .foregroundStyle(.secondary)
+                    if let changelogURL {
+                        Button { openURL(changelogURL) } label: { versionCapsule }
+                            .buttonStyle(.plain)
+                            .help("View the changelog")
+                    } else {
+                        versionCapsule
+                    }
                     Button("Check for Updates") { updater.checkForUpdates() }
                         .buttonStyle(.bordered)
                 }
@@ -154,7 +156,7 @@ public struct UpdatesView: View {
                     .fixedSize()
 
                     HStack(spacing: 6) {
-                        Text("every").foregroundStyle(.secondary)
+                        Text("every").foregroundStyle(.secondary).fixedSize()
                         Picker("", selection: $updateCheckInterval) {
                             Text("day").tag(UpdateCheckInterval.daily.rawValue)
                             Text("3 days").tag(UpdateCheckInterval.everyThreeDays.rawValue)
@@ -212,13 +214,24 @@ public struct UpdatesView: View {
 
     @ObservedObject var um = UM
     @ObservedObject var updater: SPUUpdater
+    @Environment(\.openURL) private var openURL
 
     private let showChannel: Bool
+    private let changelogURL: URL?
 
     @Default(.checkForUpdates) var checkForUpdates
     @Default(.silentUpdates) var silentUpdates
     @Default(.updateCheckInterval) var updateCheckInterval
     @Default(.updateChannel) var updateChannel
+
+    private var versionCapsule: some View {
+        Text(Bundle.main.version)
+            .font(.system(size: 11, weight: .semibold, design: .monospaced))
+            .padding(.horizontal, 8)
+            .padding(.vertical, 3)
+            .background(Capsule(style: .continuous).fill(.quaternary))
+            .foregroundStyle(.secondary)
+    }
 }
 
 // MARK: - SPUUpdater + ObservableObject
