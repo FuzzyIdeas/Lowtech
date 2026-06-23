@@ -164,7 +164,7 @@ public struct SentryUserIDPill: View {
             HStack(spacing: 5) {
                 Image(systemName: copied ? "checkmark.circle.fill" : "doc.on.doc")
                     .font(.system(size: 9, weight: .semibold))
-                Text(copied ? "Copied!" : userID)
+                Text(copied ? "Copied!" : "Machine ID: \(userID)")
                     .font(.system(size: 10, design: .monospaced))
                     .lineLimit(1)
                     .truncationMode(.middle)
