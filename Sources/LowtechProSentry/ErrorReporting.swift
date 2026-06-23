@@ -1,3 +1,4 @@
+import AppKit
 import Combine
 import Defaults
 import Lowtech
@@ -8,6 +9,9 @@ public extension Defaults.Keys {
     static let enableSentry = Key<Bool>("enableSentry", default: true)
     static let lastLaunchVersion = Key<String>("lastLaunchVersion", default: "")
     static let autoRestartOnHang = Key<Bool>("autoRestartOnHang", default: true)
+    /// Stable, anonymous identifier persisted across launches so a user can be
+    /// matched to their error reports in Sentry. See `LowtechSentry.sentryUserID`.
+    static let sentryUserID = Key<String>("sentryUserID", default: "")
 }
 
 extension SentryStacktrace? {
@@ -84,7 +88,20 @@ public enum LowtechSentry {
     }
 
     public static func getSentryUser() -> User {
-        User(userId: SERIAL_NUMBER_HASH)
+        User(userId: sentryUserID)
+    }
+
+    /// A stable, anonymous identifier for this install, persisted across launches.
+    ///
+    /// Seeded once from the machine serial number hash (falling back to a generated
+    /// id when the serial can't be read) and then kept in `Defaults` so it never
+    /// changes. Surfaced to users via `SentryUserIDPill` so they can quote it when
+    /// reporting an issue, letting us find their events in Sentry.
+    public static var sentryUserID: String {
+        if Defaults[.sentryUserID].isEmpty {
+            Defaults[.sentryUserID] = SERIAL_NUMBER_HASH.isEmpty ? UUID().uuidString : SERIAL_NUMBER_HASH
+        }
+        return Defaults[.sentryUserID]
     }
 
     private static var enableSentryObserver: Cancellable?
@@ -104,15 +121,20 @@ public struct SentryToggleRow: View {
     }
 
     public var body: some View {
-        Toggle(isOn: $enableSentry) {
-            VStack(alignment: .leading, spacing: 2) {
-                Text(title)
-                    .font(.system(size: 12, weight: .medium))
-                if let subtitle {
-                    Text(subtitle)
-                        .font(.system(size: 11, design: .rounded))
-                        .foregroundStyle(.secondary)
+        VStack(alignment: .leading, spacing: 6) {
+            Toggle(isOn: $enableSentry) {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(title)
+                        .font(.system(size: 12, weight: .medium))
+                    if let subtitle {
+                        Text(subtitle)
+                            .font(.system(size: 11, design: .rounded))
+                            .foregroundStyle(.secondary)
+                    }
                 }
+            }
+            if enableSentry {
+                SentryUserIDPill()
             }
         }
     }
@@ -121,6 +143,44 @@ public struct SentryToggleRow: View {
     private let subtitle: String?
 
     @Default(.enableSentry) private var enableSentry
+}
+
+// MARK: - SentryUserIDPill
+
+/// A small click-to-copy pill showing the stable anonymous `LowtechSentry.sentryUserID`.
+///
+/// Shown under the "Send error reports" toggle when reporting is enabled, so a user
+/// can copy their id and send it along with a bug report.
+public struct SentryUserIDPill: View {
+    public init() {}
+
+    public var body: some View {
+        Button {
+            NSPasteboard.general.clearContents()
+            NSPasteboard.general.setString(userID, forType: .string)
+            copied = true
+            mainAsyncAfter(ms: 1200) { copied = false }
+        } label: {
+            HStack(spacing: 5) {
+                Image(systemName: copied ? "checkmark.circle.fill" : "doc.on.doc")
+                    .font(.system(size: 9, weight: .semibold))
+                Text(copied ? "Copied!" : userID)
+                    .font(.system(size: 10, design: .monospaced))
+                    .lineLimit(1)
+                    .truncationMode(.middle)
+            }
+            .foregroundStyle(.secondary)
+            .padding(.horizontal, 8)
+            .padding(.vertical, 3)
+            .background(Capsule().fill(Color.primary.opacity(0.08)))
+            .overlay(Capsule().strokeBorder(Color.primary.opacity(0.10), lineWidth: 1))
+        }
+        .buttonStyle(.plain)
+        .help("Your anonymous error-report ID. Click to copy and include it when reporting an issue.")
+    }
+
+    private let userID = LowtechSentry.sentryUserID
+    @State private var copied = false
 }
 
 public func crumb(_ msg: String, level: SentryLevel = .info, category: String) {
