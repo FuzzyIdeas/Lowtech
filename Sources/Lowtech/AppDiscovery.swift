@@ -12,10 +12,20 @@ public struct MetaQuery {
     /// Spotlight picks up matching items being added, removed or changed,
     /// so callers see installs/moves/deletes without polling. The caller
     /// must keep the `MetaQuery` alive for as long as updates are wanted.
-    public init(scopes: [String], queryString: String, live: Bool = false, handler: @escaping ([NSMetadataItem]) -> Void) {
+    public init(scopes: [String], queryString: String, live: Bool = false, valueListAttributes: [String] = [], handler: @escaping ([NSMetadataItem]) -> Void) {
         let q = NSMetadataQuery()
         q.searchScopes = scopes
         q.predicate = NSPredicate(fromMetadataQueryString: queryString)
+        // Prefetch these attributes during the gather phase so reading them
+        // later via `value(forAttribute:)` / `values(forAttributes:)` hits the
+        // query's resident cache instead of a synchronous per-item XPC roundtrip
+        // to the metadata server. Without this, extracting attributes for
+        // hundreds of app bundles on the main thread (the run loop the query
+        // notifies on) can stall it for tens of seconds. Must be set before
+        // `start()`.
+        if !valueListAttributes.isEmpty {
+            q.valueListAttributes = valueListAttributes
+        }
 
         q.start()
         query = q
@@ -97,7 +107,8 @@ public func queryInstalledApps(live: Bool = false, handler: @escaping ([Installe
     MetaQuery(
         scopes: [NSMetadataQueryLocalComputerScope],
         queryString: "kMDItemContentTypeTree == 'com.apple.application-bundle'",
-        live: live
+        live: live,
+        valueListAttributes: INSTALLED_APP_META_ATTRS
     ) { items in
         let apps = items.compactMap { item -> InstalledApp? in
             guard let dict = item.values(forAttributes: INSTALLED_APP_META_ATTRS),

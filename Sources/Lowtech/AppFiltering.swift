@@ -48,7 +48,19 @@ public func isAppPathRelevant(_ path: String) -> Bool {
 // MARK: - Bundle helpers
 
 public extension Bundle {
-    var executable: FilePath? { executableURL?.filePath }
+    /// The bundle's main executable, resolved **without** `executableURL`.
+    ///
+    /// `Bundle.executableURL` / `.executablePath` funnel through CoreFoundation's
+    /// `_CFBundleCopyExecutableURLInDirectory2`, which calls `__builtin_trap()` (a
+    /// fatal `EXC_BREAKPOINT`) when a bundle's `CFBundleExecutable` value can't be
+    /// turned into a URL (empty or malformed). Some third-party apps ship such
+    /// bundles, so resolve the executable from the Info.plist + the conventional
+    /// `Contents/MacOS` layout instead, which can only ever return nil.
+    var executable: FilePath? {
+        guard let name = infoDictionary?["CFBundleExecutable"] as? String, !name.isEmpty else { return nil }
+        return bundleURL.appendingPathComponent("Contents/MacOS", isDirectory: true)
+            .appendingPathComponent(name).filePath
+    }
 }
 
 // MARK: - FilePath helpers
