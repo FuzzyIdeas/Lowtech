@@ -111,18 +111,27 @@ public func queryInstalledApps(live: Bool = false, handler: @escaping ([Installe
         valueListAttributes: INSTALLED_APP_META_ATTRS
     ) { items in
         let apps = items.compactMap { item -> InstalledApp? in
-            guard let dict = item.values(forAttributes: INSTALLED_APP_META_ATTRS),
-                  let pathString = dict[NSMetadataItemPathKey] as? String,
+            // Read attributes with the singular `value(forAttribute:)`, NOT the
+            // plural `values(forAttributes:)`. With `valueListAttributes` set, the
+            // plural API builds a dictionary and inserts every requested attribute;
+            // when one resolves to nil (e.g. kMDItemPath for an item mid-delete
+            // during a live update, or a bundle whose path the index can't resolve)
+            // it inserts nil and throws "object cannot be nil", crashing the app
+            // (hit re-entrantly while an AppleScript run loop drained a live update).
+            // The singular API returns an optional the guard skips, and still reads
+            // from the prefetch cache (measured ~3.5x faster than no prefetch), so
+            // this keeps the no-per-item-XPC win without the crash.
+            guard let pathString = item.value(forAttribute: NSMetadataItemPathKey) as? String,
                   let path = pathString.existingFilePath,
                   !path.inTrash,
-                  let bundleIdentifier = dict[NSMetadataItemCFBundleIdentifierKey] as? String
+                  let bundleIdentifier = item.value(forAttribute: NSMetadataItemCFBundleIdentifierKey) as? String
             else { return nil }
 
-            let name = dict[NSMetadataItemDisplayNameKey] as? String ?? path.name.string
+            let name = item.value(forAttribute: NSMetadataItemDisplayNameKey) as? String ?? path.name.string
             return InstalledApp(
                 path: path,
                 name: name,
-                useCount: dict["kMDItemUseCount"] as? Int ?? 0,
+                useCount: item.value(forAttribute: "kMDItemUseCount") as? Int ?? 0,
                 bundleIdentifier: bundleIdentifier
             )
         }
