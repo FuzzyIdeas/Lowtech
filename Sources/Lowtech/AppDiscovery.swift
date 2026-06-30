@@ -12,7 +12,14 @@ public struct MetaQuery {
     /// Spotlight picks up matching items being added, removed or changed,
     /// so callers see installs/moves/deletes without polling. The caller
     /// must keep the `MetaQuery` alive for as long as updates are wanted.
-    public init(scopes: [String], queryString: String, live: Bool = false, valueListAttributes: [String] = [], handler: @escaping ([NSMetadataItem]) -> Void) {
+    /// When `handlerQueue` is non-nil the handler runs on it (off the notifying
+    /// run loop) while query updates stay disabled, then updates are re-enabled /
+    /// the query stopped back on the main run loop. Use it when the handler does
+    /// expensive per-item work (e.g. `value(forAttribute:)`, a synchronous XPC
+    /// round-trip to the metadata server): on the notifying run loop that work
+    /// can stall the app for tens of seconds (App Hang). Default nil keeps the
+    /// historical synchronous-on-notification-thread behaviour.
+    public init(scopes: [String], queryString: String, live: Bool = false, valueListAttributes: [String] = [], handlerQueue: DispatchQueue? = nil, handler: @escaping ([NSMetadataItem]) -> Void) {
         let q = NSMetadataQuery()
         q.searchScopes = scopes
         q.predicate = NSPredicate(fromMetadataQueryString: queryString)
@@ -39,12 +46,24 @@ public struct MetaQuery {
                 // so the array can't mutate mid-enumeration.
                 q.disableUpdates()
                 let items = query.results.compactMap { $0 as? NSMetadataItem }
-                if live {
-                    q.enableUpdates()
+                if let handlerQueue {
+                    // Keep updates disabled across the off-thread handler so the
+                    // frozen result set can't mutate under it, then re-enable /
+                    // stop back on the notifying (main) run loop once it's done.
+                    handlerQueue.async {
+                        handler(items)
+                        DispatchQueue.main.async {
+                            if live { q.enableUpdates() } else { q.stop() }
+                        }
+                    }
                 } else {
-                    q.stop()
+                    if live {
+                        q.enableUpdates()
+                    } else {
+                        q.stop()
+                    }
+                    handler(items)
                 }
-                handler(items)
             }
     }
 
@@ -103,12 +122,21 @@ public extension FilePath {
 ///         print(apps.map(\.name))
 ///         appQuery = nil
 ///     }
+private let installedAppsQueue = DispatchQueue(label: "fyi.lowtech.installedAppsQuery", qos: .userInitiated)
+
 public func queryInstalledApps(live: Bool = false, handler: @escaping ([InstalledApp]) -> Void) -> MetaQuery {
     MetaQuery(
         scopes: [NSMetadataQueryLocalComputerScope],
         queryString: "kMDItemContentTypeTree == 'com.apple.application-bundle'",
         live: live,
-        valueListAttributes: INSTALLED_APP_META_ATTRS
+        valueListAttributes: INSTALLED_APP_META_ATTRS,
+        // Pull each bundle's attributes (a synchronous XPC per item to the
+        // metadata server) off the run loop the query notifies on: on the main
+        // run loop this stalled the app for tens of seconds with many bundles or
+        // a busy index (App Hang). MetaQuery keeps updates disabled across this,
+        // so reading the frozen snapshot off-thread is safe; we hop back to main
+        // to deliver, matching the historical delivery thread.
+        handlerQueue: installedAppsQueue
     ) { items in
         let apps = items.compactMap { item -> InstalledApp? in
             // Read attributes with the singular `value(forAttribute:)`, NOT the
@@ -135,6 +163,8 @@ public func queryInstalledApps(live: Bool = false, handler: @escaping ([Installe
                 bundleIdentifier: bundleIdentifier
             )
         }
-        handler(apps)
+        // Deliver on main: the off-thread work above is done, and callers (e.g.
+        // rcmd's main-actor app processing) expect the historical main delivery.
+        DispatchQueue.main.async { handler(apps) }
     }
 }
