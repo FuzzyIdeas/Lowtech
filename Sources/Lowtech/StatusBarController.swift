@@ -294,6 +294,16 @@ open class StatusBarController: NSObject, NSWindowDelegate, ObservableObject {
 
     func mouseEventHandler(_ event: NSEvent) {
         guard let window, event.window == nil else { return }
+
+        // A click on our own status-bar button must NOT be treated as an
+        // outside-click dismissal here: the button's action (statusItemClick ->
+        // togglePopover) already toggles the popover. If we hid it on this
+        // mouse-down, that action would immediately re-show it on mouse-up, so
+        // the icon would never close the popover, it'd only flicker and reopen.
+        if let buttonFrame = statusItem.button?.window?.frame, NSMouseInRect(NSEvent.mouseLocation, buttonFrame, false) {
+            return
+        }
+
         if window.isVisible, statusItem.isVisible, !shouldLeavePopoverOpen {
             hidePopover(LowtechAppDelegate.instance)
         }
