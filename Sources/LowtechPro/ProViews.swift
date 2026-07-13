@@ -223,10 +223,11 @@ public struct AboutView: View {
 
 // MARK: - AppInfoPopoverView
 
-/// Reusable menubar "App Info" popover: app identity (icon + name + version,
-/// where the version opens the changelog), the `LicenseRow` + `UpdatesView`
-/// pair, and a row of Website / Contact / Discord / Source / Changelog links.
-/// `trailing` adds an app-specific control to the links row (e.g. a "Show
+/// Reusable menubar "App Info" popover, styled like a grouped Settings Form: an
+/// identity header (icon + name + version), then Licence / Updates / Links as
+/// rounded cards over an opaque fill.
+///
+/// `trailing` adds an app-specific control to the Links card (e.g. a "Show
 /// tutorial" button); it receives a `dismiss` closure so that control can close
 /// the popover. All URLs are optional, so a link only renders when provided.
 public struct AppInfoPopoverView<Trailing: View>: View {
@@ -239,7 +240,7 @@ public struct AppInfoPopoverView<Trailing: View>: View {
         discordURL: URL? = nil,
         sourceURL: URL? = nil,
         changelogURL: URL? = nil,
-        width: CGFloat = 440,
+        width: CGFloat = 460,
         @ViewBuilder trailing: @escaping (@escaping () -> Void) -> Trailing = { _ in EmptyView() }
     ) {
         self.appName = appName
@@ -255,51 +256,47 @@ public struct AppInfoPopoverView<Trailing: View>: View {
     }
 
     public var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            HStack(spacing: 10) {
-                if let icon = NSImage(named: NSImage.applicationIconName) {
-                    Image(nsImage: icon)
-                        .resizable()
-                        .interpolation(.high)
-                        .scaledToFit()
-                        .frame(width: 38, height: 38)
+        ZStack {
+            // The system popover chrome is translucent enough that the desktop
+            // behind the window washes out the text. Scaling the fill up bleeds
+            // it past the content into the popover's edges and arrow, which a
+            // plain .background() would leave glassy (same trick as PaddedPopoverView).
+            Color.inverted.opacity(0.75).scaleEffect(1.5)
+
+            VStack(alignment: .leading, spacing: 14) {
+                identity
+
+                if let pro {
+                    InfoCard("Licence") {
+                        LicenseRow(pro: pro, appName: appName)
+                    }
                 }
-                Text(appName).round(22, weight: .black)
-                Spacer()
-                versionLabel
+
+                if let updater {
+                    InfoCard("Updates") {
+                        updates(updater)
+                    }
+                }
+
+                InfoCard("Links") {
+                    links
+                }
             }
-
-            Divider()
-
-            // Settings renders these inside a Form, which gives the unstyled
-            // Pickers a compact menu style; in the popover's plain VStack they
-            // default to a tall style, so force the menu style. The channel
-            // Picker's own .segmented style still overrides this.
-            if let pro, let updater {
-                LicenseAndUpdatesView(pro: pro, updater: updater, appName: appName, changelogURL: changelogURL)
-                    .pickerStyle(.menu)
-            }
-
-            HStack(spacing: 6) {
-                linkButton("Website", websiteURL)
-                linkButton("Contact", contactURL)
-                linkButton("Discord", discordURL)
-                linkButton("Source", sourceURL)
-                linkButton("Changelog", changelogURL)
-
-                Spacer()
-
-                trailing { dismiss() }
-            }
-            .font(.system(size: 11, weight: .semibold))
-            .padding(.top, 4)
+            .padding(16)
+            .frame(width: width)
         }
-        .padding(16)
-        .frame(width: width)
+        .fixedSize()
     }
 
     @Environment(\.openURL) private var openURL
     @Environment(\.dismiss) private var dismiss
+
+    @ObservedObject private var um = UM
+
+    @Default(.checkForUpdates) private var checkForUpdates
+    @Default(.silentUpdates) private var silentUpdates
+    @Default(.updateCheckInterval) private var updateCheckInterval
+    @Default(.updateChannel) private var updateChannel
 
     private let appName: String
     private let pro: LowtechPro?
@@ -312,16 +309,117 @@ public struct AppInfoPopoverView<Trailing: View>: View {
     private let width: CGFloat
     private let trailing: (@escaping () -> Void) -> Trailing
 
-    @ViewBuilder private var versionLabel: some View {
-        if let changelogURL {
-            Button { openURL(changelogURL) } label: {
-                Text("v\(Bundle.main.version)").mono(12, weight: .regular)
+    private var identity: some View {
+        HStack(spacing: 12) {
+            if let icon = NSImage(named: NSImage.applicationIconName) {
+                Image(nsImage: icon)
+                    .resizable()
+                    .interpolation(.high)
+                    .scaledToFit()
+                    .frame(width: 44, height: 44)
             }
-            .buttonStyle(.plain)
-            .help("View the changelog")
-            .foregroundColor(.secondary)
-        } else {
-            Text("v\(Bundle.main.version)").mono(12, weight: .regular).foregroundColor(.secondary)
+            VStack(alignment: .leading, spacing: 0) {
+                Text(appName).round(22, weight: .black)
+                Text("v\(Bundle.main.version)")
+                    .mono(11, weight: .regular)
+                    .foregroundColor(.secondary)
+            }
+            Spacer()
+        }
+        .padding(.leading, 2)
+    }
+
+    /// The version is deliberately plain text: the Links card already carries a
+    /// Changelog button, so making it a second changelog link only adds a
+    /// clickable target that looks like a label.
+    @ViewBuilder private func updates(_ updater: SPUUpdater) -> some View {
+        row("Automatic updates") {
+            HStack(spacing: 6) {
+                Picker("", selection: autoUpdate) {
+                    Text("Off").tag(AutoUpdate.off)
+                    Text("Check and notify").tag(AutoUpdate.notify)
+                    Text("Install silently").tag(AutoUpdate.install)
+                }
+                .labelsHidden()
+                .fixedSize()
+
+                HStack(spacing: 6) {
+                    Text("every").foregroundStyle(.secondary).fixedSize()
+                    Picker("", selection: $updateCheckInterval) {
+                        Text("day").tag(UpdateCheckInterval.daily.rawValue)
+                        Text("3 days").tag(UpdateCheckInterval.everyThreeDays.rawValue)
+                        Text("week").tag(UpdateCheckInterval.weekly.rawValue)
+                    }
+                    .labelsHidden()
+                    .fixedSize()
+                }
+                .opacity(checkForUpdates ? 1 : 0.4)
+                .disabled(!checkForUpdates)
+            }
+            // Outside a Form an unstyled Picker defaults to a tall list style.
+            .pickerStyle(.menu)
+        }
+
+        Divider()
+
+        row("Update channel") {
+            Picker("", selection: $updateChannel) {
+                Text("Release").tag(UpdateChannel.release)
+                Text("Beta").tag(UpdateChannel.beta)
+            }
+            .labelsHidden()
+            .pickerStyle(.segmented)
+            .fixedSize()
+        }
+
+        Divider()
+
+        row("Check for updates") {
+            Button("Check Now") { updater.checkForUpdates() }
+                .buttonStyle(.bordered)
+        }
+
+        if um.newVersion != nil {
+            Divider()
+            GentleUpdateView(updater: updater)
+        }
+    }
+
+    private var links: some View {
+        HStack(spacing: 6) {
+            linkButton("Website", websiteURL)
+            linkButton("Contact", contactURL)
+            linkButton("Discord", discordURL)
+            linkButton("Source", sourceURL)
+            linkButton("Changelog", changelogURL)
+
+            Spacer()
+
+            trailing { dismiss() }
+        }
+        .font(.system(size: 11, weight: .semibold))
+    }
+
+    /// Merges `checkForUpdates` and `silentUpdates` into one Off / Check and notify / Install silently selector.
+    private var autoUpdate: Binding<AutoUpdate> {
+        Binding(
+            get: { checkForUpdates ? (silentUpdates ? .install : .notify) : .off },
+            set: { mode in
+                checkForUpdates = mode != .off
+                if mode != .off {
+                    silentUpdates = mode == .install
+                }
+            }
+        )
+    }
+
+    @ViewBuilder private func row(_ title: String, @ViewBuilder _ content: () -> some View) -> some View {
+        HStack(alignment: .firstTextBaseline) {
+            Text(title)
+                .font(.system(size: 12, weight: .medium))
+                .foregroundStyle(.secondary)
+            Spacer()
+            content()
         }
     }
 
@@ -333,6 +431,58 @@ public struct AppInfoPopoverView<Trailing: View>: View {
                 .fixedSize()
         }
     }
+}
+
+// MARK: - AutoUpdate
+
+private enum AutoUpdate {
+    case off
+    case notify
+    case install
+}
+
+// MARK: - InfoCard
+
+/// One grouped-Form-style section: a small secondary caption over a rounded card.
+///
+/// Hand-built rather than `Form { Section }.formStyle(.grouped)` because a grouped
+/// Form is List-backed and reports no intrinsic height, leaving an NSPopover with
+/// nothing to size itself to. The fill is a scheme-relative solid, never a Material:
+/// a Material here would blur the desktop behind the window rather than the card it
+/// belongs to, and take on arbitrary colours from it.
+private struct InfoCard<Content: View>: View {
+    init(_ title: String? = nil, @ViewBuilder content: @escaping () -> Content) {
+        self.title = title
+        self.content = content
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            if let title {
+                Text(title)
+                    .font(.system(size: 11, weight: .semibold))
+                    .foregroundStyle(.secondary)
+                    .padding(.leading, 4)
+            }
+
+            VStack(alignment: .leading, spacing: 10) {
+                content()
+            }
+            .padding(12)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .background(
+                RoundedRectangle(cornerRadius: 10, style: .continuous)
+                    .fill(Color.primary.opacity(0.06))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 10, style: .continuous)
+                            .strokeBorder(Color.primary.opacity(0.07), lineWidth: 1)
+                    )
+            )
+        }
+    }
+
+    private let title: String?
+    @ViewBuilder private let content: () -> Content
 }
 
 // MARK: - LicenseView
