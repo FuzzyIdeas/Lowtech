@@ -200,17 +200,24 @@ public func shell(
         )
     }
 
-    let result = asyncNow {
+    let waiter = asyncNow {
         task.waitUntilExit()
-    }.wait(for: timeout)
-    if result == .timedOut {
+    }
+    if waiter.wait(for: timeout) == .timedOut {
+        // terminate() delivers SIGTERM asynchronously, and NSTask throws an ObjC
+        // exception if terminationStatus is read before the process actually exits.
+        // Wait for the exit, escalating to SIGKILL if SIGTERM is ignored.
         task.terminate()
+        if waiter.wait(for: 2) == .timedOut, task.isRunning {
+            kill(task.processIdentifier, SIGKILL)
+            _ = waiter.wait(for: 1)
+        }
     }
 
     return ProcessStatus(
         output: stdout(of: task),
         error: stderr(of: task),
-        success: task.terminationStatus == 0,
+        success: !task.isRunning && task.terminationStatus == 0,
         process: task
     )
 }
