@@ -768,44 +768,77 @@ func getSerialNumberHash() -> String? {
 
 public let SERIAL_NUMBER_HASH = getSerialNumberHash() ?? generateAPIKey()
 
-public func restart() {
-    // Check if the app was started fresh or if was restarted with arg `restarts=timestamp:timestamp:...`
-    // If the app was restarted more than 3 times in 1 minute, exit with status 1
+/// True when this launch is an auto-restart (the relauncher passes `restarts=timestamp:...`).
+public let restarted = CommandLine.arguments[safe: 1]?.starts(with: "restarts=") ?? false
+/// Set once a restart has been scheduled, so shutdown paths can skip work that no longer matters.
+public var restarting = false
 
+func tooManyRestarts() -> Bool {
+    guard CommandLine.arguments.count == 2, CommandLine.arguments[1].starts(with: "restarts=") else {
+        return false
+    }
+    let restarts = CommandLine.arguments[1].split(separator: "=")[1].split(separator: ":").compactMap { TimeInterval($0) }
+    let now = Date().timeIntervalSince1970
+    return restarts.filter { now - $0 < 60 }.count > 3
+}
+
+/// Spawns the detached relauncher that waits for THIS process to die, then reopens the app with an
+/// updated `restarts=timestamp:...` list. Returns false when it can't (unexpected argv). Does NOT
+/// exit: the caller chooses how to die — a clean `exit(0)` for hangs/user restarts, or re-raising
+/// the fatal signal for crashes (see `restartFromCrash`) so the OS still writes a crash report.
+@discardableResult
+public func scheduleRelaunch() -> Bool {
     guard CommandLine.arguments.count == 1 || (
         CommandLine.arguments.count == 2 && CommandLine.arguments[1].starts(with: "restarts=")
     ) else {
+        return false
+    }
+
+    let now = Date().timeIntervalSince1970
+    let restartArg = CommandLine.arguments.count == 2
+        ? "\(CommandLine.arguments[1]):\(now)"
+        : "restarts=\(now)"
+
+    _ = shell(
+        command: "while /bin/ps -o pid -p \(ProcessInfo.processInfo.processIdentifier) >/dev/null 2>/dev/null; do /bin/sleep 0.1; done; /bin/sleep 0.5; /usr/bin/open '\(Bundle.main.bundlePath)' --args '\(restartArg)'",
+        wait: false
+    )
+    return true
+}
+
+public func restart() {
+    restarting = true
+    // Exit with status 1 (no relaunch) when the app already restarted more than 3 times in 1 minute
+    guard !tooManyRestarts(), scheduleRelaunch() else {
         exit(1)
-    }
-
-    var args: [String] = []
-    if CommandLine.arguments.count == 2 {
-        let restarts = CommandLine.arguments[1].split(separator: "=")[1].split(separator: ":").map { TimeInterval($0)! }
-        let now = Date().timeIntervalSince1970
-        if restarts.filter({ now - $0 < 60 }).count > 3 {
-            exit(1)
-        } else {
-            args.append("\(CommandLine.arguments[1]):\(now)")
-        }
-    }
-
-    do {
-        try exec(arg0: Bundle.main.executablePath!, args: args)
-    } catch {
-        logger.error("Failed to restart: \(error)")
     }
     exit(0)
 }
 
+/// Fatal-signal trap: schedule the relauncher, then restore the default signal disposition and
+/// re-raise so the kernel + ReportCrash still produce a `.ips` (and Sentry, when installed, still
+/// captures) instead of a clean `exit(0)` that silently swallows the crash. The relauncher waits
+/// on this pid, so the restart happens whether we exit or die from the re-raised signal.
+/// Only handles genuine fault signals; async-signal-safety here is no worse than the previous
+/// `restart()`, and `signal`/`raise` themselves are async-signal-safe.
+func restartFromCrash(_ sig: Int32) {
+    if !tooManyRestarts() { scheduleRelaunch() }
+    signal(sig, SIG_DFL)
+    raise(sig)
+}
+
 public func restartOnCrash() {
+    // Uncaught ObjC exceptions never produce a Mach-level crash report, so a clean restart is
+    // all we can do there. Fault signals re-raise (restartFromCrash) so the OS writes the .ips.
     NSSetUncaughtExceptionHandler { _ in restart() }
-    signal(SIGABRT) { _ in restart() }
-    signal(SIGILL) { _ in restart() }
-    signal(SIGSEGV) { _ in restart() }
-    signal(SIGFPE) { _ in restart() }
-    signal(SIGBUS) { _ in restart() }
+    signal(SIGABRT) { restartFromCrash($0) }
+    signal(SIGILL) { restartFromCrash($0) }
+    signal(SIGSEGV) { restartFromCrash($0) }
+    signal(SIGFPE) { restartFromCrash($0) }
+    signal(SIGBUS) { restartFromCrash($0) }
+    // SIGPIPE is socket/IO noise, not a bug worth a crash report: clean-restart it as before.
     signal(SIGPIPE) { _ in restart() }
-    signal(SIGTRAP) { _ in restart() }
+    signal(SIGTRAP) { restartFromCrash($0) }
     signal(SIGHUP) { _ in restart() }
     signal(SIGINT) { _ in NSApp.terminate(nil) }
 }

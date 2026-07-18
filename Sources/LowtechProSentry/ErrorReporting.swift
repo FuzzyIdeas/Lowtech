@@ -55,6 +55,11 @@ public enum LowtechSentry {
             options.dist = release
             #if DEBUG
                 options.appHangTimeoutInterval = 3
+                // Debug builds must never upload crashes to the server: rely on the local `.ips`
+                // (the re-raise in restartFromCrash lets ReportCrash write it). Disabling the crash
+                // handler also keeps SentryCrash from installing signal handlers, so the app's own
+                // fault traps stay the only ones in play.
+                options.enableCrashHandler = false
             #else
                 options.appHangTimeoutInterval = 30
             #endif
