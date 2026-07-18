@@ -49,7 +49,7 @@ public extension Regex {
     }
 }
 
-// implementation of the `/` operator for FilePath and String that always returns a FilePath using .appending
+/// implementation of the `/` operator for FilePath and String that always returns a FilePath using .appending
 public func / (lhs: FilePath, rhs: String) -> FilePath {
     lhs.appending(rhs)
 }
@@ -189,7 +189,9 @@ public func % (_ str: String, _ arg: CVarArg) -> String {
 }
 
 public extension Substring.SubSequence {
-    var s: String { String(self) }
+    var s: String {
+        String(self)
+    }
 }
 
 public extension String.SubSequence {
@@ -387,8 +389,12 @@ public extension Bool {
     }
 
     public extension NSSize {
-        var s: String { "\(width.i)×\(height.i)" }
-        var area: CGFloat { width * height }
+        var s: String {
+            "\(width.i)×\(height.i)"
+        }
+        var area: CGFloat {
+            width * height
+        }
         func scaled(by factor: Double) -> CGSize {
             CGSize(width: (width * factor).evenInt, height: (height * factor).evenInt)
         }
@@ -403,7 +409,9 @@ public extension Bool {
     }
 
     public extension NSAppearance {
-        var isDark: Bool { name == .vibrantDark || name == .darkAqua }
+        var isDark: Bool {
+            name == .vibrantDark || name == .darkAqua
+        }
     }
 
     public extension NSWindow {
@@ -939,11 +947,15 @@ public extension Collection {
         indices.contains(index) ? self[index] : nil
     }
 
-    var isNotEmpty: Bool { !isEmpty }
+    var isNotEmpty: Bool {
+        !isEmpty
+    }
 }
 
 public extension SetAlgebra {
-    var isNotEmpty: Bool { !isEmpty }
+    var isNotEmpty: Bool {
+        !isEmpty
+    }
 }
 
 public extension Sequence {
@@ -1087,7 +1099,9 @@ public extension PrefixSequence<SHA256Digest> {
 }
 
 public extension Data {
-    var s: String? { String(data: self, encoding: .utf8) }
+    var s: String? {
+        String(data: self, encoding: .utf8)
+    }
 
     func base64(urlSafe: Bool = false) -> String {
         str(hex: false, base64: true, urlSafe: urlSafe)
@@ -1360,7 +1374,9 @@ public class RealPathDragSourceView: NSView, NSDraggingSource {
     }
 
     @available(*, unavailable)
-    required init?(coder: NSCoder) { fatalError() }
+    required init?(coder: NSCoder) {
+        fatalError()
+    }
 
     override public func mouseDown(with event: NSEvent) {
         dragOrigin = convert(event.locationInWindow, from: nil)
@@ -1602,8 +1618,12 @@ public extension Sequence where Element: Equatable & Hashable {
         filter { !elements.contains($0) }
     }
 
-    var uniqued: [Element] { Set(self).arr }
-    var set: Set<Element> { Set(self) }
+    var uniqued: [Element] {
+        Set(self).arr
+    }
+    var set: Set<Element> {
+        Set(self)
+    }
 
     func uniqued(by keyPath: KeyPath<Element, some Hashable>) -> [Element] {
         var seen = Set<AnyHashable>()
@@ -1645,8 +1665,12 @@ public extension Collection where Element: Equatable & Hashable, Index: BinaryIn
 }
 
 public extension StringProtocol {
-    func distance(of element: Element) -> Int? { firstIndex(of: element)?.distance(in: self) }
-    func distance(of string: some StringProtocol) -> Int? { range(of: string)?.lowerBound.distance(in: self) }
+    func distance(of element: Element) -> Int? {
+        firstIndex(of: element)?.distance(in: self)
+    }
+    func distance(of string: some StringProtocol) -> Int? {
+        range(of: string)?.lowerBound.distance(in: self)
+    }
 }
 
 // MARK: - BackportSortOrder
@@ -1665,7 +1689,9 @@ extension Bool: @retroactive Comparable {
 }
 
 public extension Collection {
-    func distance(to index: Index) -> Int { distance(from: startIndex, to: index) }
+    func distance(to index: Index) -> Int {
+        distance(from: startIndex, to: index)
+    }
 
 //    @available(macOS 12.0, *)
 //    func sorted<Value: Comparable>(by keyPath: KeyPath<Element, Value>, order: SortOrder) -> [Element] {
@@ -1697,7 +1723,9 @@ public extension Collection {
 }
 
 public extension String.Index {
-    func distance(in string: some StringProtocol) -> Int { string.distance(to: self) }
+    func distance(in string: some StringProtocol) -> Int {
+        string.distance(to: self)
+    }
 }
 
 public extension NSParagraphStyle {
@@ -1790,7 +1818,9 @@ public extension NSRunningApplication {
         bundle?.name
     }
 
-    var name: String? { localizedName ?? bundleName }
+    var name: String? {
+        localizedName ?? bundleName
+    }
 
     var bundle: Bundle? {
         guard let bundleURL else {
@@ -1834,8 +1864,7 @@ let binaryValidCache = Cache<String, Bool>()
 public extension URL {
     /// Get extended attribute.
     func extendedAttribute(forName name: String) throws -> Data {
-        let data = try withUnsafeFileSystemRepresentation { fileSystemPath -> Data in
-
+        try withUnsafeFileSystemRepresentation { fileSystemPath -> Data in
             // Determine attribute size:
             let length = getxattr(fileSystemPath, name, nil, 0, 0, 0)
             guard length >= 0 else { throw URL.posixError(errno) }
@@ -1850,7 +1879,6 @@ public extension URL {
             guard result >= 0 else { throw URL.posixError(errno) }
             return data
         }
-        return data
     }
 
     /// Set extended attribute.
@@ -1873,7 +1901,7 @@ public extension URL {
 
     /// Get list of all extended attributes.
     func listExtendedAttributes() throws -> [String] {
-        let list = try withUnsafeFileSystemRepresentation { fileSystemPath -> [String] in
+        try withUnsafeFileSystemRepresentation { fileSystemPath -> [String] in
             let length = listxattr(fileSystemPath, nil, 0, 0)
             guard length >= 0 else { throw URL.posixError(errno) }
 
@@ -1885,16 +1913,14 @@ public extension URL {
             guard result >= 0 else { throw URL.posixError(errno) }
 
             // Extract attribute names:
-            let list = namebuf.split(separator: 0).compactMap {
+            return namebuf.split(separator: 0).compactMap {
                 $0.withUnsafeBufferPointer {
                     $0.withMemoryRebound(to: UInt8.self) {
                         String(bytes: $0, encoding: .utf8)
                     }
                 }
             }
-            return list
         }
-        return list
     }
 
     /// Helper function to create an NSError from a Unix errno.
@@ -1942,7 +1968,9 @@ public extension Decodable {
 }
 
 public extension FlattenSequence {
-    var arr: [Element] { Array(self) }
+    var arr: [Element] {
+        Array(self)
+    }
 }
 
 public extension Binding<Int> {
@@ -2007,10 +2035,18 @@ public extension DispatchQueue {
 }
 
 public extension NSAppearance {
-    static var dark: NSAppearance? { NSAppearance(named: .darkAqua) }
-    static var light: NSAppearance? { NSAppearance(named: .aqua) }
-    static var vibrantDark: NSAppearance? { NSAppearance(named: .vibrantDark) }
-    static var vibrantLight: NSAppearance? { NSAppearance(named: .vibrantLight) }
+    static var dark: NSAppearance? {
+        NSAppearance(named: .darkAqua)
+    }
+    static var light: NSAppearance? {
+        NSAppearance(named: .aqua)
+    }
+    static var vibrantDark: NSAppearance? {
+        NSAppearance(named: .vibrantDark)
+    }
+    static var vibrantLight: NSAppearance? {
+        NSAppearance(named: .vibrantLight)
+    }
 }
 
 import CryptoKit
@@ -2111,7 +2147,9 @@ public extension FilePath {
         return false
     }
 
-    var name: FilePath.Component { lastComponent ?? "Root" }
+    var name: FilePath.Component {
+        lastComponent ?? "Root"
+    }
     var nameWithoutSize: String {
         "\(stem!.replacing(#/_\d+x\d+$/#, with: "")).\(`extension`!)"
     }
@@ -2179,8 +2217,12 @@ public extension FilePath {
         return true
     }
 
-    var dir: FilePath { removingLastComponent() }
-    var url: URL { URL(filePath: self)! }
+    var dir: FilePath {
+        removingLastComponent()
+    }
+    var url: URL {
+        URL(filePath: self)!
+    }
     var backupPath: FilePath? {
         FilePath.backups.appending(nameWithHash)
     }
@@ -2240,7 +2282,9 @@ public extension FilePath {
         return (attr[FileAttributeKey.size] as? UInt64)?.i
     }
 
-    var exists: Bool { fm.fileExists(atPath: string) }
+    var exists: Bool {
+        fm.fileExists(atPath: string)
+    }
 
     @discardableResult
     func move(to path: FilePath, force: Bool = false) throws -> FilePath {
@@ -2296,7 +2340,9 @@ public extension FilePath {
         return (try? fm.contentsOfDirectory(atPath: string))?.map { appending($0) } ?? []
     }
 
-    var shellString: String { string.shellString }
+    var shellString: String {
+        string.shellString
+    }
 
     static let Applications = FilePath("/Applications")
     static let root = FilePath("/")
@@ -2312,14 +2358,20 @@ public extension String {
     }
 }
 public extension URL {
-    var shellString: String { isFileURL ? path.shellString : absoluteString }
+    var shellString: String {
+        isFileURL ? path.shellString : absoluteString
+    }
 }
 
 let HOME_DIR_REGEX = (try? Regex("^/*?\(NSHomeDirectory())(/)?", as: (Substring, Substring?).self))?.ignoresCase()
 
 public extension URL {
-    var filePath: FilePath? { FilePath(self) }
-    var existingFilePath: FilePath? { fm.fileExists(atPath: path) ? FilePath(self) : nil }
+    var filePath: FilePath? {
+        FilePath(self)
+    }
+    var existingFilePath: FilePath? {
+        fm.fileExists(atPath: path) ? FilePath(self) : nil
+    }
 }
 
 public let HOME = URL.homeDirectory.filePath!
@@ -2368,6 +2420,8 @@ extension NSSize: @retroactive Hashable {
 }
 
 public enum LowtechFSEvents {
+    /// Creation/start errors can't be thrown to the caller anymore (start is async); the `throws`
+    /// is kept for source compatibility. Events are still delivered on the main queue.
     public static func startWatching(
         paths: [String],
         for id: ObjectIdentifier,
@@ -2376,27 +2430,37 @@ public enum LowtechFSEvents {
         flags: EonilFSEventsCreateFlags = [.noDefer, .fileEvents],
         with handler: @escaping (EonilFSEventsEvent) -> Void
     ) throws {
-        assert(Thread.isMainThread)
-        assert(watchers[id] == nil)
-
-        let s = try EonilFSEventStream(
-            pathsToWatch: paths,
-            sinceWhen: sinceWhen,
-            latency: latency,
-            flags: flags,
-            handler: handler
-        )
-        s.setDispatchQueue(DispatchQueue.main)
-        try s.start()
-        watchers[id] = s
+        fseventsQueue.async {
+            guard watchers[id] == nil else { return }
+            do {
+                let s = try EonilFSEventStream(
+                    pathsToWatch: paths,
+                    sinceWhen: sinceWhen,
+                    latency: latency,
+                    flags: flags,
+                    handler: handler
+                )
+                s.setDispatchQueue(DispatchQueue.main)
+                try s.start()
+                watchers[id] = s
+            } catch {
+                logger.error("Failed to start FSEvents watcher for \(paths, privacy: .public): \(error, privacy: .public)")
+            }
+        }
     }
     public static func stopWatching(for id: ObjectIdentifier) {
-        assert(Thread.isMainThread)
-        // assert(watchers[id] != nil)
-        guard let s = watchers[id] else { return }
-        s.stop()
-        s.invalidate()
-        watchers[id] = nil
+        fseventsQueue.async {
+            guard let s = watchers[id] else { return }
+            s.stop()
+            s.invalidate()
+            watchers[id] = nil
+        }
     }
 }
+
+/// `FSEventStreamStart` does a synchronous mach RPC to fseventsd that can block for 30s+ when the
+/// daemon is busy (e.g. right after login) — an app hang when called on the main thread (Clop
+/// CLOP-CC). All stream lifecycle calls and the `watchers` dictionary are confined to this serial
+/// queue instead; the streams are dispatch-queue-scheduled so no runloop is needed here.
+private let fseventsQueue = DispatchQueue(label: "lowtech.fsevents", qos: .userInitiated)
 private var watchers = [ObjectIdentifier: EonilFSEventStream]()
