@@ -37,15 +37,6 @@
       }
     },
     {
-      "identity" : "fsevents",
-      "kind" : "remoteSourceControl",
-      "location" : "https://github.com/eonil/FSEvents",
-      "state" : {
-        "revision" : "e6b7cdfa2754454e194a45ee6c2004d0f630fe88",
-        "version" : "0.1.7"
-      }
-    },
-    {
       "identity" : "launchatlogin-modern",
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/sindresorhus/LaunchAtLogin-Modern",
@@ -68,8 +59,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/alin23/PaddleSPM",
       "state" : {
-        "revision" : "d5446f4274ed2f01701758f40c9253b93fc43dd9",
-        "version" : "4.4.3"
+        "revision" : "7de514e10acd65e13eec1f5b75b7f18f64dbd775",
+        "version" : "4.5.1"
       }
     },
     {
@@ -104,8 +95,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/sparkle-project/Sparkle",
       "state" : {
-        "revision" : "0ef1ee0220239b3776f433314515fd849025673f",
-        "version" : "2.6.4"
+        "revision" : "d46d456107feacc80711b21847b82b07bd9fb46e",
+        "version" : "2.9.3"
       }
     },
     {

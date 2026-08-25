@@ -17,7 +17,9 @@ public class ProManager: ObservableObject {
 
 public let PM = ProManager()
 
-public var PRO: LowtechPro? { (LowtechProAppDelegate.instance as? LowtechProAppDelegate)?.pro }
+public var PRO: LowtechPro? {
+    (LowtechProAppDelegate.instance as? LowtechProAppDelegate)?.pro
+}
 
 // MARK: - LowtechProAppDelegate
 
@@ -132,9 +134,12 @@ open class LowtechProAppDelegate: LowtechIndieAppDelegate, PADProductDelegate, P
     public func willShowPaddle(_: PADUIType, product _: PADProduct) -> PADDisplayConfiguration? {
         statusBar?.showPopoverIfNotVisible()
 
+        // `statusBar?.window` is a doubly optional NSWindow??, so it needs flattening
+        // before it can sit in the same coalescing chain as the NSApp windows.
+        let statusBarWindow: NSWindow? = statusBar?.window ?? nil
         if let window = NSApp.windows.first(where: { $0.title.contains("Settings") })
             ?? NSApp.windows.first(where: { $0.accessibilityRole() != .popover })
-            ?? statusBar?.window, window.isVisible
+            ?? statusBarWindow, window.isVisible
         {
             focus()
             window.makeKeyAndOrderFront(nil)
@@ -463,7 +468,9 @@ public class LowtechPro: ObservableObject {
 
     var retryUnverified = true
 
-    @inline(__always) var active: Bool { productActivated || onTrial }
+    @inline(__always) var active: Bool {
+        productActivated || onTrial
+    }
 
     @inline(__always) func enoughTimeHasPassedSinceLastVerification(product: PADProduct) -> Bool {
         guard let verifyDate = product.lastVerifyDate else {

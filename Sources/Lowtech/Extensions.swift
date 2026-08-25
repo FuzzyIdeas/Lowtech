@@ -2012,38 +2012,3 @@ extension NSSize: @retroactive Hashable {
     }
 }
 
-import EonilFSEvents
-
-public enum LowtechFSEvents {
-    public static func startWatching(
-        paths: [String],
-        for id: ObjectIdentifier,
-        sinceWhen: EonilFSEventsEventID = .now,
-        latency: TimeInterval = 0,
-        flags: EonilFSEventsCreateFlags = [.noDefer, .fileEvents],
-        with handler: @escaping (EonilFSEventsEvent) -> Void
-    ) throws {
-        assert(Thread.isMainThread)
-        assert(watchers[id] == nil)
-
-        let s = try EonilFSEventStream(
-            pathsToWatch: paths,
-            sinceWhen: sinceWhen,
-            latency: latency,
-            flags: flags,
-            handler: handler
-        )
-        s.setDispatchQueue(DispatchQueue.main)
-        try s.start()
-        watchers[id] = s
-    }
-    public static func stopWatching(for id: ObjectIdentifier) {
-        assert(Thread.isMainThread)
-        assert(watchers[id] != nil)
-        guard let s = watchers[id] else { return }
-        s.stop()
-        s.invalidate()
-        watchers[id] = nil
-    }
-}
-private var watchers = [ObjectIdentifier: EonilFSEventStream]()
