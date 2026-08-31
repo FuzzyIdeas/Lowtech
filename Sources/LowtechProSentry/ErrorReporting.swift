@@ -72,6 +72,12 @@ public enum LowtechSentry {
                 options.appHangTimeoutInterval = 30
             #endif
             options.swiftAsyncStacktraces = true
+            #if os(macOS)
+                // `NSApplicationCrashOnExceptions` turns an uncaught NSException into a SIGTRAP,
+                // and without this the event carries only `_crashOnException` frames: no exception
+                // name, no reason, nothing to act on (CLING-A).
+                options.enableUncaughtNSExceptionReporting = true
+            #endif
             options.beforeSend = { event in
                 guard let exc = event.exceptions?.first, let mech = exc.mechanism, mech.type == "AppHang" else {
                     return event
