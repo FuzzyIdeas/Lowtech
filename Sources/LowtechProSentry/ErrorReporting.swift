@@ -25,7 +25,16 @@ extension SentryStacktrace? {
         }
         return stack.frames.contains { frame in
             guard let function = frame.function else { return false }
-            return function.contains("runModal") || function.contains("forTimeInterval")
+            // Modal loops keep the runloop parked while an alert/sheet/panel waits on the user.
+            // Paddle's licence-recovery dialog (PADLicenseRecoveryDialog) is one such alert and was
+            // the top source of these false hangs (CLOP-1W).
+            for needle in [
+                "runModal", "runModalForWindow", "runModalSession", "_doModalLoop",
+                "forTimeInterval", "beginSheet", "PADLicenseRecovery", "displayRecovery",
+            ] where function.contains(needle) {
+                return true
+            }
+            return false
         }
     }
 
@@ -37,6 +46,41 @@ extension SentryStacktrace? {
 public enum LowtechSentry {
     public static var enableSentry: Bool = Defaults[.enableSentry]
     public static var sentryDSN: String?
+
+    /// Number of in-flight blocks of work that legitimately park the main thread (a modal alert,
+    /// a synchronous panel, a deliberate wait). While this is above zero, `beforeSend` drops any
+    /// app-hang event and never auto-restarts: the app is waiting on a person, not stuck.
+    ///
+    /// This is the symbolication-independent counterpart to `isWaitingForUser`, which can miss a
+    /// modal frame when the in-process app-hang stack isn't symbolicated. Wrap known-blocking work
+    /// with `withExpectedHang { ... }` (or bracket it with `beginExpectedHang`/`endExpectedHang`).
+    private static let expectedHangLock = NSLock()
+    private static var expectedHangDepth = 0
+
+    public static var isInExpectedHang: Bool {
+        expectedHangLock.lock()
+        defer { expectedHangLock.unlock() }
+        return expectedHangDepth > 0
+    }
+
+    public static func beginExpectedHang() {
+        expectedHangLock.lock()
+        expectedHangDepth += 1
+        expectedHangLock.unlock()
+    }
+
+    public static func endExpectedHang() {
+        expectedHangLock.lock()
+        expectedHangDepth = max(0, expectedHangDepth - 1)
+        expectedHangLock.unlock()
+    }
+
+    @discardableResult
+    public static func withExpectedHang<T>(_ body: () throws -> T) rethrows -> T {
+        beginExpectedHang()
+        defer { endExpectedHang() }
+        return try body()
+    }
 
     public static func configureSentry(restartOnHang: Bool = true, getUser: @escaping () -> User) {
         guard let dsn = sentryDSN else { return }
@@ -82,7 +126,9 @@ public enum LowtechSentry {
                 guard let exc = event.exceptions?.first, let mech = exc.mechanism, mech.type == "AppHang" else {
                     return event
                 }
-                guard !exc.stacktrace.isWaitingForUser else {
+                // A modal alert / deliberate wait is up: the main thread is parked on purpose, so
+                // neither report the hang nor auto-restart out from under the user.
+                guard !isInExpectedHang, !exc.stacktrace.isWaitingForUser else {
                     return nil
                 }
                 if restartOnHang, Defaults[.autoRestartOnHang], exc.stacktrace.isExpectedToHang {
