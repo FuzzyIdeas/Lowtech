@@ -1637,12 +1637,12 @@ public let KM = KeysManager()
         var character: String {
             let char = switch self {
             case .underscore:
-                Sauce.shared.character(for: SauceKey.minus.QWERTYKeyCode.i, cocoaModifiers: [.shift])?.uppercased() ?? rawValue.uppercased()
+                Sauce.shared.character(for: SauceKey.minus.QWERTYKeyCode.i, modifiers: .cocoa([.shift]))?.uppercased() ?? rawValue.uppercased()
             default:
                 switch QWERTYKeyCode.i {
                 case kVK_Return: "⏎"
                 case kVK_Space: "⎵"
-                default: Sauce.shared.character(for: QWERTYKeyCode.i, cocoaModifiers: [])?.uppercased() ?? rawValue.uppercased()
+                default: Sauce.shared.character(for: QWERTYKeyCode.i, modifiers: .none)?.uppercased() ?? rawValue.uppercased()
                 }
             }
 

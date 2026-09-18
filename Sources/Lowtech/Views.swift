@@ -399,7 +399,7 @@ public protocol Nameable {
         }
 
         public static func keyString(_ keyCode: Int) -> String {
-            Sauce.shared.character(for: keyCode, cocoaModifiers: []) ?? SauceKey(QWERTYKeyCode: keyCode)?.character ?? ""
+            Sauce.shared.character(for: keyCode, modifiers: .none) ?? SauceKey(QWERTYKeyCode: keyCode)?.character ?? ""
         }
 
         @EnvironmentObject var env: EnvState
