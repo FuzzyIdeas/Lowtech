@@ -396,6 +396,8 @@ public struct ToggleButton: ButtonStyle {
             .contrast(hovering ? 1.02 : 1.0)
             .scaleEffect(configuration.isPressed ? 1.02 : (hovering ? 1.05 : 1))
             .contentShape(Rectangle())
+            // The on state is drawn, never announced; say it.
+            .accessibilityToggle(isOn: isOn)
             .onHover(perform: { hover in
                 guard isEnabled else { return }
                 withAnimation(.easeOut(duration: 0.1)) {

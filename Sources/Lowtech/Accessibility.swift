@@ -40,6 +40,15 @@ public extension View {
             .accessibilityAction(.default, action)
     }
 
+    /// For a row that acts through `.onTapGesture` but holds buttons of its own (delete, record a
+    /// key), which `accessibleTap` would merge away. The row stays a group with its children and
+    /// gains a press that runs `action`.
+    func accessibilityPress(_ label: String? = nil, action: @escaping () -> Void) -> some View {
+        accessibilityElement(children: .contain)
+            .modifier(OptionalAccessibilityLabel(label: label))
+            .accessibilityAction(.default, action)
+    }
+
     /// For a Button drawn as an on/off pill or chip. Without it the pill reads as a plain button
     /// and nothing tells VoiceOver or an agent whether it is on.
     @ViewBuilder func accessibilityToggle(isOn: Bool) -> some View {

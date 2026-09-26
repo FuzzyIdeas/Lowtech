@@ -1441,6 +1441,7 @@ public let KM = KeysManager()
                     Button("⇧") {
                         triggerKeys = triggerKeys.toggling(key: .lshift, allowShiftAlone: allowShiftAlone)
                     }.buttonStyle(ToggleButton(isOn: lshiftTrigger, radius: radius, noFG: noFG))
+                    .accessibilityLabel("Left Shift")
                         .overlay(Color.red.opacity(triggerKeys.contains(.shift) ? 0.1 : 0.0).clipShape(RoundedRectangle(cornerRadius: radius, style: .continuous)))
 
                     commonModifiers
@@ -1448,6 +1449,7 @@ public let KM = KeysManager()
                     Button("⇧") {
                         triggerKeys = triggerKeys.toggling(key: .rshift, allowShiftAlone: allowShiftAlone)
                     }.buttonStyle(ToggleButton(isOn: rshiftTrigger, radius: radius, noFG: noFG))
+                    .accessibilityLabel("Right Shift")
                         .overlay(Color.red.opacity(triggerKeys.contains(.shift) ? 0.1 : 0.0).clipShape(RoundedRectangle(cornerRadius: radius, style: .continuous)))
                 }.disabled(!isEnabled)
             } else {
@@ -1469,6 +1471,7 @@ public let KM = KeysManager()
                         Button("⇧ shift") {
                             triggerKeys = triggerKeys.toggling(key: .lshift, allowShiftAlone: allowShiftAlone)
                         }.buttonStyle(ToggleButton(isOn: lshiftTrigger, radius: radius, noFG: noFG))
+                    .accessibilityLabel("Left Shift")
                             .overlay(Color.red.opacity(triggerKeys.contains(.shift) ? 0.1 : 0.0).clipShape(RoundedRectangle(cornerRadius: radius, style: .continuous)))
 
                         Spacer()
@@ -1476,6 +1479,7 @@ public let KM = KeysManager()
                         Button("⇧ shift") {
                             triggerKeys = triggerKeys.toggling(key: .rshift, allowShiftAlone: allowShiftAlone)
                         }.buttonStyle(ToggleButton(isOn: rshiftTrigger, radius: radius, noFG: noFG))
+                    .accessibilityLabel("Right Shift")
                             .overlay(Color.red.opacity(triggerKeys.contains(.shift) ? 0.1 : 0.0).clipShape(RoundedRectangle(cornerRadius: radius, style: .continuous)))
                     }.frame(width: commonModifiersRowSize.width)
 
@@ -1549,14 +1553,17 @@ public let KM = KeysManager()
                 Button("⌃") {
                     triggerKeys = triggerKeys.toggling(key: .lctrl, allowShiftAlone: allowShiftAlone)
                 }.buttonStyle(ToggleButton(isOn: lctrlTrigger, radius: radius, noFG: noFG))
+                    .accessibilityLabel("Left Control")
                     .overlay(Color.red.opacity(triggerKeys.contains(.ctrl) ? 0.1 : 0.0).clipShape(RoundedRectangle(cornerRadius: radius, style: .continuous)))
                 Button("⌥") {
                     triggerKeys = triggerKeys.toggling(key: .lalt, allowShiftAlone: allowShiftAlone)
                 }.buttonStyle(ToggleButton(isOn: laltTrigger, radius: radius, noFG: noFG))
+                    .accessibilityLabel("Left Option")
                     .overlay(Color.red.opacity(triggerKeys.contains(.alt) ? 0.1 : 0.0).clipShape(RoundedRectangle(cornerRadius: radius, style: .continuous)))
                 Button("⌘") {
                     triggerKeys = triggerKeys.toggling(key: .lcmd, allowShiftAlone: allowShiftAlone)
                 }.buttonStyle(ToggleButton(isOn: lcmdTrigger, radius: radius, noFG: noFG))
+                    .accessibilityLabel("Left Command")
                     .overlay(Color.red.opacity(triggerKeys.contains(.cmd) ? 0.1 : 0.0).clipShape(RoundedRectangle(cornerRadius: radius, style: .continuous)))
                 Button(action: {}) {
                     Text("")
@@ -1567,17 +1574,22 @@ public let KM = KeysManager()
                 .padding(.horizontal, spacebarFullWidth ? 8 : 0)
                 .opacity(0.9)
                 .disabled(true)
+                // The spacebar only completes the drawing of a keyboard.
+                .accessibilityHidden(true)
                 Button("⌘") {
                     triggerKeys = triggerKeys.toggling(key: .rcmd, allowShiftAlone: allowShiftAlone)
                 }.buttonStyle(ToggleButton(isOn: rcmdTrigger, radius: radius, noFG: noFG))
+                    .accessibilityLabel("Right Command")
                     .overlay(Color.red.opacity(triggerKeys.contains(.cmd) ? 0.1 : 0.0).clipShape(RoundedRectangle(cornerRadius: radius, style: .continuous)))
                 Button("⌥") {
                     triggerKeys = triggerKeys.toggling(key: .ralt, allowShiftAlone: allowShiftAlone)
                 }.buttonStyle(ToggleButton(isOn: raltTrigger, radius: radius, noFG: noFG))
+                    .accessibilityLabel("Right Option")
                     .overlay(Color.red.opacity(triggerKeys.contains(.alt) ? 0.1 : 0.0).clipShape(RoundedRectangle(cornerRadius: radius, style: .continuous)))
                 Button("⌃") {
                     triggerKeys = triggerKeys.toggling(key: .rctrl, allowShiftAlone: allowShiftAlone)
                 }.buttonStyle(ToggleButton(isOn: rctrlTrigger, radius: radius, noFG: noFG))
+                    .accessibilityLabel("Right Control")
                     .overlay(Color.red.opacity(triggerKeys.contains(.ctrl) ? 0.1 : 0.0).clipShape(RoundedRectangle(cornerRadius: radius, style: .continuous)))
             }
             .fixedSize(horizontal: !spacebarFullWidth, vertical: true)

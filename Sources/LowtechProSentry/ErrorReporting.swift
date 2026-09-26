@@ -202,6 +202,8 @@ public struct SentryToggleRow: View {
                     }
                 }
             }
+            // A grouped form lays a multi-Text label out beside an unnamed switch; name the switch.
+            .accessibilityLabel(title)
             if enableSentry {
                 SentryUserIDPill()
             }
