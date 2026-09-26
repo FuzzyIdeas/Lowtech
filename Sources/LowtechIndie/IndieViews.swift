@@ -147,7 +147,7 @@ public struct UpdatesView: View {
 
             row("Automatic updates") {
                 HStack(spacing: 6) {
-                    Picker("", selection: autoUpdate) {
+                    Picker("Automatic updates", selection: autoUpdate) {
                         Text("Off").tag(AutoUpdate.off)
                         Text("Check and notify").tag(AutoUpdate.notify)
                         Text("Install silently").tag(AutoUpdate.install)
@@ -157,7 +157,7 @@ public struct UpdatesView: View {
 
                     HStack(spacing: 6) {
                         Text("every").foregroundStyle(.secondary).fixedSize()
-                        Picker("", selection: $updateCheckInterval) {
+                        Picker("Check interval", selection: $updateCheckInterval) {
                             Text("day").tag(UpdateCheckInterval.daily.rawValue)
                             Text("3 days").tag(UpdateCheckInterval.everyThreeDays.rawValue)
                             Text("week").tag(UpdateCheckInterval.weekly.rawValue)
@@ -172,7 +172,7 @@ public struct UpdatesView: View {
 
             if showChannel {
                 row("Update channel") {
-                    Picker("", selection: $updateChannel) {
+                    Picker("Update channel", selection: $updateChannel) {
                         Text("Release").tag(UpdateChannel.release)
                         Text("Beta").tag(UpdateChannel.beta)
                     }
