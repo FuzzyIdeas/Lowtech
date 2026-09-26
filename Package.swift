@@ -45,7 +45,6 @@ let package = Package(
 
         .package(url: "https://github.com/alin23/PaddleSPM", from: "4.5.1"),
         .package(url: "https://github.com/sparkle-project/Sparkle", from: "2.2.0"),
-        .package(url: "https://github.com/getsentry/sentry-cocoa", from: "9.2.0"),
     ],
     targets: [
         .target(
@@ -88,8 +87,18 @@ let package = Package(
             name: "LowtechProSentry",
             dependencies: [
                 "Lowtech",
-                .product(name: "Sentry", package: "sentry-cocoa"),
-            ]
+                "Sentry",
+            ],
+            // Replaces sentry-cocoa's SentryCppHelper, an empty target that only links libc++
+            linkerSettings: [.linkedLibrary("c++")]
+        ),
+        // macOS-only slice of sentry-cocoa's static Sentry.xcframework, built by Scripts/slim-sentry.sh.
+        // Depending on sentry-cocoa directly makes SwiftPM download all 7 of its xcframeworks
+        // for every platform, about 2.9 GB per DerivedData folder.
+        .binaryTarget(
+            name: "Sentry",
+            url: "https://files.lowtechguys.com/Sentry-macOS-9.29.0.xcframework.zip",
+            checksum: "60316b5c0d1854e56aa64285ab07513dba89238f4da072a3c9f6fa8a04b84b28"
         ),
     ]
 )
