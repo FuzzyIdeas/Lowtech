@@ -22,8 +22,8 @@ open class LowtechPopover: NSPopover {
         mockWindow?.collectionBehavior = [.stationary, .canJoinAllSpaces, .ignoresCycle, .fullScreenDisallowsTiling]
         mockWindow?.sharingType = .none
         mockWindow?.ignoresMouseEvents = true
-        mockWindow?.setAccessibilityRole(.menuBarItem)
-        mockWindow?.setAccessibilitySubrole(.unknown)
+        // A 2 px anchor for the popover, nothing a person can act on.
+        mockWindow?.hideFromAccessibility()
 
         mockWindow?.backgroundColor = .clear
         mockWindow?.isOpaque = false

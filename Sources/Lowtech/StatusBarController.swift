@@ -63,6 +63,8 @@ open class StatusBarController: NSObject, NSWindowDelegate, ObservableObject {
             statusBarButton.image = NSImage(named: image)
             statusBarButton.image?.size = NSSize(width: 18.0, height: 18.0)
             statusBarButton.image?.isTemplate = true
+            // Without it the item is announced by its asset name ("MenubarIcon") or not at all.
+            statusBarButton.setAccessibilityLabel(Bundle.main.name)
 
             statusBarButton.action = #selector(statusItemClick(sender:))
             statusBarButton.target = self

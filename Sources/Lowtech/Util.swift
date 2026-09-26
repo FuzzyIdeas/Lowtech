@@ -380,8 +380,7 @@ public func createWindow(
                     window.collectionBehavior = [.stationary, .canJoinAllSpaces, .ignoresCycle, .fullScreenDisallowsTiling, .fullScreenNone]
                     window.sharingType = .none
                     window.ignoresMouseEvents = true
-                    window.setAccessibilityRole(.popover)
-                    window.setAccessibilitySubrole(.unknown)
+                    window.hideFromAccessibility()
                 }
                 if show {
                     if window.canBecomeKey {

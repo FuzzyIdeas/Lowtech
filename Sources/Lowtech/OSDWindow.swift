@@ -35,8 +35,14 @@ open class OSDWindow: LowtechWindow {
         if !allowsMouse {
             ignoresMouseEvents = true
         }
+        // A popover role keeps window managers off it. A passive OSD is paint only, so it leaves
+        // the accessibility tree; one that takes the mouse (a switcher, a drop zone) stays, named.
         setAccessibilityRole(.popover)
-        setAccessibilitySubrole(.unknown)
+        if allowsMouse {
+            title = Bundle.main.name
+        } else {
+            hideFromAccessibility()
+        }
 
         backgroundColor = .clear
         contentView?.bg = .clear
@@ -184,6 +190,21 @@ open class OSDWindow: LowtechWindow {
 
 open class LowtechWindow: NSPanel, NSWindowDelegate {
     override open var canBecomeKey: Bool { allowToBecomeKey }
+
+    /// Listed to accessibility only while on screen. These panels are kept alive between uses
+    /// and fade out instead of ordering out, and an empty, invisible one sitting first in the
+    /// app's `AXWindows` is what VoiceOver and computer-use agents landed on instead of the
+    /// window the user actually had open.
+    override open func isAccessibilityElement() -> Bool {
+        !hiddenFromAccessibility && isVisible && alphaValue > 0.05 && super.isAccessibilityElement()
+    }
+
+    public var hiddenFromAccessibility = false
+
+    override open func setAccessibilityElement(_ accessibilityElement: Bool) {
+        hiddenFromAccessibility = !accessibilityElement
+        super.setAccessibilityElement(accessibilityElement)
+    }
 
     open var onMouseUp: ((NSEvent) -> Void)?
     open var onMouseDown: ((NSEvent) -> Void)?

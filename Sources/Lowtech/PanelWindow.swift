@@ -12,8 +12,10 @@ open class PanelWindow: LowtechWindow {
         screenCorner = corner
 
         level = .floating
+        // A popover role keeps window managers off the panel; the title is what VoiceOver and
+        // computer-use agents read to tell it apart ("Untitled" otherwise).
         setAccessibilityRole(.popover)
-        setAccessibilitySubrole(.unknown)
+        title = Bundle.main.name
 
         backgroundColor = .clear
         contentView?.bg = .clear
