@@ -35,7 +35,7 @@ let package = Package(
         // Dependencies declare other packages that this package depends on.
         .package(url: "https://github.com/sindresorhus/Defaults", from: "9.0.0"),
         .package(url: "https://github.com/apple/swift-atomics", from: "1.0.2"),
-        .package(url: "https://github.com/sindresorhus/LaunchAtLogin-Modern", from: "1.0.0"),
+        .package(url: "https://github.com/FuzzyIdeas/LaunchAtLogin", from: "1.2.0"),
         .package(url: "https://github.com/alin23/Magnet", from: "4.2.0"),
         .package(url: "https://github.com/Clipy/Sauce", from: "2.5.2"),
         .package(url: "https://github.com/yannickl/DynamicColor", from: "5.0.1"),
@@ -52,7 +52,7 @@ let package = Package(
             dependencies: [
                 .product(name: "Atomics", package: "swift-atomics"),
                 .product(name: "Defaults", package: "Defaults"),
-                .product(name: "LaunchAtLogin", package: "LaunchAtLogin-Modern"),
+                .product(name: "LaunchAtLogin", package: "LaunchAtLogin"),
                 .product(name: "Magnet", package: "Magnet"),
                 .product(name: "Sauce", package: "Sauce"),
                 .product(name: "DynamicColor", package: "DynamicColor"),

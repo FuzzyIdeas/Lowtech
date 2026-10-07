@@ -2,6 +2,7 @@ import Cocoa
 import Combine
 import Defaults
 import Foundation
+import LaunchAtLogin
 import SwiftUI
 
 let kAppleInterfaceThemeChangedNotification = "AppleInterfaceThemeChangedNotification"
@@ -70,6 +71,8 @@ open class LowtechAppDelegate: NSObject, NSApplicationDelegate, ObservableObject
         #if DEBUG
             print(notification)
         #endif
+        // Off the main thread now, so the first launch at login toggle drawn reads it from memory.
+        LaunchAtLogin.refresh()
         setupOnLaunch()
     }
 
