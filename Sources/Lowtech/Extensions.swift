@@ -242,6 +242,8 @@ extension NumberFormatter {
 
     static func formatter(decimals: Int = 0, padding: Int = 0, format: String? = nil, decimalSeparator: String? = nil) -> NumberFormatter {
         let f = NumberFormatter()
+        // A decimal point whatever the region writes ("2.7", not "2,7"); a caller wanting another passes `decimalSeparator`.
+        f.locale = Locale(identifier: "en_US_POSIX")
         if decimals > 0 {
             f.alwaysShowsDecimalSeparator = true
             f.maximumFractionDigits = decimals
