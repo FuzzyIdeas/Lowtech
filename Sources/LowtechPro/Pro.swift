@@ -3,7 +3,7 @@ import Defaults
 import Lowtech
 import LowtechIndie
 import os
-import Paddle
+@preconcurrency import Paddle
 
 private let logger = Logger(subsystem: lowtechLogSubsystem, category: "Pro")
 
@@ -44,6 +44,7 @@ open class LowtechProAppDelegate: LowtechIndieAppDelegate, PADProductDelegate, @
     open func willShowPaddle(_ alert: PADAlert) -> Bool {
         if alert.alertType == .error, !LowtechProAppDelegate.showNextPaddleError {
             LowtechProAppDelegate.showNextPaddleError = true
+            LowtechProAppDelegate.heldPaddleErrorMessage = alert.message
 
             return false
         }
@@ -53,51 +54,28 @@ open class LowtechProAppDelegate: LowtechIndieAppDelegate, PADProductDelegate, @
 
     @MainActor
     open func paddleDidError(_ error: Error) {
-        guard let code = PADErrorCode(rawValue: (error as NSError).code) else { return }
+        let nsError = error as NSError
+        logger.error("Paddle error \(nsError.domain) \(nsError.code): \(nsError.localizedDescription)")
+        guard nsError.domain == PADErrorDomain, let code = PADErrorCode(rawValue: nsError.code) else { return }
 
         switch code {
         case .licenseCodeUtilized, .tooManyActivationsOrExpired, .noActivations:
-            guard let product,
-                  let paddleController =
-                  (
-                      NSApp.windows.compactMap { w in w.sheets.compactMap { s in s.windowController as? PADActivateWindowController }.first }.first
-                          ?? NSApp.windows.compactMap { w in w.windowController as? PADActivateWindowController }.first
-                  ),
-                  let email = paddleController.emailTxt?.stringValue,
-                  let licenseCode = paddleController.licenseTxt?.stringValue
-            else {
-                return
-            }
-
-            LowtechProAppDelegate.showNextPaddleError = false
-            product.activations(forLicense: licenseCode) { activations, error in
-                guard let activationsList = activations as? [[String: Any]], let oldestActivation = activationsList.first
-                else {
-                    return
-                }
-
-                product.deactivateActivation(oldestActivation["activation_id"] as! String, license: licenseCode) { deactivated, error in
-                    guard deactivated else { return }
-                    mainAsync {
-                        product.activateEmail(email, license: licenseCode) { didActivate, error in
-                            guard didActivate else {
-                                if let error {
-                                    logger.error("\(error.localizedDescription)")
-                                    paddleController.showErrorAlert(error.localizedDescription)
-                                }
-                                return
-                            }
-                            paddleController.closeDialog(.activated, internalUICloseReason: nil)
-                        }
-                    }
-                }
-            }
+            freeActivationSlot(onlyIfFull: false)
+        case .unableToActivate:
+            // A licence at its limit can come back as Paddle's generic activation error instead of
+            // one of the codes above
+            freeActivationSlot(onlyIfFull: true)
         default:
             break
         }
     }
 
     public static var showNextPaddleError = true
+
+    /// How many activations a licence comes with. Only gates freeing a slot on Paddle's generic
+    /// activation error, so a licence given more seats by hand still frees one on the specific errors.
+    public var licenseActivations = 5
+
 
     public static var proDelegate: LowtechProAppDelegate? {
         guard let instance = LowtechAppDelegate.instance else {
@@ -190,6 +168,96 @@ open class LowtechProAppDelegate: LowtechIndieAppDelegate, PADProductDelegate, @
                 logger.error("Error on recovering license from Paddle: \(error)")
             }
         }
+    }
+
+    /// The message of the Paddle error alert held back while `freeActivationSlot` works, shown after
+    /// all when it gives up.
+    static var heldPaddleErrorMessage: String?
+    static var freeingActivationSlot = false
+
+    /// Paddle error codes whose own text the activation dialog shows. Every other code gets Paddle's
+    /// generic "unable to complete the license activation" text.
+    static let paddleErrorsWithOwnMessage: Set<Int> = [-122, -123, -124, -125, -126, -131]
+
+    /// Paddle refuses one more Mac than the licence allows instead of freeing a slot, so a wiped or
+    /// replaced Mac can't activate until an activation is released. This deactivates the oldest
+    /// activation and activates again with the email and code typed in the dialog.
+    ///
+    /// Paddle calls `paddleDidError` right before it shows its error alert, so the alert is held back
+    /// here and only shown if freeing a slot fails. `onlyIfFull` is for Paddle's generic error, which
+    /// also covers a blocked network or a refused licence: then a slot is only freed when the licence
+    /// lists at least `licenseActivations` activations.
+    private func freeActivationSlot(onlyIfFull: Bool) {
+        guard !LowtechProAppDelegate.freeingActivationSlot, let product,
+              let paddleController =
+              (
+                  NSApp.windows.compactMap { w in w.sheets.compactMap { s in s.windowController as? PADActivateWindowController }.first }.first
+                      ?? NSApp.windows.compactMap { w in w.windowController as? PADActivateWindowController }.first
+              ),
+              let email = paddleController.emailTxt?.stringValue.trimmed, !email.isEmpty,
+              let licenseCode = paddleController.licenseTxt?.stringValue.trimmed, !licenseCode.isEmpty
+        else {
+            return
+        }
+
+        LowtechProAppDelegate.freeingActivationSlot = true
+        LowtechProAppDelegate.heldPaddleErrorMessage = nil
+        LowtechProAppDelegate.showNextPaddleError = false
+
+        let licenseActivations = licenseActivations
+        func giveUp(_ reason: String, error: Error? = nil) {
+            logger.error("Not freeing an activation slot: \(reason) \(error?.localizedDescription ?? "")")
+            LowtechProAppDelegate.freeingActivationSlot = false
+            LowtechProAppDelegate.showNextPaddleError = true
+            guard let message = LowtechProAppDelegate.heldPaddleErrorMessage else { return }
+            LowtechProAppDelegate.heldPaddleErrorMessage = nil
+            paddleController.showErrorAlert(message)
+        }
+
+        product.activations(forLicense: licenseCode) { activations, error in mainAsync {
+            guard let activations = activations as? [[String: Any]], !activations.isEmpty else {
+                giveUp("listing the activations failed", error: error)
+                return
+            }
+            guard !onlyIfFull || activations.count >= licenseActivations else {
+                giveUp("\(activations.count) activations, the licence isn't full")
+                return
+            }
+            // Paddle lists them oldest first; sort by the date anyway and keep that order for ties
+            let oldest = activations.enumerated().min { a, b in
+                (a.element["activated"] as? Date ?? .distantFuture, a.offset) < (b.element["activated"] as? Date ?? .distantFuture, b.offset)
+            }?.element
+            guard let activationID = (oldest?["activation_id"] as? String) ?? (oldest?["activation_id"] as? NSNumber)?.stringValue else {
+                giveUp("the oldest activation has no ID")
+                return
+            }
+
+            product.deactivateActivation(activationID, license: licenseCode) { deactivated, error in mainAsync {
+                guard deactivated else {
+                    giveUp("deactivating \(activationID) failed", error: error)
+                    return
+                }
+                logger.info("Deactivated the oldest activation \(activationID) of \(activations.count) to activate this Mac")
+
+                product.activateEmail(email, license: licenseCode) { activated, error in mainAsync {
+                    LowtechProAppDelegate.freeingActivationSlot = false
+                    LowtechProAppDelegate.showNextPaddleError = true
+                    let heldMessage = LowtechProAppDelegate.heldPaddleErrorMessage
+                    LowtechProAppDelegate.heldPaddleErrorMessage = nil
+
+                    guard activated else {
+                        logger.error("Activating after freeing a slot failed: \(error?.localizedDescription ?? "unknown error")")
+                        let ownMessage = (error as NSError?).flatMap { LowtechProAppDelegate.paddleErrorsWithOwnMessage.contains($0.code) ? $0.localizedDescription : nil }
+                        if let message = ownMessage ?? heldMessage ?? error?.localizedDescription {
+                            paddleController.showErrorAlert(message)
+                        }
+                        return
+                    }
+                    self.pro.enablePro()
+                    paddleController.closeDialog(.activated, internalUICloseReason: nil)
+                }}
+            }}
+        }}
     }
 
 }
