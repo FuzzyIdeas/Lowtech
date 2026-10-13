@@ -9,6 +9,7 @@ import Cocoa
 import Combine
 import Defaults
 import Foundation
+import MachO
 import os
 
 private let logger = Logger(subsystem: lowtechLogSubsystem, category: "Util")
@@ -826,10 +827,69 @@ func restartFromCrash(_ sig: Int32) {
     raise(sig)
 }
 
+/// Writes an uncaught exception's reason and whole call stack to `~/Library/Logs/<App>/`, and points the unified log at
+/// the file. The exception leaves no crash report of its own, and the unified log cuts a long message short, which
+/// loses the stack below the framework that threw.
+func logUncaughtException(_ exception: NSException) {
+    let info = Bundle.main.infoDictionary ?? [:]
+    let app = info["CFBundleName"] as? String ?? ProcessInfo.processInfo.processName
+    let version = info["CFBundleShortVersionString"] as? String ?? "?"
+    let build = info["CFBundleVersion"] as? String ?? "?"
+    let reason = exception.reason ?? "no reason"
+    var lines = [
+        "\(app) \(version) (\(build)), pid \(ProcessInfo.processInfo.processIdentifier), \(ISO8601DateFormatter().string(from: Date()))",
+        "\(exception.name.rawValue): \(reason)",
+    ]
+    if let userInfo = exception.userInfo, !userInfo.isEmpty {
+        lines.append("userInfo: \(userInfo)")
+    }
+    // A stripped build names its own frames by the nearest exported symbol at best. With the app's load address, atos
+    // and the release's dSYM turn the addresses back into symbols.
+    if let header = _dyld_get_image_header(0) {
+        lines.append(String(format: "%@ loaded at 0x%lx", app, UInt(bitPattern: header)))
+    }
+    lines.append("")
+    lines += exception.callStackSymbols
+    let text = lines.joined(separator: "\n") + "\n"
+
+    let stamp = DateFormatter()
+    stamp.locale = Locale(identifier: "en_US_POSIX")
+    stamp.dateFormat = "yyyyMMdd-HHmmss"
+    let folder = FileManager.default.urls(for: .libraryDirectory, in: .userDomainMask)[0].appendingPathComponent("Logs/\(app)")
+    let file = folder.appendingPathComponent("uncaught-exception-\(stamp.string(from: Date())).log")
+    do {
+        try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
+        try text.write(to: file, atomically: true, encoding: .utf8)
+        logger.fault("Uncaught \(exception.name.rawValue, privacy: .public): \(reason, privacy: .public). Full stack in \(file.path, privacy: .public)")
+    } catch {
+        // Without the file, the stack goes to the unified log in pieces short enough to survive whole.
+        logger.fault("Uncaught \(exception.name.rawValue, privacy: .public): \(reason, privacy: .public)")
+        let frames = exception.callStackSymbols
+        for start in stride(from: 0, to: frames.count, by: 8) {
+            let piece = frames[start ..< min(start + 8, frames.count)].joined(separator: "\n")
+            logger.fault("\(piece, privacy: .public)")
+        }
+    }
+    pruneExceptionLogs(in: folder)
+}
+
+/// Keeps the 20 newest exception logs, so an app that keeps throwing doesn't fill the folder.
+private func pruneExceptionLogs(in folder: URL) {
+    guard let names = try? FileManager.default.contentsOfDirectory(atPath: folder.path) else { return }
+    // The time stamp in the name sorts them oldest first.
+    let logs = names.filter { $0.hasPrefix("uncaught-exception-") && $0.hasSuffix(".log") }.sorted()
+    for name in logs.dropLast(20) {
+        try? FileManager.default.removeItem(at: folder.appendingPathComponent(name))
+    }
+}
+
 public func restartOnCrash() {
-    // Uncaught ObjC exceptions never produce a Mach-level crash report, so a clean restart is
-    // all we can do there. Fault signals re-raise (restartFromCrash) so the OS writes the .ips.
-    NSSetUncaughtExceptionHandler { _ in restart() }
+    // Uncaught ObjC exceptions never produce a Mach-level crash report, so their stack is written to a log of our own
+    // before the clean restart. Fault signals re-raise (restartFromCrash) so the OS writes the .ips.
+    NSSetUncaughtExceptionHandler { exception in
+        logUncaughtException(exception)
+        restart()
+    }
     signal(SIGABRT) { restartFromCrash($0) }
     signal(SIGILL) { restartFromCrash($0) }
     signal(SIGSEGV) { restartFromCrash($0) }
