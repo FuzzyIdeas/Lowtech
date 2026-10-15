@@ -48,6 +48,11 @@ open class LowtechProAppDelegate: LowtechIndieAppDelegate, PADProductDelegate, @
 
             return false
         }
+        // An activation error is shown after finding its real cause, see `presentActivationError`
+        if alert.alertType == .error, Self.activationWindowController() != nil {
+            presentActivationError(code: LowtechProAppDelegate.lastPaddleErrorCode, paddleTitle: alert.title, paddleMessage: alert.message)
+            return false
+        }
 
         return true
     }
@@ -56,6 +61,7 @@ open class LowtechProAppDelegate: LowtechIndieAppDelegate, PADProductDelegate, @
     open func paddleDidError(_ error: Error) {
         let nsError = error as NSError
         logger.error("Paddle error \(nsError.domain) \(nsError.code): \(nsError.localizedDescription)")
+        LowtechProAppDelegate.lastPaddleErrorCode = nsError.domain == PADErrorDomain ? nsError.code : nil
         guard nsError.domain == PADErrorDomain, let code = PADErrorCode(rawValue: nsError.code) else { return }
 
         switch code {
@@ -174,6 +180,56 @@ open class LowtechProAppDelegate: LowtechIndieAppDelegate, PADProductDelegate, @
     /// all when it gives up.
     static var heldPaddleErrorMessage: String?
     static var freeingActivationSlot = false
+    /// The `PADErrorDomain` code of the last error Paddle reported, nil for other domains
+    static var lastPaddleErrorCode: Int?
+
+    static func activationWindowController() -> PADActivateWindowController? {
+        NSApp.windows.compactMap { w in w.sheets.compactMap { s in s.windowController as? PADActivateWindowController }.first }.first
+            ?? NSApp.windows.compactMap { w in w.windowController as? PADActivateWindowController }.first
+    }
+
+    /// Replaces Paddle's vague activation error with its likely cause: Paddle blocked in /etc/hosts,
+    /// a network filter or no connection, or the licence refused for a reason Paddle words vaguely.
+    /// The probe runs off the main thread and takes up to 5 seconds when Paddle can't be reached.
+    /// Falls back to Paddle's own text when nothing better is found.
+    public func presentActivationError(code: Int?, paddleTitle: String?, paddleMessage: String?) {
+        let appName = productName.isEmpty ? (Bundle.main.object(forInfoDictionaryKey: "CFBundleName") as? String ?? ProcessInfo.processInfo.processName) : productName
+
+        Task.detached(priority: .userInitiated) {
+            let diagnosis = await ActivationDiagnostics.diagnose(paddleErrorCode: code, appName: appName)
+            await MainActor.run {
+                // Paddle's own text goes in our alert too: handing it back through `showErrorAlert`
+                // could reach `willShowPaddle` again after any flag was reset, and loop
+                guard let diagnosis = diagnosis ?? paddleMessage.map({
+                    ActivationDiagnosis(title: paddleTitle ?? ActivationDiagnostics.couldNotActivateTitle, message: $0, detail: nil)
+                }) else { return }
+                Self.showActivationAlert(diagnosis, window: Self.activationWindowController()?.window)
+            }
+        }
+    }
+
+    static func showActivationAlert(_ diagnosis: ActivationDiagnosis, window: NSWindow?) {
+        let alert = NSAlert()
+        alert.alertStyle = .warning
+        alert.messageText = diagnosis.title
+        alert.informativeText = diagnosis.message
+        alert.addButton(withTitle: "OK")
+        if let detail = diagnosis.detail {
+            let label = NSTextField(wrappingLabelWithString: detail)
+            label.font = .monospacedSystemFont(ofSize: NSFont.smallSystemFontSize, weight: .regular)
+            label.textColor = .secondaryLabelColor
+            label.isSelectable = true
+            label.preferredMaxLayoutWidth = 300
+            label.frame.size = label.fittingSize
+            alert.accessoryView = label
+        }
+
+        if let window, window.isVisible {
+            alert.beginSheetModal(for: window)
+        } else {
+            alert.runModal()
+        }
+    }
 
     /// Paddle error codes whose own text the activation dialog shows. Every other code gets Paddle's
     /// generic "unable to complete the license activation" text.
@@ -189,11 +245,7 @@ open class LowtechProAppDelegate: LowtechIndieAppDelegate, PADProductDelegate, @
     /// lists at least `licenseActivations` activations.
     private func freeActivationSlot(onlyIfFull: Bool) {
         guard !LowtechProAppDelegate.freeingActivationSlot, let product,
-              let paddleController =
-              (
-                  NSApp.windows.compactMap { w in w.sheets.compactMap { s in s.windowController as? PADActivateWindowController }.first }.first
-                      ?? NSApp.windows.compactMap { w in w.windowController as? PADActivateWindowController }.first
-              ),
+              let paddleController = Self.activationWindowController(),
               let email = paddleController.emailTxt?.stringValue.trimmed, !email.isEmpty,
               let licenseCode = paddleController.licenseTxt?.stringValue.trimmed, !licenseCode.isEmpty
         else {
@@ -205,13 +257,14 @@ open class LowtechProAppDelegate: LowtechIndieAppDelegate, PADProductDelegate, @
         LowtechProAppDelegate.showNextPaddleError = false
 
         let licenseActivations = licenseActivations
+        let triggeringCode = LowtechProAppDelegate.lastPaddleErrorCode
         func giveUp(_ reason: String, error: Error? = nil) {
             logger.error("Not freeing an activation slot: \(reason) \(error?.localizedDescription ?? "")")
             LowtechProAppDelegate.freeingActivationSlot = false
             LowtechProAppDelegate.showNextPaddleError = true
             guard let message = LowtechProAppDelegate.heldPaddleErrorMessage else { return }
             LowtechProAppDelegate.heldPaddleErrorMessage = nil
-            paddleController.showErrorAlert(message)
+            presentActivationError(code: triggeringCode, paddleTitle: nil, paddleMessage: message)
         }
 
         product.activations(forLicense: licenseCode) { activations, error in mainAsync {
@@ -247,10 +300,10 @@ open class LowtechProAppDelegate: LowtechIndieAppDelegate, PADProductDelegate, @
 
                     guard activated else {
                         logger.error("Activating after freeing a slot failed: \(error?.localizedDescription ?? "unknown error")")
-                        let ownMessage = (error as NSError?).flatMap { LowtechProAppDelegate.paddleErrorsWithOwnMessage.contains($0.code) ? $0.localizedDescription : nil }
-                        if let message = ownMessage ?? heldMessage ?? error?.localizedDescription {
-                            paddleController.showErrorAlert(message)
-                        }
+                        let nsError = error as NSError?
+                        let ownMessage = nsError.flatMap { LowtechProAppDelegate.paddleErrorsWithOwnMessage.contains($0.code) ? $0.localizedDescription : nil }
+                        let code = nsError?.domain == PADErrorDomain ? nsError?.code : triggeringCode
+                        self.presentActivationError(code: code, paddleTitle: nil, paddleMessage: ownMessage ?? heldMessage ?? error?.localizedDescription)
                         return
                     }
                     self.pro.enablePro()
