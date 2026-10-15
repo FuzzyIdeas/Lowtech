@@ -508,6 +508,13 @@ extension Zephyr {
 
     ///  Observation method for `NSUbiquitousKeyValueStore.didChangeExternallyNotification`
     func keysDidChangeOnCloud(notification: Notification) {
+        // iCloud posts this on a background queue of its own. The synced values are written to
+        // UserDefaults from here, so every Defaults observer of those keys would run on that queue,
+        // and the ones that close windows or redraw crash AppKit off the main thread.
+        guard Thread.isMainThread else {
+            DispatchQueue.main.async { self.keysDidChangeOnCloud(notification: notification) }
+            return
+        }
         if notification.name == NSUbiquitousKeyValueStore.didChangeExternallyNotification {
             guard let userInfo = (notification as NSNotification).userInfo,
                   let cloudKeys = userInfo[NSUbiquitousKeyValueStoreChangedKeysKey] as? [String],
