@@ -151,7 +151,9 @@ public enum LowtechSentry {
         sentryLaunchEvent = mainAsyncAfter(ms: 5000) {
             guard enableSentry else { return }
 
-            SentrySDK.capture(message: "Launch")
+            // A fixed fingerprint keeps every launch in one issue. Grouped by stack trace, builds
+            // without uploaded symbols (betas, local builds) split off into issues of their own.
+            SentrySDK.capture(message: "Launch") { $0.setFingerprint(["launch"]) }
             Defaults[.lastLaunchVersion] = release
         }
     }
