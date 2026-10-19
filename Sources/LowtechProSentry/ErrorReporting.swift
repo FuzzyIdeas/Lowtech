@@ -2,6 +2,7 @@ import AppKit
 import Combine
 import Defaults
 import Lowtech
+import os
 import Sentry
 import SwiftUI
 
@@ -42,6 +43,17 @@ extension SentryStacktrace? {
         self == nil || isWaitingForUser
     }
 }
+
+extension Event {
+    /// The main thread is waiting for a dialog that another process shows in the app (a panel run by a
+    /// system service). ViewBridge renames the main thread for that wait so hang reporters can tell it
+    /// apart, and the wait can outlast the 30s threshold when the service is slow to show its window.
+    var isWaitingForSystemDialog: Bool {
+        threads?.first { $0.isMain?.boolValue == true }?.name?.hasPrefix("not a hang but an app-modal session") == true
+    }
+}
+
+private let logger = Logger(subsystem: lowtechLogSubsystem, category: "Sentry")
 
 public enum LowtechSentry {
     public static var enableSentry: Bool = Defaults[.enableSentry]
@@ -129,6 +141,10 @@ public enum LowtechSentry {
                 // A modal alert / deliberate wait is up: the main thread is parked on purpose, so
                 // neither report the hang nor auto-restart out from under the user.
                 guard !isInExpectedHang, !exc.stacktrace.isWaitingForUser else {
+                    return nil
+                }
+                guard !event.isWaitingForSystemDialog else {
+                    logger.info("Not reporting an app hang: the main thread is waiting for a system dialog to start")
                     return nil
                 }
                 if restartOnHang, Defaults[.autoRestartOnHang], exc.stacktrace.isExpectedToHang {
