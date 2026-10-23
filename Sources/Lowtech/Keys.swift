@@ -1481,6 +1481,7 @@ public let KM = KeysManager()
                                     triggerKeys = [.capsLock]
                                 }
                             }.buttonStyle(keyStyle(capsLockTrigger, .capsLock))
+                            .size(size: $capsLockSize)
                             Spacer()
                             if let capsRowTrailing {
                                 capsRowTrailing
@@ -1499,7 +1500,7 @@ public let KM = KeysManager()
                     HStack(alignment: .bottom, spacing: spacing) {
                         Button {
                             triggerKeys = triggerKeys.toggling(key: .lshift, allowShiftAlone: allowShiftAlone)
-                        } label: { shiftLabel(.leading) }.buttonStyle(keyStyle(lshiftTrigger, .lshift))
+                        } label: { leftShiftLabel }.buttonStyle(keyStyle(lshiftTrigger, .lshift))
                     .accessibilityLabel("Left Shift")
                             .overlay(Color.red.opacity(triggerKeys.contains(.shift) ? 0.1 : 0.0).clipShape(RoundedRectangle(cornerRadius: radius, style: .continuous)))
 
@@ -1507,7 +1508,7 @@ public let KM = KeysManager()
 
                         Button {
                             triggerKeys = triggerKeys.toggling(key: .rshift, allowShiftAlone: allowShiftAlone)
-                        } label: { shiftLabel(.trailing) }.buttonStyle(keyStyle(rshiftTrigger, .rshift))
+                        } label: { rightShiftLabel }.buttonStyle(keyStyle(rshiftTrigger, .rshift))
                     .accessibilityLabel("Right Shift")
                             .overlay(Color.red.opacity(triggerKeys.contains(.shift) ? 0.1 : 0.0).clipShape(RoundedRectangle(cornerRadius: radius, style: .continuous)))
                     }.frame(width: commonModifiersRowSize.width)
@@ -1531,14 +1532,19 @@ public let KM = KeysManager()
             ToggleButton(isOn: isOn, color: modifierKeyColor?(key, colorScheme) ?? .primary, radius: radius, noFG: noFG)
         }
 
-        /// Wider than caps lock, as on a Mac keyboard. Sized from the caps lock
-        /// label rather than a number of points, so it holds at any font size.
-        /// Its text sits on the outer side, as printed on the keys.
-        func shiftLabel(_ alignment: Alignment) -> some View {
-            ZStack(alignment: alignment) {
-                Text("⇪ capslock ⇧").hidden()
-                Text("⇧ shift")
-            }
+        /// As wide as caps lock above it, measured rather than sized from its
+        /// label, which a picked key sets in bold. The text sits on the outer
+        /// side, as printed.
+        var leftShiftLabel: some View {
+            Text("⇧ shift")
+                .frame(width: capsLockSize.width > 16 ? capsLockSize.width - 16 : nil, alignment: .leading)
+        }
+
+        /// Spans right ⌘ ⌥ ⌃ below it, so its left edge lines up with right
+        /// Command's. Less the toggle's 8 pt padding on each side.
+        var rightShiftLabel: some View {
+            Text("⇧ shift")
+                .frame(width: rightModifiersSize.width > 16 ? rightModifiersSize.width - 16 : nil, alignment: .trailing)
         }
 
         var spacing: CGFloat = 3
@@ -1627,6 +1633,8 @@ public let KM = KeysManager()
                 .disabled(true)
                 // The spacebar only completes the drawing of a keyboard.
                 .accessibilityHidden(true)
+                // Measured, so right shift above spans exactly these three.
+                HStack(spacing: spacing) {
                 Button("⌘") {
                     triggerKeys = triggerKeys.toggling(key: .rcmd, allowShiftAlone: allowShiftAlone)
                 }.buttonStyle(keyStyle(rcmdTrigger, .rcmd))
@@ -1642,12 +1650,16 @@ public let KM = KeysManager()
                 }.buttonStyle(keyStyle(rctrlTrigger, .rctrl))
                     .accessibilityLabel("Right Control")
                     .overlay(Color.red.opacity(triggerKeys.contains(.ctrl) ? 0.1 : 0.0).clipShape(RoundedRectangle(cornerRadius: radius, style: .continuous)))
+                }
+                .size(size: $rightModifiersSize)
             }
             .fixedSize(horizontal: !spacebarFullWidth, vertical: true)
             .size(size: $commonModifiersRowSize)
         }
 
         @State private var commonModifiersRowSize: CGSize = .zero
+        @State private var rightModifiersSize: CGSize = .zero
+        @State private var capsLockSize: CGSize = .zero
 
     }
 
