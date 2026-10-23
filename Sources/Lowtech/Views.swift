@@ -345,12 +345,17 @@ public protocol Nameable {
         @Environment(\.font) public var font
 
         public var body: some View {
-            Button(key.uppercasedChar) {
+            Button {
                 if env.recording, !recording {
                     env.recording = false
                     return
                 }
                 recording.toggle()
+            } label: {
+                // A period or comma sits on the baseline, in the bottom third of
+                // the cap; raised, it reads as the key's label like a letter does.
+                Text(key.uppercasedChar)
+                    .baselineOffset([".", ","].contains(key.uppercasedChar) ? 3 : 0)
             }.buttonStyle(
                 FlatButton(
                     colorBinding: $color,
