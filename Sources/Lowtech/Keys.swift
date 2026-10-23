@@ -1388,7 +1388,23 @@ public let KM = KeysManager()
     }
 
     public struct DirectionalModifierView: View {
-        public init(triggerKeys: Binding<[TriggerKey]>, spacing: CGFloat = 3, noFG: Bool = false, singleRow: Bool = true, showFnCaps: Bool = true, allowShiftAlone: Bool = false, spacebarFullWidth: Bool = false, radius: CGFloat = 6) {
+        /// `capsRowLeading` and `capsRowTrailing` share the caps lock row of the
+        /// two-row layout: the leading view at its top left, above caps lock,
+        /// and the trailing one at its right, its bottom right above right
+        /// shift. The row grows to the trailing view's height, so a title and a
+        /// control can sit in one block with the keys.
+        public init(
+            triggerKeys: Binding<[TriggerKey]>,
+            spacing: CGFloat = 3,
+            noFG: Bool = false,
+            singleRow: Bool = true,
+            showFnCaps: Bool = true,
+            allowShiftAlone: Bool = false,
+            spacebarFullWidth: Bool = false,
+            radius: CGFloat = 6,
+            capsRowLeading: AnyView? = nil,
+            capsRowTrailing: AnyView? = nil
+        ) {
             _triggerKeys = triggerKeys
             self.spacing = spacing
             self.noFG = noFG
@@ -1397,6 +1413,8 @@ public let KM = KeysManager()
             self.allowShiftAlone = allowShiftAlone
             self.spacebarFullWidth = spacebarFullWidth
             self.radius = radius
+            self.capsRowLeading = capsRowLeading
+            self.capsRowTrailing = capsRowTrailing
         }
 
         @Environment(\.isEnabled) public var isEnabled
@@ -1455,7 +1473,7 @@ public let KM = KeysManager()
             } else {
                 VStack(alignment: .center, spacing: spacing) {
                     if showFnCaps {
-                        HStack(spacing: spacing) {
+                        HStack(alignment: .bottom, spacing: spacing) {
                             Button("⇪ capslock") {
                                 if triggerKeys.contains(.capsLock) {
                                     triggerKeys = [.rcmd]
@@ -1464,13 +1482,24 @@ public let KM = KeysManager()
                                 }
                             }.buttonStyle(ToggleButton(isOn: capsLockTrigger, radius: radius, noFG: noFG))
                             Spacer()
-                        }.frame(width: commonModifiersRowSize.width)
+                            if let capsRowTrailing {
+                                capsRowTrailing
+                            }
+                        }
+                        .frame(width: commonModifiersRowSize.width)
+                        // Over the row's empty top left, so it takes no height
+                        // of its own: caps lock stays on the row's bottom edge.
+                        .overlay(alignment: .topLeading) {
+                            if let capsRowLeading {
+                                capsRowLeading
+                            }
+                        }
                     }
 
                     HStack(alignment: .bottom, spacing: spacing) {
                         Button {
                             triggerKeys = triggerKeys.toggling(key: .lshift, allowShiftAlone: allowShiftAlone)
-                        } label: { shiftLabel }.buttonStyle(ToggleButton(isOn: lshiftTrigger, radius: radius, noFG: noFG))
+                        } label: { shiftLabel(.leading) }.buttonStyle(ToggleButton(isOn: lshiftTrigger, radius: radius, noFG: noFG))
                     .accessibilityLabel("Left Shift")
                             .overlay(Color.red.opacity(triggerKeys.contains(.shift) ? 0.1 : 0.0).clipShape(RoundedRectangle(cornerRadius: radius, style: .continuous)))
 
@@ -1478,7 +1507,7 @@ public let KM = KeysManager()
 
                         Button {
                             triggerKeys = triggerKeys.toggling(key: .rshift, allowShiftAlone: allowShiftAlone)
-                        } label: { shiftLabel }.buttonStyle(ToggleButton(isOn: rshiftTrigger, radius: radius, noFG: noFG))
+                        } label: { shiftLabel(.trailing) }.buttonStyle(ToggleButton(isOn: rshiftTrigger, radius: radius, noFG: noFG))
                     .accessibilityLabel("Right Shift")
                             .overlay(Color.red.opacity(triggerKeys.contains(.shift) ? 0.1 : 0.0).clipShape(RoundedRectangle(cornerRadius: radius, style: .continuous)))
                     }.frame(width: commonModifiersRowSize.width)
@@ -1490,10 +1519,14 @@ public let KM = KeysManager()
 
         @Binding var triggerKeys: [TriggerKey]
 
+        var capsRowLeading: AnyView?
+        var capsRowTrailing: AnyView?
+
         /// Wider than caps lock, as on a Mac keyboard. Sized from the caps lock
         /// label rather than a number of points, so it holds at any font size.
-        var shiftLabel: some View {
-            ZStack {
+        /// Its text sits on the outer side, as printed on the keys.
+        func shiftLabel(_ alignment: Alignment) -> some View {
+            ZStack(alignment: alignment) {
                 Text("⇪ capslock ⇧").hidden()
                 Text("⇧ shift")
             }
