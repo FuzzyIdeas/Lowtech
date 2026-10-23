@@ -354,8 +354,9 @@ public protocol Nameable {
             } label: {
                 // A period or comma sits on the baseline, in the bottom third of
                 // the cap; raised, it reads as the key's label like a letter does.
+                // Offset, so the key keeps its size.
                 Text(key.uppercasedChar)
-                    .baselineOffset([".", ","].contains(key.uppercasedChar) ? 3 : 0)
+                    .offset(y: [".", ","].contains(key.uppercasedChar) ? -3.5 : 0)
             }.buttonStyle(
                 FlatButton(
                     colorBinding: $color,
