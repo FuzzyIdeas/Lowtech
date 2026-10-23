@@ -1453,12 +1453,12 @@ public let KM = KeysManager()
                             } else {
                                 triggerKeys = [.capsLock]
                             }
-                        }.buttonStyle(ToggleButton(isOn: capsLockTrigger, radius: radius, noFG: noFG))
+                        }.buttonStyle(keyStyle(capsLockTrigger, .capsLock))
                     }
 
                     Button("⇧") {
                         triggerKeys = triggerKeys.toggling(key: .lshift, allowShiftAlone: allowShiftAlone)
-                    }.buttonStyle(ToggleButton(isOn: lshiftTrigger, radius: radius, noFG: noFG))
+                    }.buttonStyle(keyStyle(lshiftTrigger, .lshift))
                     .accessibilityLabel("Left Shift")
                         .overlay(Color.red.opacity(triggerKeys.contains(.shift) ? 0.1 : 0.0).clipShape(RoundedRectangle(cornerRadius: radius, style: .continuous)))
 
@@ -1466,7 +1466,7 @@ public let KM = KeysManager()
 
                     Button("⇧") {
                         triggerKeys = triggerKeys.toggling(key: .rshift, allowShiftAlone: allowShiftAlone)
-                    }.buttonStyle(ToggleButton(isOn: rshiftTrigger, radius: radius, noFG: noFG))
+                    }.buttonStyle(keyStyle(rshiftTrigger, .rshift))
                     .accessibilityLabel("Right Shift")
                         .overlay(Color.red.opacity(triggerKeys.contains(.shift) ? 0.1 : 0.0).clipShape(RoundedRectangle(cornerRadius: radius, style: .continuous)))
                 }.disabled(!isEnabled)
@@ -1480,7 +1480,7 @@ public let KM = KeysManager()
                                 } else {
                                     triggerKeys = [.capsLock]
                                 }
-                            }.buttonStyle(ToggleButton(isOn: capsLockTrigger, radius: radius, noFG: noFG))
+                            }.buttonStyle(keyStyle(capsLockTrigger, .capsLock))
                             Spacer()
                             if let capsRowTrailing {
                                 capsRowTrailing
@@ -1499,7 +1499,7 @@ public let KM = KeysManager()
                     HStack(alignment: .bottom, spacing: spacing) {
                         Button {
                             triggerKeys = triggerKeys.toggling(key: .lshift, allowShiftAlone: allowShiftAlone)
-                        } label: { shiftLabel(.leading) }.buttonStyle(ToggleButton(isOn: lshiftTrigger, radius: radius, noFG: noFG))
+                        } label: { shiftLabel(.leading) }.buttonStyle(keyStyle(lshiftTrigger, .lshift))
                     .accessibilityLabel("Left Shift")
                             .overlay(Color.red.opacity(triggerKeys.contains(.shift) ? 0.1 : 0.0).clipShape(RoundedRectangle(cornerRadius: radius, style: .continuous)))
 
@@ -1507,7 +1507,7 @@ public let KM = KeysManager()
 
                         Button {
                             triggerKeys = triggerKeys.toggling(key: .rshift, allowShiftAlone: allowShiftAlone)
-                        } label: { shiftLabel(.trailing) }.buttonStyle(ToggleButton(isOn: rshiftTrigger, radius: radius, noFG: noFG))
+                        } label: { shiftLabel(.trailing) }.buttonStyle(keyStyle(rshiftTrigger, .rshift))
                     .accessibilityLabel("Right Shift")
                             .overlay(Color.red.opacity(triggerKeys.contains(.shift) ? 0.1 : 0.0).clipShape(RoundedRectangle(cornerRadius: radius, style: .continuous)))
                     }.frame(width: commonModifiersRowSize.width)
@@ -1521,6 +1521,15 @@ public let KM = KeysManager()
 
         var capsRowLeading: AnyView?
         var capsRowTrailing: AnyView?
+
+        @Environment(\.modifierKeyColor) private var modifierKeyColor
+        @Environment(\.colorScheme) private var colorScheme
+
+        /// A key's toggle, in the app's colour for that modifier when it sets
+        /// one through `modifierKeyColor`, else the plain primary.
+        private func keyStyle(_ isOn: Binding<Bool>, _ key: TriggerKey) -> ToggleButton {
+            ToggleButton(isOn: isOn, color: modifierKeyColor?(key, colorScheme) ?? .primary, radius: radius, noFG: noFG)
+        }
 
         /// Wider than caps lock, as on a Mac keyboard. Sized from the caps lock
         /// label rather than a number of points, so it holds at any font size.
@@ -1589,22 +1598,22 @@ public let KM = KeysManager()
                 if showFnCaps {
                     Button("fn") {
                         triggerKeys = triggerKeys.toggling(key: .fn, allowShiftAlone: allowShiftAlone)
-                    }.buttonStyle(ToggleButton(isOn: fnTrigger, radius: radius, noFG: noFG))
+                    }.buttonStyle(keyStyle(fnTrigger, .fn))
                 }
 
                 Button("⌃") {
                     triggerKeys = triggerKeys.toggling(key: .lctrl, allowShiftAlone: allowShiftAlone)
-                }.buttonStyle(ToggleButton(isOn: lctrlTrigger, radius: radius, noFG: noFG))
+                }.buttonStyle(keyStyle(lctrlTrigger, .lctrl))
                     .accessibilityLabel("Left Control")
                     .overlay(Color.red.opacity(triggerKeys.contains(.ctrl) ? 0.1 : 0.0).clipShape(RoundedRectangle(cornerRadius: radius, style: .continuous)))
                 Button("⌥") {
                     triggerKeys = triggerKeys.toggling(key: .lalt, allowShiftAlone: allowShiftAlone)
-                }.buttonStyle(ToggleButton(isOn: laltTrigger, radius: radius, noFG: noFG))
+                }.buttonStyle(keyStyle(laltTrigger, .lalt))
                     .accessibilityLabel("Left Option")
                     .overlay(Color.red.opacity(triggerKeys.contains(.alt) ? 0.1 : 0.0).clipShape(RoundedRectangle(cornerRadius: radius, style: .continuous)))
                 Button("⌘") {
                     triggerKeys = triggerKeys.toggling(key: .lcmd, allowShiftAlone: allowShiftAlone)
-                }.buttonStyle(ToggleButton(isOn: lcmdTrigger, radius: radius, noFG: noFG))
+                }.buttonStyle(keyStyle(lcmdTrigger, .lcmd))
                     .accessibilityLabel("Left Command")
                     .overlay(Color.red.opacity(triggerKeys.contains(.cmd) ? 0.1 : 0.0).clipShape(RoundedRectangle(cornerRadius: radius, style: .continuous)))
                 Button(action: {}) {
@@ -1620,17 +1629,17 @@ public let KM = KeysManager()
                 .accessibilityHidden(true)
                 Button("⌘") {
                     triggerKeys = triggerKeys.toggling(key: .rcmd, allowShiftAlone: allowShiftAlone)
-                }.buttonStyle(ToggleButton(isOn: rcmdTrigger, radius: radius, noFG: noFG))
+                }.buttonStyle(keyStyle(rcmdTrigger, .rcmd))
                     .accessibilityLabel("Right Command")
                     .overlay(Color.red.opacity(triggerKeys.contains(.cmd) ? 0.1 : 0.0).clipShape(RoundedRectangle(cornerRadius: radius, style: .continuous)))
                 Button("⌥") {
                     triggerKeys = triggerKeys.toggling(key: .ralt, allowShiftAlone: allowShiftAlone)
-                }.buttonStyle(ToggleButton(isOn: raltTrigger, radius: radius, noFG: noFG))
+                }.buttonStyle(keyStyle(raltTrigger, .ralt))
                     .accessibilityLabel("Right Option")
                     .overlay(Color.red.opacity(triggerKeys.contains(.alt) ? 0.1 : 0.0).clipShape(RoundedRectangle(cornerRadius: radius, style: .continuous)))
                 Button("⌃") {
                     triggerKeys = triggerKeys.toggling(key: .rctrl, allowShiftAlone: allowShiftAlone)
-                }.buttonStyle(ToggleButton(isOn: rctrlTrigger, radius: radius, noFG: noFG))
+                }.buttonStyle(keyStyle(rctrlTrigger, .rctrl))
                     .accessibilityLabel("Right Control")
                     .overlay(Color.red.opacity(triggerKeys.contains(.ctrl) ? 0.1 : 0.0).clipShape(RoundedRectangle(cornerRadius: radius, style: .continuous)))
             }
@@ -1751,4 +1760,23 @@ public let KM = KeysManager()
         }
     }
 
+#endif
+
+#if os(macOS)
+
+// MARK: - ModifierKeyColor
+
+private struct ModifierKeyColorKey: EnvironmentKey {
+    static let defaultValue: ((TriggerKey, ColorScheme) -> Color)? = nil
+}
+
+public extension EnvironmentValues {
+    /// One colour per modifier for the keys of `DirectionalModifierView`, so an
+    /// app that colour-codes its modifiers gets the same colours on its trigger
+    /// keyboards. Nil keeps every key the plain primary.
+    var modifierKeyColor: ((TriggerKey, ColorScheme) -> Color)? {
+        get { self[ModifierKeyColorKey.self] }
+        set { self[ModifierKeyColorKey.self] = newValue }
+    }
+}
 #endif
