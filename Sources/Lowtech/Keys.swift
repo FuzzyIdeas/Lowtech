@@ -1468,17 +1468,17 @@ public let KM = KeysManager()
                     }
 
                     HStack(alignment: .bottom, spacing: spacing) {
-                        Button("⇧ shift") {
+                        Button {
                             triggerKeys = triggerKeys.toggling(key: .lshift, allowShiftAlone: allowShiftAlone)
-                        }.buttonStyle(ToggleButton(isOn: lshiftTrigger, radius: radius, noFG: noFG))
+                        } label: { shiftLabel }.buttonStyle(ToggleButton(isOn: lshiftTrigger, radius: radius, noFG: noFG))
                     .accessibilityLabel("Left Shift")
                             .overlay(Color.red.opacity(triggerKeys.contains(.shift) ? 0.1 : 0.0).clipShape(RoundedRectangle(cornerRadius: radius, style: .continuous)))
 
                         Spacer()
 
-                        Button("⇧ shift") {
+                        Button {
                             triggerKeys = triggerKeys.toggling(key: .rshift, allowShiftAlone: allowShiftAlone)
-                        }.buttonStyle(ToggleButton(isOn: rshiftTrigger, radius: radius, noFG: noFG))
+                        } label: { shiftLabel }.buttonStyle(ToggleButton(isOn: rshiftTrigger, radius: radius, noFG: noFG))
                     .accessibilityLabel("Right Shift")
                             .overlay(Color.red.opacity(triggerKeys.contains(.shift) ? 0.1 : 0.0).clipShape(RoundedRectangle(cornerRadius: radius, style: .continuous)))
                     }.frame(width: commonModifiersRowSize.width)
@@ -1489,6 +1489,15 @@ public let KM = KeysManager()
         }
 
         @Binding var triggerKeys: [TriggerKey]
+
+        /// Wider than caps lock, as on a Mac keyboard. Sized from the caps lock
+        /// label rather than a number of points, so it holds at any font size.
+        var shiftLabel: some View {
+            ZStack {
+                Text("⇪ capslock ⇧").hidden()
+                Text("⇧ shift")
+            }
+        }
 
         var spacing: CGFloat = 3
         var noFG = false
