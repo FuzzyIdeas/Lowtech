@@ -1692,6 +1692,14 @@ public let KM = KeysManager()
         }
     }
 
+    extension String {
+        /// Upper case as a keycap prints it: one character stays one, so the German ß key reads ß and not SS.
+        var keycapUppercased: String {
+            let upper = uppercased()
+            return upper.count == count ? upper : self
+        }
+    }
+
     extension SauceKey: Defaults.Serializable {}
     public extension SauceKey {
         var QWERTYKey: SauceKey {
@@ -1704,7 +1712,7 @@ public let KM = KeysManager()
             (key.lowercasedChar, key)
         }
         var uppercasedChar: String {
-            memoz.character.uppercased()
+            memoz.character.keycapUppercased
         }
         var lowercasedChar: String {
             memoz.character.lowercased()
@@ -1712,12 +1720,12 @@ public let KM = KeysManager()
         var character: String {
             let char = switch self {
             case .underscore:
-                Sauce.shared.character(for: SauceKey.minus.QWERTYKeyCode.i, modifiers: .cocoa([.shift]))?.uppercased() ?? rawValue.uppercased()
+                Sauce.shared.character(for: SauceKey.minus.QWERTYKeyCode.i, modifiers: .cocoa([.shift]))?.keycapUppercased ?? rawValue.uppercased()
             default:
                 switch QWERTYKeyCode.i {
                 case kVK_Return: "⏎"
                 case kVK_Space: "⎵"
-                default: Sauce.shared.character(for: QWERTYKeyCode.i, modifiers: .none)?.uppercased() ?? rawValue.uppercased()
+                default: Sauce.shared.character(for: QWERTYKeyCode.i, modifiers: .none)?.keycapUppercased ?? rawValue.uppercased()
                 }
             }
 
