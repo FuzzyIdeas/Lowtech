@@ -43,7 +43,7 @@ let package = Package(
         .package(url: "https://github.com/malcommac/SwiftDate", from: "7.0.0"),
         .package(url: "https://github.com/alin23/AppReceiptValidator", from: "1.2.0"),
 
-        .package(url: "https://github.com/alin23/PaddleSPM", from: "4.5.1"),
+        .package(url: "https://github.com/alin23/PaddleSPM", from: "4.5.5"),
         .package(url: "https://github.com/sparkle-project/Sparkle", from: "2.2.0"),
     ],
     targets: [
@@ -97,8 +97,8 @@ let package = Package(
         // for every platform, about 2.9 GB per DerivedData folder.
         .binaryTarget(
             name: "Sentry",
-            url: "https://files.lowtechguys.com/Sentry-macOS-9.30.1.xcframework.zip",
-            checksum: "21cecc2f4568b7fe4af2e9e5604573289b81d27961a77b1726560147d07ab638"
+            url: "https://files.lowtechguys.com/Sentry-macOS-9.31.0.xcframework.zip",
+            checksum: "1cacfe4f61d75c8e6ead621ec267c1c267788cce095568cbb02a2a65d10a3ade"
         ),
     ]
 )
