@@ -115,8 +115,8 @@ private enum AutoUpdate {
 /// LunarPro-style Updates section.
 ///
 /// - A *Version* row: a monospaced version pill plus a bordered "Check for Updates" button.
-/// - An *Automatic updates* row: a single Off / Check and notify / Install silently picker.
-/// - A *Check every* row: a day / 3 days / week picker that dims when updates are off.
+/// - An *Automatic updates* row: a single Off / Check and notify / Install silently picker
+///   followed by an "every [day / 3 days / week]" picker that dims when updates are off.
 /// - An *Update channel* row: a segmented Release / Beta selector bound to `Defaults[.updateChannel]`.
 ///
 /// Everything is driven by Sparkle's native default keys (`SUEnableAutomaticChecks`,
@@ -146,28 +146,29 @@ public struct UpdatesView: View {
             }
 
             row("Automatic updates") {
-                Picker("Automatic updates", selection: autoUpdate) {
-                    Text("Off").tag(AutoUpdate.off)
-                    Text("Check and notify").tag(AutoUpdate.notify)
-                    Text("Install silently").tag(AutoUpdate.install)
-                }
-                .labelsHidden()
-                .fixedSize()
-            }
+                HStack(spacing: 6) {
+                    Picker("Automatic updates", selection: autoUpdate) {
+                        Text("Off").tag(AutoUpdate.off)
+                        Text("Check and notify").tag(AutoUpdate.notify)
+                        Text("Install silently").tag(AutoUpdate.install)
+                    }
+                    .labelsHidden()
+                    .fixedSize()
 
-            // A row of its own: a label with a menu inside a sentence
-            // ("Check and notify every [day]") is not a settings row.
-            row("Check every") {
-                Picker("Check every", selection: $updateCheckInterval) {
-                    Text("day").tag(UpdateCheckInterval.daily.rawValue)
-                    Text("3 days").tag(UpdateCheckInterval.everyThreeDays.rawValue)
-                    Text("week").tag(UpdateCheckInterval.weekly.rawValue)
+                    HStack(spacing: 6) {
+                        Text("every").foregroundStyle(.secondary).fixedSize()
+                        Picker("Check interval", selection: $updateCheckInterval) {
+                            Text("day").tag(UpdateCheckInterval.daily.rawValue)
+                            Text("3 days").tag(UpdateCheckInterval.everyThreeDays.rawValue)
+                            Text("week").tag(UpdateCheckInterval.weekly.rawValue)
+                        }
+                        .labelsHidden()
+                        .fixedSize()
+                    }
+                    .opacity(checkForUpdates ? 1 : 0.4)
+                    .disabled(!checkForUpdates)
                 }
-                .labelsHidden()
-                .fixedSize()
             }
-            .opacity(checkForUpdates ? 1 : 0.4)
-            .disabled(!checkForUpdates)
 
             if showChannel {
                 row("Update channel") {
@@ -190,9 +191,9 @@ public struct UpdatesView: View {
     @ViewBuilder
     private func row(_ title: String, @ViewBuilder _ content: () -> some View) -> some View {
         HStack(alignment: .firstTextBaseline) {
-            // The size and colour of a row title in a grouped Form.
             Text(title)
-                .font(.system(size: 13, weight: .medium))
+                .font(.system(size: 12, weight: .medium))
+                .foregroundStyle(.secondary)
             Spacer()
             content()
         }

@@ -190,6 +190,7 @@ public struct AboutView: View {
                     if let changelogURL { Link("Changelog", destination: changelogURL) }
                 }
                 .underline()
+                .opacity(0.75)
                 .padding(.top, 6)
             }
 
@@ -200,7 +201,7 @@ public struct AboutView: View {
 
             Text("© \(String(Calendar.current.component(.year, from: Date()))) THE LOW TECH GUYS")
                 .round(10)
-                .foregroundColor(.secondary)
+                .foregroundColor(.secondary.opacity(0.7))
         }
         .frame(maxWidth: .infinity)
         .padding(.vertical, 24)
