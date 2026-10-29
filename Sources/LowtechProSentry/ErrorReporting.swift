@@ -59,20 +59,23 @@ public enum LowtechSentry {
     public static var enableSentry: Bool = Defaults[.enableSentry]
     public static var sentryDSN: String?
 
-    /// Number of in-flight blocks of work that legitimately park the main thread (a modal alert,
-    /// a synchronous panel, a deliberate wait). While this is above zero, `beforeSend` drops any
-    /// app-hang event and never auto-restarts: the app is waiting on a person, not stuck.
-    ///
-    /// This is the symbolication-independent counterpart to `isWaitingForUser`, which can miss a
-    /// modal frame when the in-process app-hang stack isn't symbolicated. Wrap known-blocking work
-    /// with `withExpectedHang { ... }` (or bracket it with `beginExpectedHang`/`endExpectedHang`).
-    private static let expectedHangLock = NSLock()
-    private static var expectedHangDepth = 0
-
     public static var isInExpectedHang: Bool {
         expectedHangLock.lock()
         defer { expectedHangLock.unlock() }
         return expectedHangDepth > 0
+    }
+
+    /// A stable, anonymous identifier for this install, persisted across launches.
+    ///
+    /// Seeded once from the machine serial number hash (falling back to a generated
+    /// id when the serial can't be read) and then kept in `Defaults` so it never
+    /// changes. Surfaced to users via `SentryUserIDPill` so they can quote it when
+    /// reporting an issue, letting us find their events in Sentry.
+    public static var sentryUserID: String {
+        if Defaults[.sentryUserID].isEmpty {
+            Defaults[.sentryUserID] = SERIAL_NUMBER_HASH.isEmpty ? UUID().uuidString : SERIAL_NUMBER_HASH
+        }
+        return Defaults[.sentryUserID]
     }
 
     public static func beginExpectedHang() {
@@ -143,6 +146,10 @@ public enum LowtechSentry {
                 guard !isInExpectedHang, !exc.stacktrace.isWaitingForUser else {
                     return nil
                 }
+                guard !isWaitingInModalSession else {
+                    logger.info("Not reporting an app hang: the main thread is waiting for an alert or a panel to close")
+                    return nil
+                }
                 guard !event.isWaitingForSystemDialog else {
                     logger.info("Not reporting an app hang: the main thread is waiting for a system dialog to start")
                     return nil
@@ -178,18 +185,30 @@ public enum LowtechSentry {
         User(userId: sentryUserID)
     }
 
-    /// A stable, anonymous identifier for this install, persisted across launches.
-    ///
-    /// Seeded once from the machine serial number hash (falling back to a generated
-    /// id when the serial can't be read) and then kept in `Defaults` so it never
-    /// changes. Surfaced to users via `SentryUserIDPill` so they can quote it when
-    /// reporting an issue, letting us find their events in Sentry.
-    public static var sentryUserID: String {
-        if Defaults[.sentryUserID].isEmpty {
-            Defaults[.sentryUserID] = SERIAL_NUMBER_HASH.isEmpty ? UUID().uuidString : SERIAL_NUMBER_HASH
+    /// The main run loop is asleep in its modal panel mode: an alert or a panel shown with `runModal` is
+    /// waiting for a click. When that alert was opened from a main-queue block or a main-actor task, the
+    /// main queue gets no turn until it closes, so Sentry's hang tracker, which measures the main queue,
+    /// reports a hang after 30s although the app responds (CLOP-2EA, CLOP-28E). `isWaitingForUser` never
+    /// sees these: Sentry fills only addresses into the frames it collects in the app, and the frame names
+    /// appear after the server symbolicates the event. A main thread stuck in code during a modal session
+    /// is not asleep, so that hang is still reported.
+    static var isWaitingInModalSession: Bool {
+        let main = CFRunLoopGetMain()
+        guard CFRunLoopIsWaiting(main), let mode = CFRunLoopCopyCurrentMode(main) else {
+            return false
         }
-        return Defaults[.sentryUserID]
+        return mode.rawValue as String == RunLoop.Mode.modalPanel.rawValue
     }
+
+    /// Number of in-flight blocks of work that legitimately park the main thread (a modal alert,
+    /// a synchronous panel, a deliberate wait). While this is above zero, `beforeSend` drops any
+    /// app-hang event and never auto-restarts: the app is waiting on a person, not stuck.
+    ///
+    /// This is the symbolication-independent counterpart to `isWaitingForUser`, which can miss a
+    /// modal frame when the in-process app-hang stack isn't symbolicated. Wrap known-blocking work
+    /// with `withExpectedHang { ... }` (or bracket it with `beginExpectedHang`/`endExpectedHang`).
+    private static let expectedHangLock = NSLock()
+    private static var expectedHangDepth = 0
 
     private static var enableSentryObserver: Cancellable?
     private static var sentryLaunchEvent: DispatchWorkItem?
@@ -268,8 +287,9 @@ public struct SentryUserIDPill: View {
         .help("Your anonymous error-report ID. Click to copy and include it when reporting an issue.")
     }
 
-    private let userID = LowtechSentry.sentryUserID
     @State private var copied = false
+
+    private let userID = LowtechSentry.sentryUserID
 }
 
 public func crumb(_ msg: String, level: SentryLevel = .info, category: String) {
