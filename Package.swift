@@ -81,8 +81,8 @@ let package = Package(
         // for every platform, about 2.9 GB per DerivedData folder.
         .binaryTarget(
             name: "Sentry",
-            url: "https://files.lowtechguys.com/Sentry-macOS-9.31.0.xcframework.zip",
-            checksum: "1cacfe4f61d75c8e6ead621ec267c1c267788cce095568cbb02a2a65d10a3ade"
+            url: "https://files.lowtechguys.com/Sentry-macOS-9.32.0.xcframework.zip",
+            checksum: "57b60f0af8f3b100379f6cf46c3279fa2225acb14b4e361282d35c8e3a3230d0"
         ),
     ]
 )
