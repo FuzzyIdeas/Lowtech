@@ -121,7 +121,9 @@ public enum LowtechSentry {
             options.releaseName = "v\(release)"
             options.dist = release
             #if DEBUG
-                options.appHangTimeoutInterval = 3
+                // Hangs from Debug builds come without symbols, include pauses in the debugger, and
+                // crowd out the hangs that users report, so Debug builds do not track them at all.
+                options.enableAppHangTracking = false
                 // Debug builds must never upload crashes to the server: rely on the local `.ips`
                 // (the re-raise in restartFromCrash lets ReportCrash write it). Disabling the crash
                 // handler also keeps SentryCrash from installing signal handlers, so the app's own
