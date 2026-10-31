@@ -15,10 +15,6 @@ let package = Package(
             targets: ["Lowtech"]
         ),
         .library(
-            name: "LowtechAppStore",
-            targets: ["LowtechAppStore"]
-        ),
-        .library(
             name: "LowtechIndie",
             targets: ["LowtechIndie"]
         ),
@@ -40,7 +36,6 @@ let package = Package(
         .package(url: "https://github.com/Clipy/Sauce", from: "2.5.2"),
         .package(url: "https://github.com/yannickl/DynamicColor", from: "5.0.1"),
         .package(url: "https://github.com/diniska/swiftui-system-colors", from: "1.1.0"),
-        .package(url: "https://github.com/malcommac/SwiftDate", from: "7.0.0"),
 
         .package(url: "https://github.com/alin23/PaddleSPM", from: "4.5.5"),
         .package(url: "https://github.com/sparkle-project/Sparkle", from: "2.2.0"),
@@ -57,15 +52,6 @@ let package = Package(
                 .product(name: "DynamicColor", package: "DynamicColor"),
                 .product(name: "SystemColors", package: "swiftui-system-colors"),
             ]
-        ),
-        .target(
-            name: "LowtechAppStore",
-            dependencies: [
-                "Lowtech",
-                .product(name: "SwiftDate", package: "SwiftDate"),
-            ],
-            exclude: ["Numbers.swift.secret"]
-
         ),
         .target(
             name: "LowtechIndie",

@@ -19,10 +19,6 @@ open class LowtechAppDelegate: NSObject, NSApplicationDelegate, ObservableObject
     open var initialized = false
     open var env = EnvState()
 
-    open func isTrialMode() -> Bool {
-        false
-    }
-
     @MainActor
     open func applicationDidResignActive(_ notification: Notification) {
 //        statusBar?.hidePopover(self)
@@ -83,8 +79,6 @@ open class LowtechAppDelegate: NSObject, NSApplicationDelegate, ObservableObject
 
     public var shouldRestartOnCrash = Defaults[.autoRestartOnCrash]
 
-    public lazy var trialMode = isTrialMode()
-
     public var showPopoverOnFirstLaunch = true
     public var statusBar: StatusBarController?
     public var application = NSApplication.shared
@@ -94,8 +88,6 @@ open class LowtechAppDelegate: NSObject, NSApplicationDelegate, ObservableObject
 
     public var contentView: AnyView?
     public var accentColor: Color?
-
-    public var appStoreURL: URL?
 
     public var statusItemLength = NSStatusItem.squareLength
 

@@ -82,15 +82,6 @@
       }
     },
     {
-      "identity" : "swiftdate",
-      "kind" : "remoteSourceControl",
-      "location" : "https://github.com/malcommac/SwiftDate",
-      "state" : {
-        "revision" : "5d943224c3bb173e6ecf27295611615eba90c80e",
-        "version" : "7.0.0"
-      }
-    },
-    {
       "identity" : "swiftui-system-colors",
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/diniska/swiftui-system-colors",
