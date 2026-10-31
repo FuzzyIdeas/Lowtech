@@ -51,6 +51,25 @@ extension Event {
     var isWaitingForSystemDialog: Bool {
         threads?.first { $0.isMain?.boolValue == true }?.name?.hasPrefix("not a hang but an app-modal session") == true
     }
+
+    /// The main thread is inside Security's code signing calls, reading or checking a signature. Those wait on
+    /// securityd, which can take more than 30s to answer on a busy Mac, and the signature checks that run at launch
+    /// are where that wait shows up (CLING-DN, CLING-3E, CLOP-VS). Sentry fills only addresses into the frames it
+    /// collects in the app, so `dladdr` names each one: Security's code signing functions are exported, so their
+    /// names resolve even in a stripped build.
+    var isCheckingCodeSignature: Bool {
+        guard let frames = exceptions?.first?.stacktrace?.frames else { return false }
+        return frames.contains { frame in
+            guard let hex = frame.instructionAddress,
+                  let address = UInt(hex.hasPrefix("0x") ? String(hex.dropFirst(2)) : hex, radix: 16),
+                  let pointer = UnsafeRawPointer(bitPattern: address)
+            else { return false }
+            var info = Dl_info()
+            guard dladdr(pointer, &info) != 0, let name = info.dli_sname else { return false }
+            let symbol = String(cString: name)
+            return symbol.hasPrefix("SecCode") || symbol.hasPrefix("SecStaticCode")
+        }
+    }
 }
 
 private let logger = Logger(subsystem: lowtechLogSubsystem, category: "Sentry")
@@ -154,6 +173,10 @@ public enum LowtechSentry {
                 }
                 guard !event.isWaitingForSystemDialog else {
                     logger.info("Not reporting an app hang: the main thread is waiting for a system dialog to start")
+                    return nil
+                }
+                guard !event.isCheckingCodeSignature else {
+                    logger.info("Not reporting an app hang: the main thread is waiting for a code signature check")
                     return nil
                 }
                 if restartOnHang, Defaults[.autoRestartOnHang], exc.stacktrace.isExpectedToHang {
