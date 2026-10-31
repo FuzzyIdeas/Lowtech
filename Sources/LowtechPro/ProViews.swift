@@ -10,10 +10,15 @@ import SwiftUI
 /// LunarPro-style license status row: a seal glyph colored by state, the "<App> Pro" name,
 /// a human status string, then a borderedProminent "Buy" (trial / inactive only) and a
 /// bordered "Activate" / "Manage" button. Bound to a `LowtechPro` instance.
+///
+/// `flat` swaps the system bordered buttons for flat pills, with "Buy" filled in `accent`,
+/// for surfaces drawn in the app's own style rather than a Settings form.
 public struct LicenseRow: View {
-    public init(pro: LowtechPro, appName: String? = nil) {
+    public init(pro: LowtechPro, appName: String? = nil, flat: Bool = false, accent: Color = .accentColor) {
         self.pro = pro
         self.appName = appName
+        self.flat = flat
+        self.accent = accent
     }
 
     public var body: some View {
@@ -30,24 +35,45 @@ public struct LicenseRow: View {
             }
             Spacer()
             if pro.onTrial || !pro.active {
-                Button("Buy") { pro.showCheckout() }
-                    .buttonStyle(.borderedProminent)
+                styled(Button("Buy") { pro.showCheckout() }, prominent: true)
             }
-            Button(licensed ? "Manage" : "Activate") {
-                if licensed {
-                    pro.manageLicence()
-                } else {
-                    pro.showLicenseActivation()
-                }
-            }
-            .buttonStyle(.bordered)
+            styled(
+                Button(licensed ? "Manage" : "Activate") {
+                    if licensed {
+                        pro.manageLicence()
+                    } else {
+                        pro.showLicenseActivation()
+                    }
+                },
+                prominent: false
+            )
         }
         .padding(.vertical, 6)
     }
 
     @ObservedObject var pro: LowtechPro
 
+    @ViewBuilder private func styled(_ button: some View, prominent: Bool) -> some View {
+        if flat {
+            button
+                .buttonStyle(FlatButton(
+                    color: prominent ? accent : .primary.opacity(0.08),
+                    textColor: prominent ? .white : .primary,
+                    radius: 7,
+                    horizontalPadding: 10,
+                    verticalPadding: 4
+                ))
+                .font(.system(size: 12, weight: .semibold))
+        } else if prominent {
+            button.buttonStyle(.borderedProminent)
+        } else {
+            button.buttonStyle(.bordered)
+        }
+    }
+
     private let appName: String?
+    private let flat: Bool
+    private let accent: Color
 
     private var resolvedAppName: String {
         appName ?? (Bundle.main.infoDictionary?["CFBundleName"] as? String) ?? "Pro"
@@ -223,13 +249,15 @@ public struct AboutView: View {
 
 // MARK: - AppInfoPopoverView
 
-/// Reusable menubar "App Info" popover, styled like a grouped Settings Form: an
-/// identity header (icon + name + version), then Licence / Updates / Links as
-/// rounded cards over an opaque fill.
+/// Reusable menubar "App Info" popover: an identity header (icon + name + version),
+/// then Licence / Updates / Links as rounded cards, with flat pill controls in place
+/// of the system's bordered ones so it reads as part of the menubar popover it opens
+/// from rather than a Settings form.
 ///
 /// `trailing` adds an app-specific control to the Links card (e.g. a "Show
 /// tutorial" button); it receives a `dismiss` closure so that control can close
 /// the popover. All URLs are optional, so a link only renders when provided.
+/// `accent` fills the one prominent control, the licence's "Buy".
 public struct AppInfoPopoverView<Trailing: View>: View {
     public init(
         appName: String,
@@ -241,6 +269,7 @@ public struct AppInfoPopoverView<Trailing: View>: View {
         sourceURL: URL? = nil,
         changelogURL: URL? = nil,
         width: CGFloat = 460,
+        accent: Color = .accentColor,
         @ViewBuilder trailing: @escaping (@escaping () -> Void) -> Trailing = { _ in EmptyView() }
     ) {
         self.appName = appName
@@ -252,23 +281,32 @@ public struct AppInfoPopoverView<Trailing: View>: View {
         self.sourceURL = sourceURL
         self.changelogURL = changelogURL
         self.width = width
+        self.accent = accent
         self.trailing = trailing
     }
 
     public var body: some View {
         ZStack {
-            // The system popover chrome is translucent enough that the desktop
-            // behind the window washes out the text. Scaling the fill up bleeds
-            // it past the content into the popover's edges and arrow, which a
-            // plain .background() would leave glassy (same trick as PaddedPopoverView).
-            Color.inverted.opacity(0.75).scaleEffect(1.5)
+            if #available(macOS 26, *) {
+                // The popover is Liquid Glass here, the same material as the
+                // menubar popover it opens from, so it takes the same tint from
+                // the desktop. An opaque fill over it turned it flat gray-white
+                // next to that popover.
+                Color.clear
+            } else {
+                // The older popover chrome is translucent enough that the desktop
+                // behind the window washes out the text. Scaling the fill up bleeds
+                // it past the content into the popover's edges and arrow, which a
+                // plain .background() would leave glassy (same trick as PaddedPopoverView).
+                Color.inverted.opacity(0.75).scaleEffect(1.5)
+            }
 
             VStack(alignment: .leading, spacing: 14) {
                 identity
 
                 if let pro {
                     InfoCard("Licence") {
-                        LicenseRow(pro: pro, appName: appName)
+                        LicenseRow(pro: pro, appName: appName, flat: true, accent: accent)
                     }
                 }
 
@@ -307,6 +345,7 @@ public struct AppInfoPopoverView<Trailing: View>: View {
     private let sourceURL: URL?
     private let changelogURL: URL?
     private let width: CGFloat
+    private let accent: Color
     private let trailing: (@escaping () -> Void) -> Trailing
 
     private var identity: some View {
@@ -335,48 +374,53 @@ public struct AppInfoPopoverView<Trailing: View>: View {
     @ViewBuilder private func updates(_ updater: SPUUpdater) -> some View {
         row("Automatic updates") {
             HStack(spacing: 6) {
-                Picker("Automatic updates", selection: autoUpdate) {
-                    Text("Off").tag(AutoUpdate.off)
-                    Text("Check and notify").tag(AutoUpdate.notify)
-                    Text("Install silently").tag(AutoUpdate.install)
+                pillMenu(autoUpdateTitle) {
+                    Picker("Automatic updates", selection: autoUpdate) {
+                        Text("Off").tag(AutoUpdate.off)
+                        Text("Check and notify").tag(AutoUpdate.notify)
+                        Text("Install silently").tag(AutoUpdate.install)
+                    }
+                    .labelsHidden()
+                    .pickerStyle(.inline)
                 }
-                .labelsHidden()
-                .fixedSize()
 
                 HStack(spacing: 6) {
                     Text("every").foregroundStyle(.secondary).fixedSize()
-                    Picker("Check interval", selection: $updateCheckInterval) {
-                        Text("day").tag(UpdateCheckInterval.daily.rawValue)
-                        Text("3 days").tag(UpdateCheckInterval.everyThreeDays.rawValue)
-                        Text("week").tag(UpdateCheckInterval.weekly.rawValue)
+                    pillMenu(intervalTitle) {
+                        Picker("Check interval", selection: $updateCheckInterval) {
+                            Text("day").tag(UpdateCheckInterval.daily.rawValue)
+                            Text("3 days").tag(UpdateCheckInterval.everyThreeDays.rawValue)
+                            Text("week").tag(UpdateCheckInterval.weekly.rawValue)
+                        }
+                        .labelsHidden()
+                        .pickerStyle(.inline)
                     }
-                    .labelsHidden()
-                    .fixedSize()
                 }
                 .opacity(checkForUpdates ? 1 : 0.4)
                 .disabled(!checkForUpdates)
             }
-            // Outside a Form an unstyled Picker defaults to a tall list style.
-            .pickerStyle(.menu)
+            .font(.system(size: 12, weight: .medium))
         }
 
-        Divider()
+        Divider().opacity(0.6)
 
         row("Update channel") {
-            Picker("Update channel", selection: $updateChannel) {
-                Text("Release").tag(UpdateChannel.release)
-                Text("Beta").tag(UpdateChannel.beta)
+            // Two pills in a track instead of a segmented Picker, which draws its
+            // selection in the system accent (blue) whatever the app's colours are.
+            HStack(spacing: 2) {
+                channelButton("Release", .release)
+                channelButton("Beta", .beta)
             }
-            .labelsHidden()
-            .pickerStyle(.segmented)
-            .fixedSize()
+            .padding(2)
+            .background(RoundedRectangle(cornerRadius: 9, style: .continuous).fill(Color.primary.opacity(0.06)))
         }
 
-        Divider()
+        Divider().opacity(0.6)
 
         row("Check for updates") {
             Button("Check Now") { updater.checkForUpdates() }
-                .buttonStyle(.bordered)
+                .buttonStyle(FlatButton(color: .primary.opacity(0.08), textColor: .primary, radius: 7, horizontalPadding: 10, verticalPadding: 4))
+                .font(.system(size: 12, weight: .semibold))
         }
 
         if um.newVersion != nil {
@@ -423,10 +467,52 @@ public struct AppInfoPopoverView<Trailing: View>: View {
         }
     }
 
+    private var autoUpdateTitle: String {
+        switch autoUpdate.wrappedValue {
+        case .off: "Off"
+        case .notify: "Check and notify"
+        case .install: "Install silently"
+        }
+    }
+
+    private var intervalTitle: String {
+        switch UpdateCheckInterval(rawValue: updateCheckInterval) {
+        case .everyThreeDays: "3 days"
+        case .weekly: "week"
+        default: "day"
+        }
+    }
+
+    /// A menu drawn as a quiet pill with its value in it, the way the menubar
+    /// popover's "Sort by" menu is, instead of the system's gray popup button.
+    private func pillMenu(_ title: String, @ViewBuilder content: () -> some View) -> some View {
+        Menu(content: content) {
+            Text(title)
+        }
+        .menuStyle(.borderlessButton)
+        .fixedSize()
+        .roundbg(radius: 7, verticalPadding: 3, horizontalPadding: 8, color: .primary.opacity(0.08))
+    }
+
+    private func channelButton(_ title: String, _ channel: UpdateChannel) -> some View {
+        let selected = updateChannel == channel
+        return Button(title) { updateChannel = channel }
+            .buttonStyle(FlatButton(
+                color: selected ? .primary : .clear,
+                textColor: selected ? .inverted : .secondary,
+                radius: 7,
+                horizontalPadding: 10,
+                verticalPadding: 3,
+                hoverScaleEffects: false
+            ))
+            .font(.system(size: 12, weight: .semibold))
+            .accessibilityAddTraits(selected ? .isSelected : [])
+    }
+
     @ViewBuilder private func linkButton(_ title: String, _ url: URL?) -> some View {
         if let url {
             Button(title) { openURL(url) }
-                .buttonStyle(FlatButton(color: .primary.opacity(0.1), textColor: .primary, horizontalPadding: 6, verticalPadding: 3))
+                .buttonStyle(FlatButton(color: .primary.opacity(0.08), textColor: .primary, radius: 7, horizontalPadding: 7, verticalPadding: 3))
                 .lineLimit(1)
                 .fixedSize()
         }
@@ -443,7 +529,8 @@ private enum AutoUpdate {
 
 // MARK: - InfoCard
 
-/// One grouped-Form-style section: a small secondary caption over a rounded card.
+/// One section: a small-caps caption over a rounded card, in the same vocabulary
+/// as the menubar popover's section headers and rows.
 ///
 /// Hand-built rather than `Form { Section }.formStyle(.grouped)` because a grouped
 /// Form is List-backed and reports no intrinsic height, leaving an NSPopover with
@@ -457,12 +544,14 @@ private struct InfoCard<Content: View>: View {
     }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 6) {
+        VStack(alignment: .leading, spacing: 7) {
             if let title {
-                Text(title)
-                    .font(.system(size: 11, weight: .semibold))
-                    .foregroundStyle(.secondary)
+                Text(title.uppercased())
+                    .mono(10, weight: .bold)
+                    .kerning(1.4)
+                    .foregroundColor(.secondary.opacity(0.75))
                     .padding(.leading, 4)
+                    .accessibilityLabel(title)
             }
 
             VStack(alignment: .leading, spacing: 10) {
@@ -471,15 +560,17 @@ private struct InfoCard<Content: View>: View {
             .padding(12)
             .frame(maxWidth: .infinity, alignment: .leading)
             .background(
-                RoundedRectangle(cornerRadius: 10, style: .continuous)
-                    .fill(Color.primary.opacity(0.06))
+                RoundedRectangle(cornerRadius: 12, style: .continuous)
+                    .fill(Color.primary.opacity(colorScheme == .dark ? 0.08 : 0.05))
                     .overlay(
-                        RoundedRectangle(cornerRadius: 10, style: .continuous)
-                            .strokeBorder(Color.primary.opacity(0.07), lineWidth: 1)
+                        RoundedRectangle(cornerRadius: 12, style: .continuous)
+                            .strokeBorder(Color.primary.opacity(colorScheme == .dark ? 0.12 : 0.07), lineWidth: 0.5)
                     )
             )
         }
     }
+
+    @Environment(\.colorScheme) private var colorScheme
 
     private let title: String?
     @ViewBuilder private let content: () -> Content
