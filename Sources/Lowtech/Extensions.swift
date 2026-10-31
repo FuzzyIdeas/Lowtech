@@ -2423,7 +2423,8 @@ extension NSSize: @retroactive Hashable {
 
 public enum LowtechFSEvents {
     /// Creation/start errors can't be thrown to the caller anymore (start is async); the `throws`
-    /// is kept for source compatibility. Events are still delivered on the main queue.
+    /// is kept for source compatibility. Events are still delivered on the main queue, and none
+    /// reach the handler once its stream has stopped.
     public static func startWatching(
         paths: [String],
         for id: ObjectIdentifier,
@@ -2434,17 +2435,22 @@ public enum LowtechFSEvents {
     ) throws {
         fseventsQueue.async {
             guard watchers[id] == nil else { return }
+            let live = FSEventsWatchLiveness()
             do {
                 let s = try EonilFSEventStream(
                     pathsToWatch: paths,
                     sinceWhen: sinceWhen,
                     latency: latency,
-                    flags: flags,
-                    handler: handler
-                )
-                s.setDispatchQueue(DispatchQueue.main)
+                    flags: flags
+                ) { event in
+                    DispatchQueue.main.async {
+                        guard live.isLive else { return }
+                        handler(event)
+                    }
+                }
+                s.setDispatchQueue(fseventsQueue)
                 try s.start()
-                watchers[id] = s
+                watchers[id] = (s, live)
             } catch {
                 logger.error("Failed to start FSEvents watcher for \(paths, privacy: .public): \(error, privacy: .public)")
             }
@@ -2452,9 +2458,10 @@ public enum LowtechFSEvents {
     }
     public static func stopWatching(for id: ObjectIdentifier) {
         fseventsQueue.async {
-            guard let s = watchers[id] else { return }
-            s.stop()
-            s.invalidate()
+            guard let w = watchers[id] else { return }
+            w.live.end()
+            w.stream.stop()
+            w.stream.invalidate()
             watchers[id] = nil
         }
     }
@@ -2463,6 +2470,27 @@ public enum LowtechFSEvents {
 /// `FSEventStreamStart` does a synchronous mach RPC to fseventsd that can block for 30s+ when the
 /// daemon is busy (e.g. right after login) — an app hang when called on the main thread (Clop
 /// CLOP-CC). All stream lifecycle calls and the `watchers` dictionary are confined to this serial
-/// queue instead; the streams are dispatch-queue-scheduled so no runloop is needed here.
+/// queue instead. The streams are scheduled on it too: when fseventsd restarts, FSEvents registers
+/// every stream again on the stream's own queue with another synchronous call to the daemon, and
+/// with the streams on the main queue that wait hung the app (Clop CLOP-1W, rcmd RCMD-K).
 private let fseventsQueue = DispatchQueue(label: "lowtech.fsevents", qos: .userInitiated)
-private var watchers = [ObjectIdentifier: EonilFSEventStream]()
+private var watchers = [ObjectIdentifier: (stream: EonilFSEventStream, live: FSEventsWatchLiveness)]()
+
+/// Ended on `fseventsQueue` when a stream stops, and checked on the main queue before each event is
+/// handed over, so events that were already queued for the main thread are dropped.
+private final class FSEventsWatchLiveness: @unchecked Sendable {
+    var isLive: Bool {
+        lock.lock()
+        defer { lock.unlock() }
+        return live
+    }
+
+    func end() {
+        lock.lock()
+        live = false
+        lock.unlock()
+    }
+
+    private let lock = NSLock()
+    private var live = true
+}
