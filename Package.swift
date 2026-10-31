@@ -41,7 +41,6 @@ let package = Package(
         .package(url: "https://github.com/yannickl/DynamicColor", from: "5.0.1"),
         .package(url: "https://github.com/diniska/swiftui-system-colors", from: "1.1.0"),
         .package(url: "https://github.com/malcommac/SwiftDate", from: "7.0.0"),
-        .package(url: "https://github.com/alin23/AppReceiptValidator", from: "1.2.0"),
 
         .package(url: "https://github.com/alin23/PaddleSPM", from: "4.5.5"),
         .package(url: "https://github.com/sparkle-project/Sparkle", from: "2.2.0"),
@@ -64,7 +63,6 @@ let package = Package(
             dependencies: [
                 "Lowtech",
                 .product(name: "SwiftDate", package: "SwiftDate"),
-                .product(name: "AppReceiptValidator", package: "AppReceiptValidator"),
             ],
             exclude: ["Numbers.swift.secret"]
 
