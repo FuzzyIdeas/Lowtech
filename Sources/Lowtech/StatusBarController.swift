@@ -204,19 +204,19 @@ open class StatusBarController: NSObject, NSWindowDelegate, ObservableObject {
     }
 
     public func fixMenu() {
-        let menu = NSMenu(title: "Edit")
+        let menu = NSMenu(title: String(localized: "Edit", table: "Lowtech"))
 
-        menu.addItem(withTitle: "Quit", action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q")
-        menu.addItem(withTitle: "Close Window", action: #selector(StatusBarController.hidePopover(_:)), keyEquivalent: "w")
-        menu.addItem(withTitle: "Select All", action: #selector(NSText.selectAll(_:)), keyEquivalent: "a")
-        menu.addItem(withTitle: "Copy", action: #selector(NSText.copy(_:)), keyEquivalent: "c")
-        menu.addItem(withTitle: "Cut", action: #selector(NSText.cut(_:)), keyEquivalent: "x")
-        menu.addItem(withTitle: "Paste", action: #selector(NSText.paste(_:)), keyEquivalent: "v")
-        menu.addItem(withTitle: "Undo", action: Selector(("undo:")), keyEquivalent: "z")
-        menu.addItem(withTitle: "Redo", action: Selector(("redo:")), keyEquivalent: "Z")
+        menu.addItem(withTitle: String(localized: "Quit", table: "Lowtech"), action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q")
+        menu.addItem(withTitle: String(localized: "Close Window", table: "Lowtech"), action: #selector(StatusBarController.hidePopover(_:)), keyEquivalent: "w")
+        menu.addItem(withTitle: String(localized: "Select All", table: "Lowtech"), action: #selector(NSText.selectAll(_:)), keyEquivalent: "a")
+        menu.addItem(withTitle: String(localized: "Copy", table: "Lowtech"), action: #selector(NSText.copy(_:)), keyEquivalent: "c")
+        menu.addItem(withTitle: String(localized: "Cut", table: "Lowtech"), action: #selector(NSText.cut(_:)), keyEquivalent: "x")
+        menu.addItem(withTitle: String(localized: "Paste", table: "Lowtech"), action: #selector(NSText.paste(_:)), keyEquivalent: "v")
+        menu.addItem(withTitle: String(localized: "Undo", table: "Lowtech"), action: Selector(("undo:")), keyEquivalent: "z")
+        menu.addItem(withTitle: String(localized: "Redo", table: "Lowtech"), action: Selector(("redo:")), keyEquivalent: "Z")
 
         let editMenuItem = NSMenuItem()
-        editMenuItem.title = "Edit"
+        editMenuItem.title = String(localized: "Edit", table: "Lowtech")
         editMenuItem.submenu = menu
         if NSApp.mainMenu == nil {
             NSApp.mainMenu = NSMenu()

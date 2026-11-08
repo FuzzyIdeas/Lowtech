@@ -616,7 +616,7 @@ public protocol Nameable {
                         .clipShape(RoundedRectangle(cornerRadius: 4, style: .continuous))
                         .shadow(color: .black.opacity(0.2), radius: 2, x: 0, y: 1)
                 }
-                Text("Show this menu").font(.caption.bold())
+                Text("Show this menu", tableName: "Lowtech", comment: "Under the hotkey that opens the menu").font(.caption.bold())
             }
         }
     }
@@ -753,7 +753,7 @@ public struct ErrorPopoverView: View {
             Color.hotRed.brightness(0.4).scaleEffect(1.5)
             VStack(alignment: .leading, spacing: 10) {
                 HStack {
-                    Text("Error").font(.system(size: 24, weight: .heavy)).foregroundColor(.black).padding(.trailing)
+                    Text("Error", tableName: "Lowtech").font(.system(size: 24, weight: .heavy)).foregroundColor(.black).padding(.trailing)
                     Spacer()
                     SwiftUI.Button(
                         action: { error = "" },

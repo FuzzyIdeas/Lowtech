@@ -12,7 +12,7 @@ public struct GentleUpdateView: View {
 
     public var body: some View {
         if let version = um.newVersion {
-            Button("v\(version) available") { updater.checkForUpdates() }
+            Button(String(localized: "v\(version) available", table: "Lowtech", comment: "Button shown when an update is available. The placeholder is the new version number.")) { updater.checkForUpdates() }
                 .buttonStyle(FlatButton(
                     color: .orange,
                     textColor: Color.blackMauve,
@@ -24,7 +24,7 @@ public struct GentleUpdateView: View {
                 .minimumScaleFactor(.leastNonzeroMagnitude)
                 .scaledToFit()
         } else {
-            Button("Check for updates") { updater.checkForUpdates() }
+            Button(String(localized: "Check for updates", table: "Lowtech")) { updater.checkForUpdates() }
                 .buttonStyle(FlatButton())
                 .font(.system(size: 11, weight: .semibold))
         }
@@ -44,7 +44,7 @@ public struct VersionView: View {
     public var body: some View {
         VStack(alignment: .leading, spacing: 6) {
             HStack {
-                Text("Version:")
+                Text("Version:", tableName: "Lowtech")
                     .font(.system(size: 11, weight: .medium, design: .monospaced))
                 Text(Bundle.main.version)
                     .font(.system(size: 11, weight: .semibold, design: .monospaced))
@@ -54,17 +54,17 @@ public struct VersionView: View {
                 GentleUpdateView(updater: updater)
             }
             HStack(spacing: 3) {
-                Text("Check automatically")
+                Text("Check automatically", tableName: "Lowtech")
                     .font(.system(size: 11, weight: .medium, design: .monospaced))
                 Spacer()
 
-                Button("Never") {
+                Button(String(localized: "Never", table: "Lowtech")) {
                     checkForUpdates = false
                     updateCheckInterval = 0
                 }
                 .buttonStyle(PickerButton(horizontalPadding: 6, verticalPadding: 3, enumValue: updateCheckInterval, onValue: 0))
                 .font(.system(size: 11, weight: .semibold))
-                Button("Daily") {
+                Button(String(localized: "Daily", table: "Lowtech")) {
                     checkForUpdates = true
                     updateCheckInterval = UpdateCheckInterval.daily.rawValue
                 }
@@ -75,7 +75,7 @@ public struct VersionView: View {
                     onValue: UpdateCheckInterval.daily.rawValue
                 ))
                 .font(.system(size: 11, weight: .semibold))
-                Button("Weekly") {
+                Button(String(localized: "Weekly", table: "Lowtech")) {
                     checkForUpdates = true
                     updateCheckInterval = UpdateCheckInterval.weekly.rawValue
                 }
@@ -131,36 +131,36 @@ public struct UpdatesView: View {
 
     public var body: some View {
         VStack(alignment: .leading, spacing: 12) {
-            row("Version") {
+            row(String(localized: "Version", table: "Lowtech")) {
                 HStack(spacing: 8) {
                     if let changelogURL {
                         Button { openURL(changelogURL) } label: { versionCapsule }
                             .buttonStyle(.plain)
-                            .help("View the changelog")
+                            .help(Text("View the changelog", tableName: "Lowtech"))
                     } else {
                         versionCapsule
                     }
-                    Button("Check for Updates") { updater.checkForUpdates() }
+                    Button(String(localized: "Check for Updates", table: "Lowtech")) { updater.checkForUpdates() }
                         .buttonStyle(.bordered)
                 }
             }
 
-            row("Automatic updates") {
+            row(String(localized: "Automatic updates", table: "Lowtech")) {
                 HStack(spacing: 6) {
-                    Picker("Automatic updates", selection: autoUpdate) {
-                        Text("Off").tag(AutoUpdate.off)
-                        Text("Check and notify").tag(AutoUpdate.notify)
-                        Text("Install silently").tag(AutoUpdate.install)
+                    Picker(String(localized: "Automatic updates", table: "Lowtech"), selection: autoUpdate) {
+                        Text("Off", tableName: "Lowtech").tag(AutoUpdate.off)
+                        Text("Check and notify", tableName: "Lowtech").tag(AutoUpdate.notify)
+                        Text("Install silently", tableName: "Lowtech").tag(AutoUpdate.install)
                     }
                     .labelsHidden()
                     .fixedSize()
 
                     HStack(spacing: 6) {
-                        Text("every").foregroundStyle(.secondary).fixedSize()
-                        Picker("Check interval", selection: $updateCheckInterval) {
-                            Text("day").tag(UpdateCheckInterval.daily.rawValue)
-                            Text("3 days").tag(UpdateCheckInterval.everyThreeDays.rawValue)
-                            Text("week").tag(UpdateCheckInterval.weekly.rawValue)
+                        Text("every", tableName: "Lowtech", comment: "Before the update check interval picker: every day, 3 days or week").foregroundStyle(.secondary).fixedSize()
+                        Picker(String(localized: "Check interval", table: "Lowtech"), selection: $updateCheckInterval) {
+                            Text("day", tableName: "Lowtech", comment: "Update check interval, after \"every\"").tag(UpdateCheckInterval.daily.rawValue)
+                            Text("3 days", tableName: "Lowtech", comment: "Update check interval, after \"every\"").tag(UpdateCheckInterval.everyThreeDays.rawValue)
+                            Text("week", tableName: "Lowtech", comment: "Update check interval, after \"every\"").tag(UpdateCheckInterval.weekly.rawValue)
                         }
                         .labelsHidden()
                         .fixedSize()
@@ -171,10 +171,10 @@ public struct UpdatesView: View {
             }
 
             if showChannel {
-                row("Update channel") {
-                    Picker("Update channel", selection: $updateChannel) {
-                        Text("Release").tag(UpdateChannel.release)
-                        Text("Beta").tag(UpdateChannel.beta)
+                row(String(localized: "Update channel", table: "Lowtech")) {
+                    Picker(String(localized: "Update channel", table: "Lowtech"), selection: $updateChannel) {
+                        Text("Release", tableName: "Lowtech", comment: "Update channel for stable versions").tag(UpdateChannel.release)
+                        Text("Beta", tableName: "Lowtech", comment: "Update channel for test versions").tag(UpdateChannel.beta)
                     }
                     .labelsHidden()
                     .pickerStyle(.segmented)

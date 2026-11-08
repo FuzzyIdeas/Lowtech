@@ -35,10 +35,10 @@ public struct LicenseRow: View {
             }
             Spacer()
             if pro.onTrial || !pro.active {
-                styled(Button("Buy") { pro.showCheckout() }, prominent: true)
+                styled(Button(String(localized: "Buy", table: "Lowtech")) { pro.showCheckout() }, prominent: true)
             }
             styled(
-                Button(licensed ? "Manage" : "Activate") {
+                Button(licensed ? String(localized: "Manage", table: "Lowtech") : String(localized: "Activate", table: "Lowtech")) {
                     if licensed {
                         pro.manageLicence()
                     } else {
@@ -95,11 +95,11 @@ public struct LicenseRow: View {
     private var licenseStatus: String {
         if pro.onTrial {
             if let days = product?.trialDaysRemaining?.intValue, days > 0 {
-                return "Trial, \(days) day\(days == 1 ? "" : "s") remaining"
+                return String(localized: "Trial, \(days) days remaining", table: "Lowtech", comment: "Licence status. The placeholder is the number of trial days left.")
             }
-            return "Trial"
+            return String(localized: "Trial", table: "Lowtech")
         }
-        return pro.productActivated ? "Licensed on this Mac" : "Not activated"
+        return pro.productActivated ? String(localized: "Licensed on this Mac", table: "Lowtech") : String(localized: "Not activated", table: "Lowtech")
     }
 }
 
@@ -179,7 +179,7 @@ public struct AboutView: View {
                         Text("v\(Bundle.main.version)").mono(13, weight: .regular)
                     }
                     .buttonStyle(.plain)
-                    .help("View the changelog")
+                    .help(Text("View the changelog", tableName: "Lowtech"))
                 } else {
                     Text("v\(Bundle.main.version)").mono(13, weight: .regular)
                 }
@@ -193,13 +193,13 @@ public struct AboutView: View {
             if let pro {
                 if pro.onTrial {
                     let days = (product?.trialDaysRemaining ?? 0).intValue
-                    Text("Trial (\(days) day\(days == 1 ? "" : "s") left)")
+                    Text("Trial (\(days) days left)", tableName: "Lowtech", comment: "Pill in the About pane. The placeholder is the number of trial days left.")
                         .mono(11, weight: .semibold)
                         .padding(.horizontal, 8).padding(.vertical, 3)
                         .background(Capsule().fill(Color.orange.opacity(0.2)))
                         .foregroundColor(.orange)
                 } else if pro.active {
-                    Text("Pro")
+                    Text(verbatim: "Pro")
                         .mono(11, weight: .semibold)
                         .padding(.horizontal, 8).padding(.vertical, 3)
                         .background(Capsule().fill(Color.red.opacity(0.18)))
@@ -209,18 +209,18 @@ public struct AboutView: View {
 
             if websiteURL != nil || contactURL != nil || discordURL != nil || sourceURL != nil || changelogURL != nil {
                 HStack(spacing: 20) {
-                    if let websiteURL { Link("Website", destination: websiteURL) }
-                    if let contactURL { Link("Contact", destination: contactURL) }
+                    if let websiteURL { Link(String(localized: "Website", table: "Lowtech"), destination: websiteURL) }
+                    if let contactURL { Link(String(localized: "Contact", table: "Lowtech"), destination: contactURL) }
                     if let discordURL { Link("Discord", destination: discordURL) }
-                    if let sourceURL { Link("Source", destination: sourceURL) }
-                    if let changelogURL { Link("Changelog", destination: changelogURL) }
+                    if let sourceURL { Link(String(localized: "Source", table: "Lowtech", comment: "Link to the source code"), destination: sourceURL) }
+                    if let changelogURL { Link(String(localized: "Changelog", table: "Lowtech"), destination: changelogURL) }
                 }
                 .underline()
                 .opacity(0.75)
                 .padding(.top, 6)
             }
 
-            Text("Made by \"\(vendorName)\"")
+            Text("Made by \"\(vendorName)\"", tableName: "Lowtech", comment: "About pane. The placeholder is the name of the company.")
                 .round(11)
                 .foregroundColor(.secondary)
                 .padding(.top, 2)
@@ -305,18 +305,18 @@ public struct AppInfoPopoverView<Trailing: View>: View {
                 identity
 
                 if let pro {
-                    InfoCard("Licence") {
+                    InfoCard(String(localized: "Licence", table: "Lowtech")) {
                         LicenseRow(pro: pro, appName: appName, flat: true, accent: accent)
                     }
                 }
 
                 if let updater {
-                    InfoCard("Updates") {
+                    InfoCard(String(localized: "Updates", table: "Lowtech")) {
                         updates(updater)
                     }
                 }
 
-                InfoCard("Links") {
+                InfoCard(String(localized: "Links", table: "Lowtech")) {
                     links
                 }
             }
@@ -372,25 +372,25 @@ public struct AppInfoPopoverView<Trailing: View>: View {
     /// Changelog button, so making it a second changelog link only adds a
     /// clickable target that looks like a label.
     @ViewBuilder private func updates(_ updater: SPUUpdater) -> some View {
-        row("Automatic updates") {
+        row(String(localized: "Automatic updates", table: "Lowtech")) {
             HStack(spacing: 6) {
                 pillMenu(autoUpdateTitle) {
-                    Picker("Automatic updates", selection: autoUpdate) {
-                        Text("Off").tag(AutoUpdate.off)
-                        Text("Check and notify").tag(AutoUpdate.notify)
-                        Text("Install silently").tag(AutoUpdate.install)
+                    Picker(String(localized: "Automatic updates", table: "Lowtech"), selection: autoUpdate) {
+                        Text("Off", tableName: "Lowtech").tag(AutoUpdate.off)
+                        Text("Check and notify", tableName: "Lowtech").tag(AutoUpdate.notify)
+                        Text("Install silently", tableName: "Lowtech").tag(AutoUpdate.install)
                     }
                     .labelsHidden()
                     .pickerStyle(.inline)
                 }
 
                 HStack(spacing: 6) {
-                    Text("every").foregroundStyle(.secondary).fixedSize()
+                    Text("every", tableName: "Lowtech", comment: "Before the update check interval picker: every day, 3 days or week").foregroundStyle(.secondary).fixedSize()
                     pillMenu(intervalTitle) {
-                        Picker("Check interval", selection: $updateCheckInterval) {
-                            Text("day").tag(UpdateCheckInterval.daily.rawValue)
-                            Text("3 days").tag(UpdateCheckInterval.everyThreeDays.rawValue)
-                            Text("week").tag(UpdateCheckInterval.weekly.rawValue)
+                        Picker(String(localized: "Check interval", table: "Lowtech"), selection: $updateCheckInterval) {
+                            Text("day", tableName: "Lowtech", comment: "Update check interval, after \"every\"").tag(UpdateCheckInterval.daily.rawValue)
+                            Text("3 days", tableName: "Lowtech", comment: "Update check interval, after \"every\"").tag(UpdateCheckInterval.everyThreeDays.rawValue)
+                            Text("week", tableName: "Lowtech", comment: "Update check interval, after \"every\"").tag(UpdateCheckInterval.weekly.rawValue)
                         }
                         .labelsHidden()
                         .pickerStyle(.inline)
@@ -404,12 +404,12 @@ public struct AppInfoPopoverView<Trailing: View>: View {
 
         Divider().opacity(0.6)
 
-        row("Update channel") {
+        row(String(localized: "Update channel", table: "Lowtech")) {
             // Two pills in a track instead of a segmented Picker, which draws its
             // selection in the system accent (blue) whatever the app's colours are.
             HStack(spacing: 2) {
-                channelButton("Release", .release)
-                channelButton("Beta", .beta)
+                channelButton(String(localized: "Release", table: "Lowtech", comment: "Update channel for stable versions"), .release)
+                channelButton(String(localized: "Beta", table: "Lowtech", comment: "Update channel for test versions"), .beta)
             }
             .padding(2)
             .background(RoundedRectangle(cornerRadius: 9, style: .continuous).fill(Color.primary.opacity(0.06)))
@@ -417,8 +417,8 @@ public struct AppInfoPopoverView<Trailing: View>: View {
 
         Divider().opacity(0.6)
 
-        row("Check for updates") {
-            Button("Check Now") { updater.checkForUpdates() }
+        row(String(localized: "Check for updates", table: "Lowtech")) {
+            Button(String(localized: "Check Now", table: "Lowtech")) { updater.checkForUpdates() }
                 .buttonStyle(FlatButton(color: .primary.opacity(0.08), textColor: .primary, radius: 7, horizontalPadding: 10, verticalPadding: 4))
                 .font(.system(size: 12, weight: .semibold))
         }
@@ -431,11 +431,11 @@ public struct AppInfoPopoverView<Trailing: View>: View {
 
     private var links: some View {
         HStack(spacing: 6) {
-            linkButton("Website", websiteURL)
-            linkButton("Contact", contactURL)
+            linkButton(String(localized: "Website", table: "Lowtech"), websiteURL)
+            linkButton(String(localized: "Contact", table: "Lowtech"), contactURL)
             linkButton("Discord", discordURL)
-            linkButton("Source", sourceURL)
-            linkButton("Changelog", changelogURL)
+            linkButton(String(localized: "Source", table: "Lowtech", comment: "Link to the source code"), sourceURL)
+            linkButton(String(localized: "Changelog", table: "Lowtech"), changelogURL)
 
             Spacer()
 
@@ -469,17 +469,17 @@ public struct AppInfoPopoverView<Trailing: View>: View {
 
     private var autoUpdateTitle: String {
         switch autoUpdate.wrappedValue {
-        case .off: "Off"
-        case .notify: "Check and notify"
-        case .install: "Install silently"
+        case .off: String(localized: "Off", table: "Lowtech")
+        case .notify: String(localized: "Check and notify", table: "Lowtech")
+        case .install: String(localized: "Install silently", table: "Lowtech")
         }
     }
 
     private var intervalTitle: String {
         switch UpdateCheckInterval(rawValue: updateCheckInterval) {
-        case .everyThreeDays: "3 days"
-        case .weekly: "week"
-        default: "day"
+        case .everyThreeDays: String(localized: "3 days", table: "Lowtech", comment: "Update check interval, after \"every\"")
+        case .weekly: String(localized: "week", table: "Lowtech", comment: "Update check interval, after \"every\"")
+        default: String(localized: "day", table: "Lowtech", comment: "Update check interval, after \"every\"")
         }
     }
 
@@ -585,19 +585,19 @@ public struct LicenseView: View {
 
     public var body: some View {
         HStack {
-            Text("Licence:")
+            Text("Licence:", tableName: "Lowtech")
                 .font(.system(size: 12, weight: .medium, design: .monospaced))
-            Text(pro.onTrial ? "trial" : (pro.productActivated ? "active" : "inactive"))
+            Text(pro.onTrial ? String(localized: "trial", table: "Lowtech", comment: "Licence state") : (pro.productActivated ? String(localized: "active", table: "Lowtech", comment: "Licence state") : String(localized: "inactive", table: "Lowtech", comment: "Licence state")))
                 .font(.system(size: 12, weight: .semibold, design: .monospaced))
 
             Spacer()
 
             if pro.onTrial {
-                Button("Buy") { pro.showCheckout() }
+                Button(String(localized: "Buy", table: "Lowtech")) { pro.showCheckout() }
                     .buttonStyle(FlatButton())
                     .font(.system(size: 12, weight: .semibold))
             }
-            Button((pro.productActivated && !pro.onTrial) ? "Manage" : "Activate") { pro.showLicenseActivation() }
+            Button((pro.productActivated && !pro.onTrial) ? String(localized: "Manage", table: "Lowtech") : String(localized: "Activate", table: "Lowtech")) { pro.showLicenseActivation() }
                 .buttonStyle(FlatButton())
                 .font(.system(size: 12, weight: .semibold))
         }

@@ -1,0 +1,254 @@
+{
+  "sourceLanguage": "en",
+  "strings": {
+    "%@ and %@": {
+      "comment": "Joins a list of app names: the first placeholder is the names before the last one, separated by commas",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "%1$@ and %2$@"
+          }
+        }
+      }
+    },
+    "%@ are running and may be blocking %@. Allow %@ to connect to paddle.com and paddleapi.com in %@, then try again.": {
+      "comment": "The first and last placeholders are a list of firewall apps like Little Snitch and Lulu, the others are the app name.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "%1$@ are running and may be blocking %2$@. Allow %3$@ to connect to paddle.com and paddleapi.com in %4$@, then try again."
+          }
+        }
+      }
+    },
+    "%@ is running and may be blocking %@. Allow %@ to connect to paddle.com and paddleapi.com in %@, then try again.": {
+      "comment": "The first and last placeholders are the name of a firewall app like Little Snitch, the others are the app name.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "new",
+            "value": "%1$@ is running and may be blocking %2$@. Allow %3$@ to connect to paddle.com and paddleapi.com in %4$@, then try again."
+          }
+        }
+      }
+    },
+    "3 days": {
+      "comment": "Update check interval, after \"every\""
+    },
+    "Activate": {},
+    "Automatic updates": {},
+    "Beta": {
+      "comment": "Update channel for test versions"
+    },
+    "Buy": {},
+    "Caps Lock": {
+      "comment": "Keyboard key name"
+    },
+    "Changelog": {},
+    "Check Now": {},
+    "Check and notify": {},
+    "Check automatically": {},
+    "Check for Updates": {},
+    "Check for updates": {},
+    "Check interval": {},
+    "Check that you copied the code from the right receipt, then try again.": {},
+    "Check your internet connection, VPN or firewall, then try again.": {},
+    "Choose": {
+      "comment": "Button in a file picker"
+    },
+    "Choose a file": {},
+    "Choose your working directory": {},
+    "Close Window": {},
+    "Command": {
+      "comment": "Keyboard key name"
+    },
+    "Contact": {},
+    "Contact support if you think this is a mistake.": {},
+    "Control": {
+      "comment": "Keyboard key name"
+    },
+    "Copied!": {},
+    "Copy": {},
+    "Cut": {},
+    "Daily": {},
+    "Edit": {},
+    "Error": {},
+    "Fn": {
+      "comment": "Keyboard key name"
+    },
+    "Install silently": {},
+    "It was refunded or disabled. Contact support if you think this is a mistake.": {},
+    "Left Command": {
+      "comment": "Keyboard key name"
+    },
+    "Left Control": {
+      "comment": "Keyboard key name"
+    },
+    "Left Option": {
+      "comment": "Keyboard key name"
+    },
+    "Left Shift": {
+      "comment": "Keyboard key name"
+    },
+    "Licence": {},
+    "Licence:": {},
+    "Licensed on this Mac": {},
+    "Links": {},
+    "Loading...": {},
+    "Machine ID: %@": {
+      "comment": "The placeholder is an anonymous ID for error reports"
+    },
+    "Made by \"%@\"": {
+      "comment": "About pane. The placeholder is the name of the company."
+    },
+    "Manage": {},
+    "Never": {},
+    "No shortcuts found": {},
+    "Not activated": {},
+    "OK": {},
+    "Off": {},
+    "Open the shortcut in the Shortcuts app for editing": {},
+    "Option": {
+      "comment": "Keyboard key name"
+    },
+    "Other": {
+      "comment": "Group for shortcuts that are not in a folder"
+    },
+    "Paddle couldn't activate this licence": {
+      "comment": "Alert title. Paddle is the licence vendor."
+    },
+    "Paddle is blocked in /etc/hosts": {
+      "comment": "Alert title. Paddle is the licence vendor."
+    },
+    "Paddle's servers can't be reached": {
+      "comment": "Alert title. Paddle is the licence vendor."
+    },
+    "Paste": {},
+    "Quit": {},
+    "Redo": {},
+    "Release": {
+      "comment": "Update channel for stable versions"
+    },
+    "Renew it or buy a new licence, then activate again.": {},
+    "Right Command": {
+      "comment": "Keyboard key name"
+    },
+    "Right Control": {
+      "comment": "Keyboard key name"
+    },
+    "Right Option": {
+      "comment": "Keyboard key name"
+    },
+    "Right Shift": {
+      "comment": "Keyboard key name"
+    },
+    "Select All": {},
+    "Select shortcut": {},
+    "Send anonymous error reports": {},
+    "Shift": {
+      "comment": "Keyboard key name"
+    },
+    "Show this menu": {
+      "comment": "Under the hotkey that opens the menu"
+    },
+    "Source": {
+      "comment": "Link to the source code"
+    },
+    "This licence code doesn't match %@": {
+      "comment": "Alert title. The placeholder is the app name."
+    },
+    "This licence has expired": {},
+    "This licence isn't active": {},
+    "This licence was disabled after a chargeback": {},
+    "Trial": {},
+    "Trial (%lld days left)": {
+      "comment": "Pill in the About pane. The placeholder is the number of trial days left.",
+      "localizations": {
+        "en": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Trial (%lld day left)"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Trial (%lld days left)"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "Trial, %lld days remaining": {
+      "comment": "Licence status. The placeholder is the number of trial days left.",
+      "localizations": {
+        "en": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Trial, %lld day remaining"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Trial, %lld days remaining"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "Try again, and contact support if it keeps failing.": {},
+    "Undo": {},
+    "Update channel": {},
+    "Updates": {},
+    "Version": {},
+    "Version:": {},
+    "View the changelog": {},
+    "Website": {},
+    "Weekly": {},
+    "Your anonymous error-report ID. Click to copy and include it when reporting an issue.": {},
+    "Your hosts file sends Paddle's servers to this Mac, so %@ can't reach them to activate the licence. Remove the lines below from /etc/hosts, then try again.": {
+      "comment": "The placeholder is the app name."
+    },
+    "active": {
+      "comment": "Licence state"
+    },
+    "day": {
+      "comment": "Update check interval, after \"every\""
+    },
+    "every": {
+      "comment": "Before the update check interval picker: every day, 3 days or week"
+    },
+    "inactive": {
+      "comment": "Licence state"
+    },
+    "trial": {
+      "comment": "Licence state"
+    },
+    "v%@ available": {
+      "comment": "Button shown when an update is available. The placeholder is the new version number."
+    },
+    "week": {
+      "comment": "Update check interval, after \"every\""
+    },
+    "⇧ shift": {
+      "comment": "Printed on the Shift key cap"
+    },
+    "⇪ capslock": {
+      "comment": "Printed on the Caps Lock key cap"
+    }
+  },
+  "version": "1.0"
+}

@@ -51,7 +51,9 @@ let package = Package(
                 .product(name: "Sauce", package: "Sauce"),
                 .product(name: "DynamicColor", package: "DynamicColor"),
                 .product(name: "SystemColors", package: "swiftui-system-colors"),
-            ]
+            ],
+            // Copied as is, not compiled: apps ship it in Contents/Resources/Limba so their users can translate Lowtech's strings
+            resources: [.copy("Resources/Lowtech.xcstrings")]
         ),
         .target(
             name: "LowtechIndie",

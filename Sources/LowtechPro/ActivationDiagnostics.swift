@@ -162,16 +162,16 @@ public enum ActivationDiagnostics {
         // Paddle's servers answered with a reason, so the network is fine
         switch cause {
         case .expired:
-            return diagnosis("This licence has expired", "Renew it or buy a new licence, then activate again.")
+            return diagnosis(String(localized: "This licence has expired", table: "Lowtech"), String(localized: "Renew it or buy a new licence, then activate again.", table: "Lowtech"))
         case .chargeback:
-            return diagnosis("This licence was disabled after a chargeback", "Contact support if you think this is a mistake.")
+            return diagnosis(String(localized: "This licence was disabled after a chargeback", table: "Lowtech"), String(localized: "Contact support if you think this is a mistake.", table: "Lowtech"))
         case .refundedOrDisabled:
-            return diagnosis("This licence isn't active", "It was refunded or disabled. Contact support if you think this is a mistake.")
+            return diagnosis(String(localized: "This licence isn't active", table: "Lowtech"), String(localized: "It was refunded or disabled. Contact support if you think this is a mistake.", table: "Lowtech"))
         // The app already tried freeing the oldest activation for these, so there's nothing to deactivate by hand
         case .otherMac, .activationLimit:
             return diagnosis(couldNotActivateTitle, couldNotActivateMessage)
         case .wrongLicence:
-            return diagnosis("This licence code doesn't match \(appName)", "Check that you copied the code from the right receipt, then try again.")
+            return diagnosis(String(localized: "This licence code doesn't match \(appName)", table: "Lowtech", comment: "Alert title. The placeholder is the app name."), String(localized: "Check that you copied the code from the right receipt, then try again.", table: "Lowtech"))
         case .unableToActivate, nil:
             break
         }
@@ -180,8 +180,8 @@ public enum ActivationDiagnostics {
         if !hostsLines.isEmpty {
             logger.error("Paddle is blocked in /etc/hosts: \(hostsLines.joined(separator: "; "))")
             return diagnosis(
-                "Paddle is blocked in /etc/hosts",
-                "Your hosts file sends Paddle's servers to this Mac, so \(appName) can't reach them to activate the licence. Remove the lines below from /etc/hosts, then try again.",
+                String(localized: "Paddle is blocked in /etc/hosts", table: "Lowtech", comment: "Alert title. Paddle is the licence vendor."),
+                String(localized: "Your hosts file sends Paddle's servers to this Mac, so \(appName) can't reach them to activate the licence. Remove the lines below from /etc/hosts, then try again.", table: "Lowtech", comment: "The placeholder is the app name."),
                 hostsLines
             )
         }
@@ -195,12 +195,14 @@ public enum ActivationDiagnostics {
             guard filters.isEmpty else {
                 let filterNames = joinedNames(filters)
                 return diagnosis(
-                    "Paddle's servers can't be reached",
-                    "\(filterNames) \(filters.count == 1 ? "is" : "are") running and may be blocking \(appName). Allow \(appName) to connect to paddle.com and paddleapi.com in \(filterNames), then try again.",
+                    String(localized: "Paddle's servers can't be reached", table: "Lowtech", comment: "Alert title. Paddle is the licence vendor."),
+                    filters.count == 1
+                        ? String(localized: "\(filterNames) is running and may be blocking \(appName). Allow \(appName) to connect to paddle.com and paddleapi.com in \(filterNames), then try again.", table: "Lowtech", comment: "The first and last placeholders are the name of a firewall app like Little Snitch, the others are the app name.")
+                        : String(localized: "\(filterNames) are running and may be blocking \(appName). Allow \(appName) to connect to paddle.com and paddleapi.com in \(filterNames), then try again.", table: "Lowtech", comment: "The first and last placeholders are a list of firewall apps like Little Snitch and Lulu, the others are the app name."),
                     failures
                 )
             }
-            return diagnosis("Paddle's servers can't be reached", "Check your internet connection, VPN or firewall, then try again.", failures)
+            return diagnosis(String(localized: "Paddle's servers can't be reached", table: "Lowtech", comment: "Alert title. Paddle is the licence vendor."), String(localized: "Check your internet connection, VPN or firewall, then try again.", table: "Lowtech"), failures)
         }
 
         if cause == .unableToActivate {
@@ -209,8 +211,8 @@ public enum ActivationDiagnostics {
         return nil
     }
 
-    static let couldNotActivateTitle = "Paddle couldn't activate this licence"
-    static let couldNotActivateMessage = "Try again, and contact support if it keeps failing."
+    static var couldNotActivateTitle: String { String(localized: "Paddle couldn't activate this licence", table: "Lowtech", comment: "Alert title. Paddle is the licence vendor.") }
+    static var couldNotActivateMessage: String { String(localized: "Try again, and contact support if it keeps failing.", table: "Lowtech") }
 
     static func describe(_ error: Error, timeout: TimeInterval) -> String {
         guard let urlError = error as? URLError else { return error.localizedDescription }
@@ -229,7 +231,8 @@ public enum ActivationDiagnostics {
 
     static func joinedNames(_ names: [String]) -> String {
         guard names.count > 1, let last = names.last else { return names.first ?? "" }
-        return names.dropLast().joined(separator: ", ") + " and " + last
+        let first = names.dropLast().joined(separator: ", ")
+        return String(localized: "\(first) and \(last)", table: "Lowtech", comment: "Joins a list of app names: the first placeholder is the names before the last one, separated by commas")
     }
 
     /// Lowercased names of every process, to catch filter daemons that aren't NSRunningApplications

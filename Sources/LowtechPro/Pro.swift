@@ -213,7 +213,7 @@ open class LowtechProAppDelegate: LowtechIndieAppDelegate, PADProductDelegate, @
         alert.alertStyle = .warning
         alert.messageText = diagnosis.title
         alert.informativeText = diagnosis.message
-        alert.addButton(withTitle: "OK")
+        alert.addButton(withTitle: String(localized: "OK", table: "Lowtech"))
         if let detail = diagnosis.detail {
             let label = NSTextField(wrappingLabelWithString: detail)
             label.font = .monospacedSystemFont(ofSize: NSFont.smallSystemFontSize, weight: .regular)

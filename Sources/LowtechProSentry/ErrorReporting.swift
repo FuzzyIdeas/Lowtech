@@ -246,7 +246,7 @@ public enum LowtechSentry {
 /// The Sentry SDK is reconfigured / closed automatically by `LowtechSentry.configureSentry`'s
 /// observer when this default changes, so flipping the toggle is enough.
 public struct SentryToggleRow: View {
-    public init(title: String = "Send anonymous error reports", subtitle: String? = nil) {
+    public init(title: String = String(localized: "Send anonymous error reports", table: "Lowtech"), subtitle: String? = nil) {
         self.title = title
         self.subtitle = subtitle
     }
@@ -297,7 +297,7 @@ public struct SentryUserIDPill: View {
             HStack(spacing: 5) {
                 Image(systemName: copied ? "checkmark.circle.fill" : "doc.on.doc")
                     .font(.system(size: 9, weight: .semibold))
-                Text(copied ? "Copied!" : "Machine ID: \(userID)")
+                Text(copied ? String(localized: "Copied!", table: "Lowtech") : String(localized: "Machine ID: \(userID)", table: "Lowtech", comment: "The placeholder is an anonymous ID for error reports"))
                     .font(.system(size: 10, design: .monospaced))
                     .lineLimit(1)
                     .truncationMode(.middle)
@@ -309,7 +309,7 @@ public struct SentryUserIDPill: View {
             .overlay(Capsule().strokeBorder(Color.primary.opacity(0.10), lineWidth: 1))
         }
         .buttonStyle(.plain)
-        .help("Your anonymous error-report ID. Click to copy and include it when reporting an issue.")
+        .help(Text("Your anonymous error-report ID. Click to copy and include it when reporting an issue.", tableName: "Lowtech"))
     }
 
     @State private var copied = false

@@ -291,18 +291,18 @@ public struct ShortcutChoiceMenu: View {
         if shortcutsManager.hasFetched {
             let grouped = shortcutsManager.groupedByFolder
             if grouped.isEmpty {
-                Text("No shortcuts found").disabled(true)
+                Text("No shortcuts found", tableName: "Lowtech").disabled(true)
             } else if grouped.count == 1, let only = grouped.first {
                 shortcutList(only.shortcuts)
             } else {
                 ForEach(grouped, id: \.folder) { folder, shortcuts in
-                    Section(folder ?? "Other") {
+                    Section(folder ?? String(localized: "Other", table: "Lowtech", comment: "Group for shortcuts that are not in a folder")) {
                         shortcutList(shortcuts)
                     }
                 }
             }
         } else {
-            Text("Loading...")
+            Text("Loading...", tableName: "Lowtech")
                 .disabled(true)
                 .onAppear { shortcutsManager.fetch() }
         }
@@ -328,7 +328,7 @@ public struct ShortcutChoiceMenu: View {
 
 /// Compound picker: a folder-grouped Menu (with folder submenus) plus an "open in Shortcuts" hammer button.
 public struct ShortcutsPicker: View {
-    public init(shortcut: Binding<Shortcut?>, placeholder: String = "Select shortcut") {
+    public init(shortcut: Binding<Shortcut?>, placeholder: String = String(localized: "Select shortcut", table: "Lowtech")) {
         _shortcut = shortcut
         self.placeholder = placeholder
     }
@@ -339,7 +339,7 @@ public struct ShortcutsPicker: View {
                 if shortcutsManager.hasFetched {
                     let grouped = shortcutsManager.groupedByFolder
                     if grouped.isEmpty {
-                        Text("No shortcuts found").disabled(true)
+                        Text("No shortcuts found", tableName: "Lowtech").disabled(true)
                     } else {
                         let ungrouped = grouped.first { $0.folder == nil }?.shortcuts ?? []
                         let folders = grouped.filter { $0.folder != nil }
@@ -359,7 +359,7 @@ public struct ShortcutsPicker: View {
                         }
                     }
                 } else {
-                    Text("Loading...").disabled(true)
+                    Text("Loading...", tableName: "Lowtech").disabled(true)
                 }
             } label: {
                 Text(shortcut?.name ?? placeholder)
@@ -373,7 +373,7 @@ public struct ShortcutsPicker: View {
             } label: {
                 Image(systemName: shortcut == nil ? "hammer" : "hammer.fill")
             }
-            .help("Open the shortcut in the Shortcuts app for editing")
+            .help(Text("Open the shortcut in the Shortcuts app for editing", tableName: "Lowtech"))
             .disabled(shortcut == nil)
         }
         .onAppear { shortcutsManager.fetch() }

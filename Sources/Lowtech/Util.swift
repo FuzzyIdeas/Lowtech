@@ -568,7 +568,7 @@ public extension RandomAccessCollection where Element: Hashable {
 }
 
 public func promptForWorkingDirectoryPermission(
-    message: String = "Choose your working directory",
+    message: String = String(localized: "Choose your working directory", table: "Lowtech"),
     prompt: String = "Choose",
     initialPath: URL = FileManager.default.homeDirectoryForCurrentUser.deletingLastPathComponent(),
     defaultsKey: Defaults.Key<Data?>? = nil
@@ -599,8 +599,8 @@ public func promptForWorkingDirectoryPermission(
 }
 
 public func promptForFilePermission(
-    message: String = "Choose a file",
-    prompt: String = "Choose",
+    message: String = String(localized: "Choose a file", table: "Lowtech"),
+    prompt: String = String(localized: "Choose", table: "Lowtech", comment: "Button in a file picker"),
     initialPath: URL = FileManager.default.homeDirectoryForCurrentUser,
     defaultsKey: Defaults.Key<Data?>? = nil
 ) -> URL? {
@@ -659,7 +659,7 @@ import UniformTypeIdentifiers
 
 public extension URL {
     @discardableResult
-    func withScopedAccess<T>(fileChoiceMessage: String = "Choose a file", _ action: (URL) -> T) -> T? {
+    func withScopedAccess<T>(fileChoiceMessage: String = String(localized: "Choose a file", table: "Lowtech"), _ action: (URL) -> T) -> T? {
         guard let url = restoreFileAccess(for: self) ?? promptForFilePermission(message: fileChoiceMessage, initialPath: self), url.startAccessingSecurityScopedResource()
         else { return nil }
 

@@ -1173,50 +1173,50 @@ public let KM = KeysManager()
         public var readableStr: String {
             switch self {
             case .rcmd:
-                "Right Command"
+                String(localized: "Right Command", table: "Lowtech", comment: "Keyboard key name")
             case .ralt:
-                "Right Option"
+                String(localized: "Right Option", table: "Lowtech", comment: "Keyboard key name")
             case .lcmd:
-                "Left Command"
+                String(localized: "Left Command", table: "Lowtech", comment: "Keyboard key name")
             case .lalt:
-                "Left Option"
+                String(localized: "Left Option", table: "Lowtech", comment: "Keyboard key name")
             case .lctrl:
-                "Left Control"
+                String(localized: "Left Control", table: "Lowtech", comment: "Keyboard key name")
             case .lshift:
-                "Left Shift"
+                String(localized: "Left Shift", table: "Lowtech", comment: "Keyboard key name")
             case .rshift:
-                "Right Shift"
+                String(localized: "Right Shift", table: "Lowtech", comment: "Keyboard key name")
             case .rctrl:
-                "Right Control"
+                String(localized: "Right Control", table: "Lowtech", comment: "Keyboard key name")
             case .cmd:
-                "Command"
+                String(localized: "Command", table: "Lowtech", comment: "Keyboard key name")
             case .alt:
-                "Option"
+                String(localized: "Option", table: "Lowtech", comment: "Keyboard key name")
             case .ctrl:
-                "Control"
+                String(localized: "Control", table: "Lowtech", comment: "Keyboard key name")
             case .shift:
-                "Shift"
+                String(localized: "Shift", table: "Lowtech", comment: "Keyboard key name")
             case .fn:
-                "Fn"
+                String(localized: "Fn", table: "Lowtech", comment: "Keyboard key name")
             case .capsLock:
-                "Caps Lock"
+                String(localized: "Caps Lock", table: "Lowtech", comment: "Keyboard key name")
             }
         }
 
         public var sideIndependentReadableStr: String {
             switch self {
             case .rcmd, .lcmd, .cmd:
-                "Command"
+                String(localized: "Command", table: "Lowtech", comment: "Keyboard key name")
             case .ralt, .lalt, .alt:
-                "Option"
+                String(localized: "Option", table: "Lowtech", comment: "Keyboard key name")
             case .lctrl, .rctrl, .ctrl:
-                "Control"
+                String(localized: "Control", table: "Lowtech", comment: "Keyboard key name")
             case .lshift, .rshift, .shift:
-                "Shift"
+                String(localized: "Shift", table: "Lowtech", comment: "Keyboard key name")
             case .fn:
-                "Fn"
+                String(localized: "Fn", table: "Lowtech", comment: "Keyboard key name")
             case .capsLock:
-                "Caps Lock"
+                String(localized: "Caps Lock", table: "Lowtech", comment: "Keyboard key name")
             }
         }
 
@@ -1459,7 +1459,7 @@ public let KM = KeysManager()
                     Button("⇧") {
                         triggerKeys = triggerKeys.toggling(key: .lshift, allowShiftAlone: allowShiftAlone)
                     }.buttonStyle(keyStyle(lshiftTrigger, .lshift))
-                    .accessibilityLabel("Left Shift")
+                    .accessibilityLabel(Text("Left Shift", tableName: "Lowtech", comment: "Keyboard key name"))
                         .overlay(Color.red.opacity(triggerKeys.contains(.shift) ? 0.1 : 0.0).clipShape(RoundedRectangle(cornerRadius: radius, style: .continuous)))
 
                     commonModifiers
@@ -1467,14 +1467,14 @@ public let KM = KeysManager()
                     Button("⇧") {
                         triggerKeys = triggerKeys.toggling(key: .rshift, allowShiftAlone: allowShiftAlone)
                     }.buttonStyle(keyStyle(rshiftTrigger, .rshift))
-                    .accessibilityLabel("Right Shift")
+                    .accessibilityLabel(Text("Right Shift", tableName: "Lowtech", comment: "Keyboard key name"))
                         .overlay(Color.red.opacity(triggerKeys.contains(.shift) ? 0.1 : 0.0).clipShape(RoundedRectangle(cornerRadius: radius, style: .continuous)))
                 }.disabled(!isEnabled)
             } else {
                 VStack(alignment: .center, spacing: spacing) {
                     if showFnCaps {
                         HStack(alignment: .bottom, spacing: spacing) {
-                            Button("⇪ capslock") {
+                            Button(String(localized: "⇪ capslock", table: "Lowtech", comment: "Printed on the Caps Lock key cap")) {
                                 if triggerKeys.contains(.capsLock) {
                                     triggerKeys = [.rcmd]
                                 } else {
@@ -1501,7 +1501,7 @@ public let KM = KeysManager()
                         Button {
                             triggerKeys = triggerKeys.toggling(key: .lshift, allowShiftAlone: allowShiftAlone)
                         } label: { leftShiftLabel }.buttonStyle(keyStyle(lshiftTrigger, .lshift))
-                    .accessibilityLabel("Left Shift")
+                    .accessibilityLabel(Text("Left Shift", tableName: "Lowtech", comment: "Keyboard key name"))
                             .overlay(Color.red.opacity(triggerKeys.contains(.shift) ? 0.1 : 0.0).clipShape(RoundedRectangle(cornerRadius: radius, style: .continuous)))
 
                         Spacer()
@@ -1509,7 +1509,7 @@ public let KM = KeysManager()
                         Button {
                             triggerKeys = triggerKeys.toggling(key: .rshift, allowShiftAlone: allowShiftAlone)
                         } label: { rightShiftLabel }.buttonStyle(keyStyle(rshiftTrigger, .rshift))
-                    .accessibilityLabel("Right Shift")
+                    .accessibilityLabel(Text("Right Shift", tableName: "Lowtech", comment: "Keyboard key name"))
                             .overlay(Color.red.opacity(triggerKeys.contains(.shift) ? 0.1 : 0.0).clipShape(RoundedRectangle(cornerRadius: radius, style: .continuous)))
                     }.frame(width: commonModifiersRowSize.width)
 
@@ -1536,14 +1536,14 @@ public let KM = KeysManager()
         /// label, which a picked key sets in bold. The text sits on the outer
         /// side, as printed.
         var leftShiftLabel: some View {
-            Text("⇧ shift")
+            Text("⇧ shift", tableName: "Lowtech", comment: "Printed on the Shift key cap")
                 .frame(width: capsLockSize.width > 16 ? capsLockSize.width - 16 : nil, alignment: .leading)
         }
 
         /// Spans right ⌘ ⌥ ⌃ below it, so its left edge lines up with right
         /// Command's. Less the toggle's 8 pt padding on each side.
         var rightShiftLabel: some View {
-            Text("⇧ shift")
+            Text("⇧ shift", tableName: "Lowtech", comment: "Printed on the Shift key cap")
                 .frame(width: rightModifiersSize.width > 16 ? rightModifiersSize.width - 16 : nil, alignment: .trailing)
         }
 
@@ -1610,17 +1610,17 @@ public let KM = KeysManager()
                 Button("⌃") {
                     triggerKeys = triggerKeys.toggling(key: .lctrl, allowShiftAlone: allowShiftAlone)
                 }.buttonStyle(keyStyle(lctrlTrigger, .lctrl))
-                    .accessibilityLabel("Left Control")
+                    .accessibilityLabel(Text("Left Control", tableName: "Lowtech", comment: "Keyboard key name"))
                     .overlay(Color.red.opacity(triggerKeys.contains(.ctrl) ? 0.1 : 0.0).clipShape(RoundedRectangle(cornerRadius: radius, style: .continuous)))
                 Button("⌥") {
                     triggerKeys = triggerKeys.toggling(key: .lalt, allowShiftAlone: allowShiftAlone)
                 }.buttonStyle(keyStyle(laltTrigger, .lalt))
-                    .accessibilityLabel("Left Option")
+                    .accessibilityLabel(Text("Left Option", tableName: "Lowtech", comment: "Keyboard key name"))
                     .overlay(Color.red.opacity(triggerKeys.contains(.alt) ? 0.1 : 0.0).clipShape(RoundedRectangle(cornerRadius: radius, style: .continuous)))
                 Button("⌘") {
                     triggerKeys = triggerKeys.toggling(key: .lcmd, allowShiftAlone: allowShiftAlone)
                 }.buttonStyle(keyStyle(lcmdTrigger, .lcmd))
-                    .accessibilityLabel("Left Command")
+                    .accessibilityLabel(Text("Left Command", tableName: "Lowtech", comment: "Keyboard key name"))
                     .overlay(Color.red.opacity(triggerKeys.contains(.cmd) ? 0.1 : 0.0).clipShape(RoundedRectangle(cornerRadius: radius, style: .continuous)))
                 Button(action: {}) {
                     Text("")
@@ -1638,17 +1638,17 @@ public let KM = KeysManager()
                 Button("⌘") {
                     triggerKeys = triggerKeys.toggling(key: .rcmd, allowShiftAlone: allowShiftAlone)
                 }.buttonStyle(keyStyle(rcmdTrigger, .rcmd))
-                    .accessibilityLabel("Right Command")
+                    .accessibilityLabel(Text("Right Command", tableName: "Lowtech", comment: "Keyboard key name"))
                     .overlay(Color.red.opacity(triggerKeys.contains(.cmd) ? 0.1 : 0.0).clipShape(RoundedRectangle(cornerRadius: radius, style: .continuous)))
                 Button("⌥") {
                     triggerKeys = triggerKeys.toggling(key: .ralt, allowShiftAlone: allowShiftAlone)
                 }.buttonStyle(keyStyle(raltTrigger, .ralt))
-                    .accessibilityLabel("Right Option")
+                    .accessibilityLabel(Text("Right Option", tableName: "Lowtech", comment: "Keyboard key name"))
                     .overlay(Color.red.opacity(triggerKeys.contains(.alt) ? 0.1 : 0.0).clipShape(RoundedRectangle(cornerRadius: radius, style: .continuous)))
                 Button("⌃") {
                     triggerKeys = triggerKeys.toggling(key: .rctrl, allowShiftAlone: allowShiftAlone)
                 }.buttonStyle(keyStyle(rctrlTrigger, .rctrl))
-                    .accessibilityLabel("Right Control")
+                    .accessibilityLabel(Text("Right Control", tableName: "Lowtech", comment: "Keyboard key name"))
                     .overlay(Color.red.opacity(triggerKeys.contains(.ctrl) ? 0.1 : 0.0).clipShape(RoundedRectangle(cornerRadius: radius, style: .continuous)))
                 }
                 .size(size: $rightModifiersSize)
