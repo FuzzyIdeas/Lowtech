@@ -95,7 +95,10 @@ public struct LicenseRow: View {
     private var licenseStatus: String {
         if pro.onTrial {
             if let days = product?.trialDaysRemaining?.intValue, days > 0 {
-                return String(localized: "Trial, \(days) days remaining", table: "Lowtech", comment: "Licence status. The placeholder is the number of trial days left.")
+                // Without a translation the main bundle has no Lowtech table, so the catalog's plural forms never apply
+                return days == 1
+                    ? String(localized: "Trial, 1 day remaining", table: "Lowtech", comment: "Licence status")
+                    : String(localized: "Trial, \(days) days remaining", table: "Lowtech", comment: "Licence status. The placeholder is the number of trial days left.")
             }
             return String(localized: "Trial", table: "Lowtech")
         }
@@ -193,7 +196,9 @@ public struct AboutView: View {
             if let pro {
                 if pro.onTrial {
                     let days = (product?.trialDaysRemaining ?? 0).intValue
-                    Text("Trial (\(days) days left)", tableName: "Lowtech", comment: "Pill in the About pane. The placeholder is the number of trial days left.")
+                    (days == 1
+                        ? Text("Trial (1 day left)", tableName: "Lowtech", comment: "Pill in the About pane")
+                        : Text("Trial (\(days) days left)", tableName: "Lowtech", comment: "Pill in the About pane. The placeholder is the number of trial days left."))
                         .mono(11, weight: .semibold)
                         .padding(.horizontal, 8).padding(.vertical, 3)
                         .background(Capsule().fill(Color.orange.opacity(0.2)))
