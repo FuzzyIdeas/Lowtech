@@ -33,7 +33,7 @@ public final class Zephyr: NSObject {
     override init() {
         super.init()
         setupNotifications()
-        NSUbiquitousKeyValueStore.default.synchronize()
+        cloudQueue.async { NSUbiquitousKeyValueStore.default.synchronize() }
     }
 
     /// Zephyr's de-initialization method.
@@ -73,19 +73,23 @@ public final class Zephyr: NSObject {
             return
         }
 
-        switch shared.dataStoreWithLatestData() {
-        case .local:
-            printGeneralSyncStatus(finished: false, destination: .remote)
-            shared.zephyrQueue.sync {
+        let localDate = shared.localSyncDate
+        shared.cloudQueue.async {
+            switch shared.dataStoreWithLatestData(localDate: localDate) {
+            case .local:
+                printGeneralSyncStatus(finished: false, destination: .remote)
                 shared.syncToCloud()
+                printGeneralSyncStatus(finished: true, destination: .remote)
+            case .remote:
+                let remote = shared.zephyrRemoteStoreDictionary
+                DispatchQueue.main.async {
+                    printGeneralSyncStatus(finished: false, destination: .local)
+                    shared.zephyrQueue.sync {
+                        shared.syncFromCloud(remote)
+                    }
+                    printGeneralSyncStatus(finished: true, destination: .local)
+                }
             }
-            printGeneralSyncStatus(finished: true, destination: .remote)
-        case .remote:
-            printGeneralSyncStatus(finished: false, destination: .local)
-            shared.zephyrQueue.sync {
-                shared.syncFromCloud()
-            }
-            printGeneralSyncStatus(finished: true, destination: .local)
         }
     }
 
@@ -96,19 +100,32 @@ public final class Zephyr: NSObject {
     /// - Parameters:
     ///     - keys: An array of keys that should be synchronized between `UserDefaults` and `NSUbiquitousKeyValueStore`.
     public static func sync(keys: [String]) {
-        switch shared.dataStoreWithLatestData() {
-        case .local:
-            printGeneralSyncStatus(finished: false, destination: .remote)
-            shared.zephyrQueue.sync {
+        // The iCloud side is read on `cloudQueue`, since the first read after launch waits for the daemon to send
+        // the whole store. This Mac's side is read here, when the sync starts. A setting written on this Mac after
+        // this point (and pushed by the key-value observers) then doesn't change which side wins, and doesn't get
+        // overwritten by the older value from iCloud.
+        let localDate = shared.localSyncDate
+        let localValues = keys.map { shared.userDefaults.object(forKey: $0) }
+        shared.cloudQueue.async {
+            switch shared.dataStoreWithLatestData(localDate: localDate) {
+            case .local:
+                printGeneralSyncStatus(finished: false, destination: .remote)
                 shared.syncSpecificKeys(keys: keys, dataStore: .local)
+                printGeneralSyncStatus(finished: true, destination: .remote)
+            case .remote:
+                let remote = shared.zephyrRemoteStoreDictionary
+                DispatchQueue.main.async {
+                    printGeneralSyncStatus(finished: false, destination: .local)
+                    shared.zephyrQueue.sync {
+                        for (key, valueAtStart) in zip(keys, localValues)
+                            where samePropertyListValue(shared.userDefaults.object(forKey: key), valueAtStart)
+                        {
+                            shared.syncFromCloud(key: key, value: remote[key])
+                        }
+                    }
+                    printGeneralSyncStatus(finished: true, destination: .local)
+                }
             }
-            printGeneralSyncStatus(finished: true, destination: .remote)
-        case .remote:
-            printGeneralSyncStatus(finished: false, destination: .local)
-            shared.zephyrQueue.sync {
-                shared.syncSpecificKeys(keys: keys, dataStore: .remote)
-            }
-            printGeneralSyncStatus(finished: true, destination: .local)
         }
     }
 
@@ -241,7 +258,15 @@ public final class Zephyr: NSObject {
     /// A queue used to serialize synchronization on monitored keys.
     private let zephyrQueue = DispatchQueue(label: "com.zephyr.queue")
 
-    // The `UserDefaults` object to sync with `NSUbiquitousKeyValueStore` (e.g., iCloud).
+    /// The queue for Zephyr's calls to `NSUbiquitousKeyValueStore`.
+    ///
+    /// Each of those calls waits for the syncdefaultsd daemon to reply, which can take a long time when the daemon is
+    /// busy or stuck. They used to run on the main thread, and every setting written back to iCloud froze the app
+    /// for as long as the daemon took to answer. Nothing waits on this queue, so the main thread and `zephyrQueue`
+    /// never wait for the daemon.
+    private let cloudQueue = DispatchQueue(label: "com.zephyr.cloud", qos: .utility)
+
+    /// The `UserDefaults` object to sync with `NSUbiquitousKeyValueStore` (e.g., iCloud).
     private var userDefaults = UserDefaults.standard
 
     /// A session-persisted variable to directly access all of the `UserDefaults` elements.
@@ -253,6 +278,16 @@ public final class Zephyr: NSObject {
     private var zephyrRemoteStoreDictionary: [String: AnyHashable] {
         (NSUbiquitousKeyValueStore.default.dictionaryRepresentation as? [String: AnyHashable]) ?? [:]
     }
+
+    /// Whether two values read from `UserDefaults` are equal. They are property list objects, which compare by value.
+    private static func samePropertyListValue(_ a: Any?, _ b: Any?) -> Bool {
+        switch (a, b) {
+        case (nil, nil): true
+        case let (a?, b?): (a as AnyObject).isEqual(b)
+        default: false
+        }
+    }
+
 }
 
 // MARK: - Helpers
@@ -291,28 +326,27 @@ private extension Zephyr {
     /// If no data exists in `NSUbiquitousKeyValueStore`, then `NSUbiquitousKeyValueStore` will synchronize with data from `UserDefaults`.
     /// If no data exists in `UserDefaults`, then `UserDefaults` will synchronize with data from `NSUbiquitousKeyValueStore`.
     ///
+    /// - Parameters:
+    ///     - localDate: The last sync date in `UserDefaults`, read by the caller when the sync started.
     /// - Returns: The persistent data store that has the newest data.
-    func dataStoreWithLatestData() -> ZephyrDataStore {
-        if let remoteDate = zephyrRemoteStoreDictionary[ZephyrSyncKey] as? Date,
-           let localDate = zephyrLocalStoreDictionary[ZephyrSyncKey] as? Date
-        {
-            // If both localDate and remoteDate exist, compare the two, and then synchronize the data stores.
-            return localDate.timeIntervalSince1970 > remoteDate.timeIntervalSince1970 ? .local : .remote
-
-        } else {
-            // If remoteDate doesn't exist, then assume local data is newer.
-            guard let _ = zephyrRemoteStoreDictionary[ZephyrSyncKey] as? Date else {
-                return .local
-            }
-
-            // If localDate doesn't exist, then assume that remote data is newer.
-            guard let _ = zephyrLocalStoreDictionary[ZephyrSyncKey] as? Date else {
-                return .remote
-            }
-
-            // If neither exist, synchronize local data store to iCloud.
+    func dataStoreWithLatestData(localDate: Date?) -> ZephyrDataStore {
+        // If remoteDate doesn't exist, then assume local data is newer.
+        guard let remoteDate = zephyrRemoteStoreDictionary[ZephyrSyncKey] as? Date else {
             return .local
         }
+
+        // If localDate doesn't exist, then assume that remote data is newer.
+        guard let localDate else {
+            return .remote
+        }
+
+        // If both localDate and remoteDate exist, compare the two, and then synchronize the data stores.
+        return localDate.timeIntervalSince1970 > remoteDate.timeIntervalSince1970 ? .local : .remote
+    }
+
+    /// The last sync date in `UserDefaults`.
+    var localSyncDate: Date? {
+        userDefaults.object(forKey: ZephyrSyncKey) as? Date
     }
 }
 
@@ -341,14 +375,20 @@ extension Zephyr {
     ///     - keys: Array of keys to synchronize.
     ///     - dataStore: Signifies if keys should be synchronized to/from iCloud.
     func syncSpecificKeys(keys: [String], dataStore: ZephyrDataStore) {
-        for key in keys {
-            switch dataStore {
-            case .local:
-                let value = zephyrLocalStoreDictionary[key]
-                syncToCloud(key: key, value: value)
-            case .remote:
-                let value = zephyrRemoteStoreDictionary[key]
-                syncFromCloud(key: key, value: value)
+        switch dataStore {
+        case .local:
+            // The values are read here, so a later change of the same key is written to iCloud after this one.
+            let local = zephyrLocalStoreDictionary
+            let values = keys.map { ($0, local[$0]) }
+            cloudQueue.async { [self] in
+                for (key, value) in values {
+                    syncToCloud(key: key, value: value)
+                }
+            }
+        case .remote:
+            let remote = zephyrRemoteStoreDictionary
+            for key in keys {
+                syncFromCloud(key: key, value: remote[key])
             }
         }
     }
@@ -357,29 +397,31 @@ extension Zephyr {
     ///
     /// If a key is passed, only that key will be synchronized.
     ///
+    /// Runs on `cloudQueue` only. It writes to iCloud and never to `UserDefaults`, so it leaves the key-value
+    /// observers registered, and a change made on this Mac while the daemon is slow still gets synced.
+    ///
     /// - Parameters:
     ///     - key: If you pass a key, only that key will be updated in `NSUbiquitousKeyValueStore`.
     ///     - value: The value that will be synchronized. Must be passed with a key, otherwise, nothing will happen.
     func syncToCloud(key: String? = nil, value: Any? = nil) {
+        #if DEBUG
+            dispatchPrecondition(condition: .onQueue(cloudQueue))
+        #endif
         let ubiquitousStore = NSUbiquitousKeyValueStore.default
         ubiquitousStore.set(Date(), forKey: ZephyrSyncKey)
 
         // Sync all defaults to iCloud if key is nil, otherwise sync only the specific key/value pair.
         guard let key else {
             for (key, value) in zephyrLocalStoreDictionary {
-                unregisterObserver(key: key)
                 ubiquitousStore.set(value, forKey: key)
                 Zephyr.printKeySyncStatus(key: key, value: value, destination: .remote)
                 if Zephyr.syncUbiquitousKeyValueStoreOnChange {
                     ubiquitousStore.synchronize()
                 }
-                registerObserver(key: key)
             }
 
             return
         }
-
-        unregisterObserver(key: key)
 
         if let value {
             ubiquitousStore.set(value, forKey: key)
@@ -392,23 +434,17 @@ extension Zephyr {
         if Zephyr.syncUbiquitousKeyValueStoreOnChange {
             ubiquitousStore.synchronize()
         }
-
-        registerObserver(key: key)
     }
 
     /// Synchronizes all `NSUbiquitousKeyValueStore` to `UserDefaults`.
     ///
-    /// If a key is passed, only that key will be synchronized.
-    ///
     /// - Parameters:
-    ///     - key: If you pass a key, only that key will updated in `UserDefaults`.
-    ///     - value: The value that will be synchronized. Must be passed with a key, otherwise, nothing will happen.
-    func syncFromCloud() {
+    ///     - remote: The contents of `NSUbiquitousKeyValueStore`, read on `cloudQueue`.
+    func syncFromCloud(_ remote: [String: AnyHashable]) {
         let defaults = userDefaults
         defaults.set(Date(), forKey: ZephyrSyncKey)
 
-        // Sync all defaults from iCloud if key is nil, otherwise sync only the specific key/value pair.
-        for (key, value) in zephyrRemoteStoreDictionary {
+        for (key, value) in remote {
             unregisterObserver(key: key)
             defaults.set(value, forKey: key)
             Zephyr.printKeySyncStatus(key: key, value: value, destination: .local)
@@ -508,34 +544,38 @@ extension Zephyr {
 
     ///  Observation method for `NSUbiquitousKeyValueStore.didChangeExternallyNotification`
     func keysDidChangeOnCloud(notification: Notification) {
-        // iCloud posts this on a background queue of its own. The synced values are written to
-        // UserDefaults from here, so every Defaults observer of those keys would run on that queue,
-        // and the ones that close windows or redraw crash AppKit off the main thread.
-        guard Thread.isMainThread else {
-            DispatchQueue.main.async { self.keysDidChangeOnCloud(notification: notification) }
+        guard notification.name == NSUbiquitousKeyValueStore.didChangeExternallyNotification,
+              let userInfo = (notification as NSNotification).userInfo,
+              let cloudKeys = userInfo[NSUbiquitousKeyValueStoreChangedKeysKey] as? [String]
+        else {
             return
         }
-        if notification.name == NSUbiquitousKeyValueStore.didChangeExternallyNotification {
-            guard let userInfo = (notification as NSNotification).userInfo,
-                  let cloudKeys = userInfo[NSUbiquitousKeyValueStoreChangedKeysKey] as? [String],
-                  let remoteStoredDate = zephyrRemoteStoreDictionary[ZephyrSyncKey] as? Date
-            else {
+
+        // The iCloud side is read on `cloudQueue`, since a read can wait for the daemon.
+        cloudQueue.async { [self] in
+            let remote = zephyrRemoteStoreDictionary
+            guard let remoteStoredDate = remote[ZephyrSyncKey] as? Date else {
                 return
             }
 
-            if let localStoredDate = zephyrLocalStoreDictionary[ZephyrSyncKey] as? Date,
-               !(remoteStoredDate.timeIntervalSince1970 > localStoredDate.timeIntervalSince1970)
-            {
-                return
-            }
-
-            zephyrQueue.sync {
-                for key in monitoredKeys where cloudKeys.contains(key) {
-                    syncSpecificKeys(keys: [key], dataStore: .remote)
+            // The synced values are written to UserDefaults on the main thread, since every Defaults observer of
+            // those keys runs on the thread that writes them, and the ones that close windows or redraw crash
+            // AppKit off the main thread.
+            DispatchQueue.main.async { [self] in
+                if let localStoredDate = zephyrLocalStoreDictionary[ZephyrSyncKey] as? Date,
+                   !(remoteStoredDate.timeIntervalSince1970 > localStoredDate.timeIntervalSince1970)
+                {
+                    return
                 }
-            }
 
-            Zephyr.postNotificationAfterSyncFromCloud()
+                zephyrQueue.sync {
+                    for key in monitoredKeys where cloudKeys.contains(key) {
+                        syncFromCloud(key: key, value: remote[key])
+                    }
+                }
+
+                Zephyr.postNotificationAfterSyncFromCloud()
+            }
         }
     }
 }
@@ -608,7 +648,7 @@ extension Zephyr {
         }
     }
 
-    // Notify any observers that we have finished synchronizing an update from iCloud.
+    /// Notify any observers that we have finished synchronizing an update from iCloud.
     static func postNotificationAfterSyncFromCloud() {
         NotificationCenter.default.post(name: Zephyr.keysDidChangeOnCloudNotification, object: nil)
     }
