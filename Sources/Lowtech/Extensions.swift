@@ -802,6 +802,9 @@ public extension BinaryInteger {
 
 import System
 
+/// Built once: a `CharacterSet` literal makes a new set, bitmap and all, on every call.
+private let PATH_TRIM_CHARACTERS = CharacterSet(charactersIn: "\"'\n\t {},")
+
 public extension String {
     var ns: NSString {
         self as NSString
@@ -813,7 +816,7 @@ public extension String {
     }
 
     var trimmedPath: String {
-        trimmingCharacters(in: ["\"", "'", "\n", "\t", " ", "{", "}", ","])
+        trimmingCharacters(in: PATH_TRIM_CHARACTERS)
     }
 
     var url: URL? {
@@ -1001,7 +1004,9 @@ public extension Sequence {
         results.reserveCapacity(count)
 
         for elem in self {
-            if results.count == count { return results }
+            if results.count == count {
+                return results
+            }
             if condition(elem) {
                 results.append(elem)
             }
@@ -2301,7 +2306,9 @@ public extension FilePath {
 
         let path = path.isDir ? path.appending(name) : path
 
-        if force { try path.delete() }
+        if force {
+            try path.delete()
+        }
         logger.debug("Moving path \(shellString) to \(path.shellString)")
         try fm.moveItem(atPath: string, toPath: path.string)
         return path
@@ -2325,7 +2332,9 @@ public extension FilePath {
 
         let path = path.isDir ? path.appending(name) : path
 
-        if force { try path.delete() }
+        if force {
+            try path.delete()
+        }
         logger.debug("Copying path \(shellString) to \(path.shellString)")
         try fm.copyItem(atPath: string, toPath: path.string)
         return path
