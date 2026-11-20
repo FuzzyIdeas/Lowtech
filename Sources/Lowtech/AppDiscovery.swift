@@ -12,13 +12,16 @@ public struct MetaQuery {
     /// Spotlight picks up matching items being added, removed or changed,
     /// so callers see installs/moves/deletes without polling. The caller
     /// must keep the `MetaQuery` alive for as long as updates are wanted.
-    /// When `handlerQueue` is non-nil the handler runs on it (off the notifying
-    /// run loop) while query updates stay disabled, then updates are re-enabled /
-    /// the query stopped back on the main run loop. Use it when the handler does
+    /// When `handlerQueue` is non-nil the whole query runs on an operation queue
+    /// backed by it: the query is started there, its notifications are posted
+    /// there, and the handler runs there while query updates stay disabled. The
+    /// main thread never touches the query. Use it when the handler does
     /// expensive per-item work (e.g. `value(forAttribute:)`, a synchronous XPC
-    /// round-trip to the metadata server): on the notifying run loop that work
-    /// can stall the app for tens of seconds (App Hang). Default nil keeps the
-    /// historical synchronous-on-notification-thread behaviour.
+    /// round-trip to the metadata server), or when the query may be started
+    /// while the metadata server is slow: `startQuery` waits for the server, and
+    /// on the main thread that wait was an App Hang of 30 s and more (CLING-1R).
+    /// Default nil keeps the historical behaviour: started on the calling
+    /// thread, notified and handled on the main run loop.
     public init(scopes: [String], queryString: String, live: Bool = false, valueListAttributes: [String] = [], handlerQueue: DispatchQueue? = nil, handler: @escaping ([NSMetadataItem]) -> Void) {
         let q = NSMetadataQuery()
         q.searchScopes = scopes
@@ -34,7 +37,19 @@ public struct MetaQuery {
             q.valueListAttributes = valueListAttributes
         }
 
-        q.start()
+        // NSMetadataQuery allows `startQuery` only on its operation queue or on
+        // the main thread, and posts its notifications on that queue when one is
+        // set. A serial queue over `handlerQueue` keeps the start, the
+        // notifications, the handler and the stop on one thread that isn't main.
+        let operationQueue: OperationQueue? = handlerQueue.map { handlerQueue in
+            let oq = OperationQueue()
+            oq.name = "fyi.lowtech.MetaQuery"
+            oq.maxConcurrentOperationCount = 1
+            oq.underlyingQueue = handlerQueue
+            return oq
+        }
+        q.operationQueue = operationQueue
+
         query = q
         observer = NotificationCenter.default.publisher(for: NSNotification.Name.NSMetadataQueryDidFinishGathering, object: q)
             .merge(with: NotificationCenter.default.publisher(for: NSNotification.Name.NSMetadataQueryDidUpdate, object: q))
@@ -46,16 +61,12 @@ public struct MetaQuery {
                 // so the array can't mutate mid-enumeration.
                 q.disableUpdates()
                 let items = query.results.compactMap { $0 as? NSMetadataItem }
-                if let handlerQueue {
-                    // Keep updates disabled across the off-thread handler so the
-                    // frozen result set can't mutate under it, then re-enable /
-                    // stop back on the notifying (main) run loop once it's done.
-                    handlerQueue.async {
-                        handler(items)
-                        DispatchQueue.main.async {
-                            if live { q.enableUpdates() } else { q.stop() }
-                        }
-                    }
+                if handlerQueue != nil {
+                    // Already on the query's operation queue: keep updates
+                    // disabled across the handler so the frozen result set
+                    // can't mutate under it, then re-enable or stop here.
+                    handler(items)
+                    if live { q.enableUpdates() } else { q.stop() }
                 } else {
                     if live {
                         q.enableUpdates()
@@ -65,6 +76,12 @@ public struct MetaQuery {
                     handler(items)
                 }
             }
+
+        if let operationQueue {
+            operationQueue.addOperation { q.start() }
+        } else {
+            q.start()
+        }
     }
 
     public let query: NSMetadataQuery
@@ -130,12 +147,13 @@ public func queryInstalledApps(live: Bool = false, handler: @escaping ([Installe
         queryString: "kMDItemContentTypeTree == 'com.apple.application-bundle'",
         live: live,
         valueListAttributes: INSTALLED_APP_META_ATTRS,
-        // Pull each bundle's attributes (a synchronous XPC per item to the
-        // metadata server) off the run loop the query notifies on: on the main
-        // run loop this stalled the app for tens of seconds with many bundles or
-        // a busy index (App Hang). MetaQuery keeps updates disabled across this,
-        // so reading the frozen snapshot off-thread is safe; we hop back to main
-        // to deliver, matching the historical delivery thread.
+        // Run the whole query off the main thread: starting it waits for the
+        // metadata server (CLING-1R), and each bundle's attributes are a
+        // synchronous XPC per item. On the main thread either one stalled the
+        // app for tens of seconds with many bundles or a busy index (App Hang).
+        // MetaQuery keeps updates disabled across the handler, so reading the
+        // frozen snapshot here is safe; we hop back to main to deliver, matching
+        // the historical delivery thread.
         handlerQueue: installedAppsQueue
     ) { items in
         let apps = items.compactMap { item -> InstalledApp? in
